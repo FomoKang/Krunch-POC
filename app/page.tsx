@@ -196,9 +196,9 @@ export default function HomePage() {
             {uniqueDrops.map((item) => (
               <div
                 key={item.id}
-                className="bg-[#1a1a1a] rounded-xl overflow-hidden border border-white/5 hover:border-[#FF6B9D]/30 transition-colors"
+                className="bg-[#1a1a1a] rounded-xl overflow-hidden border border-[#FF6B9D]/30 hover:border-[#FF6B9D]/50 transition-colors"
               >
-                <div className="relative aspect-[4/3] bg-[#0d0d0d]">
+                <div className="relative aspect-[4/3] bg-transparent">
                   <Image src={item.image || "/placeholder.svg"} alt={item.name} fill className="object-cover" />
                 </div>
                 <div className="p-3">
