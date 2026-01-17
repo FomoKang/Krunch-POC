@@ -25,8 +25,8 @@ export function Confetti({ active }: { active: boolean }) {
           x: Math.random() * 100,
           color: colors[Math.floor(Math.random() * colors.length)],
           delay: Math.random() * 0.3,
-          duration: 1 + Math.random() * 1,
-          rotation: Math.random() * 360,
+          duration: 2 + Math.random() * 2,
+          rotation: Math.random() * 720,
         })
       }
       setPieces(newPieces)
@@ -39,20 +39,23 @@ export function Confetti({ active }: { active: boolean }) {
 
   return (
     <div className="fixed inset-0 pointer-events-none z-[9999] overflow-hidden">
-      {pieces.map((piece) => (
-        <div
-          key={piece.id}
-          className="absolute w-3 h-3 animate-confetti-fall"
-          style={{
-            left: `${piece.x}%`,
-            backgroundColor: piece.color,
-            animationDelay: `${piece.delay}s`,
-            animationDuration: `${piece.duration}s`,
-            transform: `rotate(${piece.rotation}deg)`,
-            borderRadius: Math.random() > 0.5 ? "50%" : "0%",
-          }}
-        />
-      ))}
+      {pieces.map((piece) => {
+        const borderRadius = Math.random() > 0.5 ? "50%" : "0%"
+        return (
+          <div
+            key={piece.id}
+            className="absolute w-3 h-3"
+            style={{
+              left: `${piece.x}%`,
+              top: '-10px',
+              backgroundColor: piece.color,
+              borderRadius,
+              animation: `confetti-fall ${piece.duration}s linear ${piece.delay}s forwards`,
+              '--rotation': `${piece.rotation}deg`,
+            } as React.CSSProperties}
+          />
+        )
+      })}
     </div>
   )
 }
