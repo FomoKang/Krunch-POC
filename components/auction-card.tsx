@@ -153,7 +153,7 @@ export function AuctionCard() {
         </div>
 
         {/* Main Content - 상품 정보 (항상 보임) */}
-        <div className="relative z-20 bg-black/30 mx-4 mb-4 mt-16 sm:mt-20 rounded-lg border border-border/50 overflow-hidden" style={{ marginLeft: 'max(1rem, env(safe-area-inset-left))', marginRight: 'max(1rem, env(safe-area-inset-right))' }}>
+        <div className="relative z-20 bg-black/30 mx-4 mb-4 mt-24 sm:mt-28 rounded-lg border border-border/50 overflow-hidden" style={{ marginLeft: 'max(1rem, env(safe-area-inset-left))', marginRight: 'max(1rem, env(safe-area-inset-right))' }}>
           <div className="p-4 pb-3 sm:p-6">
             <h2 className="font-display text-4xl sm:text-5xl text-primary uppercase leading-[0.85] tracking-tight drop-shadow-md">GIVE</h2>
             <h2 className="font-display text-4xl sm:text-5xl text-primary uppercase leading-[0.85] tracking-tight drop-shadow-md">AWAY</h2>
