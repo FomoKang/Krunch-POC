@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Image from "next/image"
+import Link from "next/link"
 import { Confetti } from "./confetti"
 import { SuccessPopup } from "./success-popup"
 
@@ -119,15 +120,15 @@ export function AuctionCard() {
       <div className="flex flex-col min-h-[100dvh] bg-transparent" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'calc(100px + env(safe-area-inset-bottom))' }}>
         {/* Header Section - Fixed */}
         <div className="relative z-50" style={{ minHeight: 'calc(4rem + env(safe-area-inset-top))' }}>
-          <div className="absolute top-4 left-4" style={{ top: 'calc(1rem + env(safe-area-inset-top))' }}>
+          <Link href="/" className="absolute top-4 left-4" style={{ top: 'calc(1rem + env(safe-area-inset-top))' }}>
             <Image
               src="/logo-pink.png"
               alt="Krunch Logo"
               width={120}
               height={40}
-              className="h-auto w-24 sm:w-[120px]"
+              className="h-auto w-24 sm:w-[120px] cursor-pointer hover:opacity-80 transition-opacity"
             />
-          </div>
+          </Link>
 
           <div className="absolute top-4 right-4 z-10 bg-black/30 backdrop-blur-md px-3 py-2 rounded-lg border border-primary/30" style={{ top: 'calc(1rem + env(safe-area-inset-top))' }}>
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-sans">Current Bid</p>
@@ -155,8 +156,8 @@ export function AuctionCard() {
         {/* Main Content - 상품 정보 (항상 보임) */}
         <div className="relative z-20 bg-black/30 mx-4 mb-4 mt-24 sm:mt-28 rounded-lg border border-border/50 overflow-hidden" style={{ marginLeft: 'max(1rem, env(safe-area-inset-left))', marginRight: 'max(1rem, env(safe-area-inset-right))' }}>
           <div className="p-4 pb-3 sm:p-6">
-            <h2 className="font-display text-4xl sm:text-5xl text-primary uppercase leading-[0.85] tracking-tight drop-shadow-md">GIVE</h2>
-            <h2 className="font-display text-4xl sm:text-5xl text-primary uppercase leading-[0.85] tracking-tight drop-shadow-md">AWAY</h2>
+            <h2 className="font-display text-4xl sm:text-5xl text-primary uppercase leading-[0.85] tracking-tight drop-shadow-md">LEGEND</h2>
+            <h2 className="font-display text-4xl sm:text-5xl text-primary uppercase leading-[0.85] tracking-tight drop-shadow-md">AUCTION</h2>
           </div>
 
           <div className="px-4 pb-3 flex items-center gap-4 sm:gap-6">

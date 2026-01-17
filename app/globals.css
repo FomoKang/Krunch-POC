@@ -3,81 +3,82 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Krunch 앱 다크 테마 색상으로 업데이트 */
 :root {
-  --background: #080808;
-  --foreground: #ffffff;
-  --card: #0a0a0a;
-  --card-foreground: #ffffff;
-  --popover: #0a0a0a;
-  --popover-foreground: #ffffff;
-  /* Using the exact neon pink from reference */
-  --primary: #ff6b8a;
-  --primary-foreground: #000000;
-  --secondary: #1a1a1a;
-  --secondary-foreground: #ffffff;
-  --muted: #1a1a1a;
-  --muted-foreground: #666666;
-  --accent: #ff6b8a;
-  --accent-foreground: #000000;
+  --background: oklch(0.05 0 0);
+  --foreground: oklch(0.98 0 0);
+  --card: oklch(0.1 0 0);
+  --card-foreground: oklch(0.98 0 0);
+  --popover: oklch(0.1 0 0);
+  --popover-foreground: oklch(0.98 0 0);
+  --primary: oklch(0.7 0.2 350);
+  --primary-foreground: oklch(0.05 0 0);
+  --secondary: oklch(0.15 0 0);
+  --secondary-foreground: oklch(0.98 0 0);
+  --muted: oklch(0.2 0 0);
+  --muted-foreground: oklch(0.6 0 0);
+  --accent: oklch(0.7 0.2 350);
+  --accent-foreground: oklch(0.05 0 0);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.577 0.245 27.325);
-  --border: #222222;
-  --input: #222222;
-  --ring: #ff6b8a;
-  --radius: 0.25rem;
-  /* ... existing sidebar vars ... */
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --border: oklch(0.2 0 0);
+  --input: oklch(0.15 0 0);
+  --ring: oklch(0.7 0.2 350);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.1 0 0);
+  --sidebar-foreground: oklch(0.98 0 0);
+  --sidebar-primary: oklch(0.7 0.2 350);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.15 0 0);
+  --sidebar-accent-foreground: oklch(0.98 0 0);
+  --sidebar-border: oklch(0.2 0 0);
+  --sidebar-ring: oklch(0.7 0.2 350);
 }
 
-/* ... existing dark mode ... */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --background: oklch(0.05 0 0);
+  --foreground: oklch(0.98 0 0);
+  --card: oklch(0.1 0 0);
+  --card-foreground: oklch(0.98 0 0);
+  --popover: oklch(0.1 0 0);
+  --popover-foreground: oklch(0.98 0 0);
+  --primary: oklch(0.7 0.2 350);
+  --primary-foreground: oklch(0.05 0 0);
+  --secondary: oklch(0.15 0 0);
+  --secondary-foreground: oklch(0.98 0 0);
+  --muted: oklch(0.2 0 0);
+  --muted-foreground: oklch(0.6 0 0);
+  --accent: oklch(0.7 0.2 350);
+  --accent-foreground: oklch(0.05 0 0);
   --destructive: oklch(0.396 0.141 25.723);
   --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
+  --border: oklch(0.2 0 0);
+  --input: oklch(0.15 0 0);
+  --ring: oklch(0.7 0.2 350);
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
+  --sidebar: oklch(0.1 0 0);
+  --sidebar-foreground: oklch(0.98 0 0);
+  --sidebar-primary: oklch(0.7 0.2 350);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.15 0 0);
+  --sidebar-accent-foreground: oklch(0.98 0 0);
+  --sidebar-border: oklch(0.2 0 0);
+  --sidebar-ring: oklch(0.7 0.2 350);
 }
 
 @theme inline {
-  /* Updated font families to match reference */
   --font-sans: "Inter", "Inter Fallback", system-ui, sans-serif;
   --font-mono: "Geist Mono", "Geist Mono Fallback";
   --font-serif: "Playfair Display", "Georgia", serif;
-  /* Added display font for GIVE AWAY title */
   --font-display: "Anton", "Impact", "Arial Narrow", sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -98,6 +99,11 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -117,110 +123,26 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-black text-white;
   }
 }
 
-/* Neon glow effect for primary elements */
-.neon-glow {
-  /* Updated glow color to match new pink */
-  text-shadow: 0 0 10px #ff6b8a, 0 0 20px #ff6b8a, 0 0 40px #ff6b8a;
+/* Loading animation for splash screen */
+@keyframes loading {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
 }
 
-/* Subtle neon glow for countdown timer - improved readability */
+/* Neon glow effects */
 .neon-glow-subtle {
   text-shadow: 0 0 4px rgba(255, 107, 138, 0.6), 0 0 8px rgba(255, 107, 138, 0.4);
 }
 
-.neon-box-glow {
-  box-shadow: 0 0 15px rgba(255, 107, 138, 0.5), 0 0 30px rgba(255, 107, 138, 0.3), 0 0 45px rgba(255, 107, 138, 0.1);
-}
-
-.neon-box-glow-intense {
-  box-shadow: 0 0 20px rgba(255, 107, 138, 0.6), 0 0 40px rgba(255, 107, 138, 0.4), 0 0 60px rgba(255, 107, 138, 0.2);
-}
-
-@keyframes pulse-glow {
-  0%,
-  100% {
-    box-shadow: 0 0 15px rgba(255, 107, 138, 0.5), 0 0 30px rgba(255, 107, 138, 0.3);
-  }
-  50% {
-    box-shadow: 0 0 25px rgba(255, 107, 138, 0.7), 0 0 50px rgba(255, 107, 138, 0.5);
-  }
-}
-
-.animate-pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
-}
-
-/* Grayscale filter for hero images */
-.grayscale-hero {
-  filter: grayscale(100%) contrast(1.1);
-}
-
-/* Signature/handwriting style animation */
-.signature-path {
-  stroke-dasharray: 1000;
-  stroke-dashoffset: 1000;
-  animation: draw-signature 3s ease forwards;
-}
-
-@keyframes draw-signature {
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
-/* Added confetti fall animation */
-@keyframes confetti-fall {
-  0% {
-    transform: translateY(-10vh) rotate(0deg);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(100vh) rotate(720deg);
-    opacity: 0;
-  }
-}
-
-.animate-confetti-fall {
-  animation: confetti-fall 2s ease-out forwards;
-}
-
-/* Added popup scale animation */
-@keyframes popup-scale {
-  0% {
-    transform: scale(0.8);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.animate-popup-scale {
-  animation: popup-scale 0.3s ease-out forwards;
-}
-
-/* Added checkmark draw animation */
-@keyframes checkmark-draw {
-  0% {
-    stroke-dashoffset: 24;
-  }
-  100% {
-    stroke-dashoffset: 0;
-  }
-}
-
-.animate-checkmark {
-  stroke-dasharray: 24;
-  stroke-dashoffset: 24;
-  animation: checkmark-draw 0.4s ease-out 0.2s forwards;
-}
-
-/* Added bid ticker animation */
+/* Bid pulse animation */
 @keyframes bid-pulse {
   0%,
   100% {
@@ -235,22 +157,7 @@
   animation: bid-pulse 0.3s ease-out;
 }
 
-/* Live bid ticker slide-up fade-in animation */
-@keyframes slide-up-fade-in {
-  0% {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-slide-up-fade-in {
-  animation: slide-up-fade-in 0.4s ease-out forwards;
-}
-
+/* Slide up bottom sheet animation */
 @keyframes slide-up-bottom-sheet {
   from {
     transform: translateY(100%);
@@ -263,3 +170,4 @@
 .animate-slide-up-bottom-sheet {
   animation: slide-up-bottom-sheet 0.3s ease-out forwards;
 }
+

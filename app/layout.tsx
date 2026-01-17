@@ -1,34 +1,33 @@
 import type React from "react"
-import type { Metadata, Viewport } from "next"
-import { Inter, Playfair_Display, Anton } from "next/font/google"
+import type { Metadata } from "next"
+import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 
-const _inter = Inter({ subsets: ["latin"] })
-
-const _playfair = Playfair_Display({
-  subsets: ["latin"],
-  style: ["italic"],
-  weight: ["700"],
-})
-
-const _anton = Anton({
-  subsets: ["latin"],
-  weight: ["400"],
-})
+const _geist = Geist({ subsets: ["latin"] })
+const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "KRUNCH | Live Auction",
-  description: "Exclusive streetwear auctions - cop the heat before it's gone",
-    generator: 'v0.app'
-}
-
-export const viewport: Viewport = {
-  themeColor: "#080808",
-  width: "device-width",
-  initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  title: "Krunch - Exclusive Drops & Auctions",
+  description: "Discover and bid on exclusive streetwear, sneakers, and collectibles",
+  generator: "v0.app",
+  icons: {
+    icon: [
+      {
+        url: "/icon-light-32x32.png",
+        media: "(prefers-color-scheme: light)",
+      },
+      {
+        url: "/icon-dark-32x32.png",
+        media: "(prefers-color-scheme: dark)",
+      },
+      {
+        url: "/icon.svg",
+        type: "image/svg+xml",
+      },
+    ],
+    apple: "/apple-icon.png",
+  },
 }
 
 export default function RootLayout({
@@ -37,8 +36,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="bg-transparent">
-      <body className={`font-sans antialiased bg-transparent`}>
+    <html lang="ko" className="dark">
+      <body className={`font-sans antialiased bg-black`}>
         {children}
         <Analytics />
       </body>
