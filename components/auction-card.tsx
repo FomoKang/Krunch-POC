@@ -14,6 +14,13 @@ const formatNumber = (value: string): string => {
   return parseInt(numericValue, 10).toLocaleString("en-US")
 }
 
+interface BidLogEntry {
+  id: number
+  username: string
+  amount: number
+  time: string
+}
+
 export function AuctionCard() {
   const [offerAmount, setOfferAmount] = useState(formatNumber("1"))
   const [currentBid, setCurrentBid] = useState(2450000)
@@ -21,6 +28,7 @@ export function AuctionCard() {
   const [showConfetti, setShowConfetti] = useState(false)
   const [showPopup, setShowPopup] = useState(false)
   const [timeRemaining, setTimeRemaining] = useState(24 * 60 * 60) // 24 hours in seconds
+  const [bidLog, setBidLog] = useState<BidLogEntry[]>([])
 
   // Handle input change with formatting
   const handleOfferChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,6 +67,35 @@ export function AuctionCard() {
   }
 
   const handleSetOffer = () => {
+    // Parse the offer amount (remove commas)
+    const numericAmount = parseInt(offerAmount.replace(/,/g, ""), 10)
+    if (isNaN(numericAmount) || numericAmount <= 0) {
+      return
+    }
+
+    // Update current bid
+    setCurrentBid(numericAmount)
+    setBidPulse(true)
+    setTimeout(() => setBidPulse(false), 300)
+
+    // Add to bid log
+    const now = new Date()
+    const timeString = now.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    })
+    
+    const newBidEntry: BidLogEntry = {
+      id: Date.now(),
+      username: "You",
+      amount: numericAmount,
+      time: timeString,
+    }
+
+    setBidLog((prev) => [newBidEntry, ...prev].slice(0, 5)) // Keep only latest 5 entries
+
+    // Show confetti and popup
     setShowConfetti(true)
     setTimeout(() => {
       setShowPopup(true)
@@ -77,33 +114,41 @@ export function AuctionCard() {
       <Confetti active={showConfetti} />
       <SuccessPopup show={showPopup} onClose={handleClosePopup} amount={offerAmount} />
 
-      <div className="flex flex-col min-h-screen bg-background pb-[120px]">
+      <div className="flex flex-col min-h-screen bg-transparent pb-[120px]">
         <div className="relative flex-1">
           <div className="absolute inset-0">
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="fixed top-0 left-0 w-full h-full object-cover object-left -z-50"
+            >
+              <source src="/hero-bg.mp4" type="video/mp4" />
+            </video>
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-transparent" />
+          </div>
+
+          <div className="absolute top-4 left-4 z-50 relative">
             <Image
-              src="/images/image.png"
-              alt="PEACEMINUSONE Artist"
-              fill
-              className="object-cover object-top grayscale-hero"
-              priority
+              src="/logo-pink.png"
+              alt="Krunch Logo"
+              width={120}
+              height={40}
+              className="h-auto"
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/90" />
           </div>
 
-          <div className="absolute top-4 left-4 z-10">
-            <h1 className="font-serif italic text-2xl font-bold text-primary tracking-tight">Krunch</h1>
-          </div>
-
-          <div className="absolute top-4 right-4 z-10 bg-black/60 backdrop-blur-sm px-3 py-2 rounded-lg border border-primary/30">
+          <div className="absolute top-4 right-4 z-10 bg-black/30 backdrop-blur-md px-3 py-2 rounded-lg border border-primary/30">
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-sans">Current Bid</p>
             <p
-              className={`text-lg font-bold text-primary font-sans transition-transform ${bidPulse ? "animate-bid-pulse" : ""}`}
+              className={`text-lg font-bold text-primary font-sans transition-transform drop-shadow-md ${bidPulse ? "animate-bid-pulse" : ""}`}
             >
               ₩{currentBid.toLocaleString()}
             </p>
           </div>
 
-          <svg className="absolute bottom-32 left-4 w-28 h-36 z-10" viewBox="0 0 100 130" fill="none">
+          <svg className="absolute bottom-32 left-4 w-28 h-36 z-0" viewBox="0 0 100 130" fill="none">
             <ellipse
               cx="35"
               cy="30"
@@ -164,25 +209,35 @@ export function AuctionCard() {
           </svg>
         </div>
 
-        <div className="relative z-20 bg-card mx-4 mb-8 rounded-lg border border-border/50 overflow-hidden">
+        <div className="relative z-20 bg-black/30 mx-4 mb-8 rounded-lg border border-border/50 overflow-hidden">
           <div className="p-4 pb-3">
-            <h2 className="font-display text-5xl text-primary uppercase leading-[0.85] tracking-tight">GIVE</h2>
-            <h2 className="font-display text-5xl text-primary uppercase leading-[0.85] tracking-tight">AWAY</h2>
+            <h2 className="font-display text-5xl text-primary uppercase leading-[0.85] tracking-tight drop-shadow-md">GIVE</h2>
+            <h2 className="font-display text-5xl text-primary uppercase leading-[0.85] tracking-tight drop-shadow-md">AWAY</h2>
           </div>
 
           <div className="px-4 pb-3 flex items-center gap-6">
-            <div className="relative w-32 h-24 flex-shrink-0">
-              <Image src="/images/ubermensch-cap.jpg" alt="Übermensch Cap" fill className="object-contain" />
+            <div className="relative w-56 h-44 flex-shrink-0">
+              {/* 🔻 모자 이미지 대신 들어갈 영상 코드 (소리 끔) */}
+<video
+  src="/cap-spin.mp4"
+  autoPlay
+  loop
+  muted
+  playsInline
+  className="w-full h-full object-contain rounded-xl"
+/>
+{/* 🔺 object-contain: 박스 안에 비율 유지하며 쏙 들어가게 함 */}
+{/* 🔺 rounded-xl: 모서리를 둥글게 깎아서 예쁘게 만듦 */}
             </div>
             <div className="flex-1 flex justify-end">
-              <div className="font-display text-5xl font-bold text-primary neon-glow-subtle tracking-tight">
+              <div className="font-display text-5xl font-bold text-primary neon-glow-subtle tracking-tight drop-shadow-md">
                 {formatTime(timeRemaining)}
               </div>
             </div>
           </div>
 
           <div className="px-4 pb-3">
-            <p className="text-xs font-semibold text-foreground tracking-wide font-sans">PEACEMINUSONE</p>
+            <p className="text-xs font-semibold text-foreground tracking-wide font-sans drop-shadow-md">PEACEMINUSONE</p>
             <p className="text-xs text-muted-foreground mt-0.5 font-sans">Übermensch 2025 World Tour Special Merch</p>
             <p className="text-xs text-muted-foreground font-sans">Übermensch Cap (Burgundy) customized</p>
           </div>
@@ -190,7 +245,7 @@ export function AuctionCard() {
           <div className="mx-4 border-t border-primary/30" />
 
           <div className="p-4 pt-3">
-            <p className="text-sm font-medium text-foreground mb-2 font-sans">Your Offer</p>
+            <p className="text-sm font-medium text-foreground mb-2 font-sans drop-shadow-md">Your Offer</p>
 
             <div className="flex items-end gap-2 mb-4">
               <span className="text-xs text-muted-foreground pb-1 font-sans">KRW</span>
@@ -218,7 +273,7 @@ export function AuctionCard() {
                     e.preventDefault()
                   }
                 }}
-                className="flex-1 bg-transparent border-b border-primary/50 text-right text-4xl font-bold text-foreground focus:outline-none focus:border-primary pb-1 font-sans"
+                className="flex-1 bg-transparent border-b border-primary/50 text-right text-4xl font-bold text-foreground focus:outline-none focus:border-primary pb-1 font-sans drop-shadow-md"
               />
             </div>
 
@@ -230,6 +285,40 @@ export function AuctionCard() {
             </button>
           </div>
         </div>
+
+        {/* Bid Log */}
+        {bidLog.length > 0 && (
+          <div className="relative z-20 bg-black/10 mx-4 mb-8 rounded-lg border border-border/50 overflow-hidden">
+            <div className="p-4">
+              <h3 className="text-xs uppercase tracking-widest text-muted-foreground font-medium mb-3 font-sans">Log</h3>
+              <div className="space-y-1.5">
+                {bidLog.map((bid) => (
+                  <div
+                    key={bid.id}
+                    className={`flex items-center justify-between py-2 px-3 rounded-lg ${
+                      bidLog.indexOf(bid) === 0 ? "bg-primary/10 border border-primary/30 backdrop-blur-sm" : "bg-black/20 backdrop-blur-sm"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
+                        <span className="text-xs font-bold text-muted-foreground">{bid.username.charAt(0).toUpperCase()}</span>
+                      </div>
+                      <span className={`text-sm font-medium ${bidLog.indexOf(bid) === 0 ? "text-primary" : "text-foreground"} font-sans drop-shadow-md`}>
+                        {bid.username}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <span className={`text-sm font-bold ${bidLog.indexOf(bid) === 0 ? "text-primary" : "text-foreground"} font-sans drop-shadow-md`}>
+                        ₩{bid.amount.toLocaleString()}
+                      </span>
+                      <span className="text-xs text-muted-foreground ml-2 font-sans">{bid.time}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </>
   )

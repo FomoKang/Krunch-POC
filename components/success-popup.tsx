@@ -27,7 +27,7 @@ export function SuccessPopup({ show, onClose, amount }: SuccessPopupProps) {
 
         <p className="text-muted-foreground text-center mb-1 font-sans">Your offer has been placed</p>
 
-        <p className="text-3xl font-bold text-primary text-center mb-6 font-sans">₩{Number(amount).toLocaleString()}</p>
+        <p className="text-3xl font-bold text-primary text-center mb-6 font-sans">₩{Number(amount.replace(/,/g, "")).toLocaleString()}</p>
 
         <button
           onClick={onClose}
