@@ -29,6 +29,8 @@ export function AuctionCard() {
   const [showPopup, setShowPopup] = useState(false)
   const [timeRemaining, setTimeRemaining] = useState(24 * 60 * 60) // 24 hours in seconds
   const [bidLog, setBidLog] = useState<BidLogEntry[]>([])
+  const [showBidLog, setShowBidLog] = useState(false)
+  const [showAuctionCard, setShowAuctionCard] = useState(false)
 
   // Handle input change with formatting
   const handleOfferChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -114,32 +116,20 @@ export function AuctionCard() {
       <Confetti active={showConfetti} />
       <SuccessPopup show={showPopup} onClose={handleClosePopup} amount={offerAmount} />
 
-      <div className="flex flex-col min-h-screen bg-transparent pb-[120px]">
-        <div className="relative flex-1">
-          <div className="absolute inset-0">
-            <video
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="fixed top-0 left-0 w-full h-full object-cover object-left -z-50"
-            >
-              <source src="/hero-bg.mp4" type="video/mp4" />
-            </video>
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-transparent" />
-          </div>
-
-          <div className="absolute top-4 left-4 z-50 relative">
+      <div className="flex flex-col min-h-[100dvh] bg-transparent" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'calc(100px + env(safe-area-inset-bottom))' }}>
+        {/* Header Section - Fixed */}
+        <div className="relative z-50" style={{ minHeight: 'calc(4rem + env(safe-area-inset-top))' }}>
+          <div className="absolute top-4 left-4" style={{ top: 'calc(1rem + env(safe-area-inset-top))' }}>
             <Image
               src="/logo-pink.png"
               alt="Krunch Logo"
               width={120}
               height={40}
-              className="h-auto"
+              className="h-auto w-24 sm:w-[120px]"
             />
           </div>
 
-          <div className="absolute top-4 right-4 z-10 bg-black/30 backdrop-blur-md px-3 py-2 rounded-lg border border-primary/30">
+          <div className="absolute top-4 right-4 z-10 bg-black/30 backdrop-blur-md px-3 py-2 rounded-lg border border-primary/30" style={{ top: 'calc(1rem + env(safe-area-inset-top))' }}>
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-sans">Current Bid</p>
             <p
               className={`text-lg font-bold text-primary font-sans transition-transform drop-shadow-md ${bidPulse ? "animate-bid-pulse" : ""}`}
@@ -147,90 +137,41 @@ export function AuctionCard() {
               ₩{currentBid.toLocaleString()}
             </p>
           </div>
-
-          <svg className="absolute bottom-32 left-4 w-28 h-36 z-0" viewBox="0 0 100 130" fill="none">
-            <ellipse
-              cx="35"
-              cy="30"
-              rx="8"
-              ry="4"
-              stroke="#ffffff"
-              strokeWidth="1.2"
-              fill="none"
-              transform="rotate(-30 35 30)"
-            />
-            <ellipse
-              cx="35"
-              cy="30"
-              rx="8"
-              ry="4"
-              stroke="#ffffff"
-              strokeWidth="1.2"
-              fill="none"
-              transform="rotate(30 35 30)"
-            />
-            <ellipse
-              cx="35"
-              cy="30"
-              rx="8"
-              ry="4"
-              stroke="#ffffff"
-              strokeWidth="1.2"
-              fill="none"
-              transform="rotate(90 35 30)"
-            />
-            <circle cx="35" cy="30" r="3" stroke="#ffffff" strokeWidth="1.2" fill="none" />
-            <path
-              d="M35 38 Q30 55, 25 70"
-              stroke="#ffffff"
-              strokeWidth="1.2"
-              fill="none"
-              strokeLinecap="round"
-              className="signature-path"
-            />
-            <path
-              d="M15 85 Q35 70, 55 80 Q75 90, 60 100 Q45 110, 30 105"
-              stroke="#ffffff"
-              strokeWidth="1.2"
-              fill="none"
-              strokeLinecap="round"
-              className="signature-path"
-              style={{ animationDelay: "0.3s" }}
-            />
-            <path
-              d="M20 115 Q50 108, 70 115"
-              stroke="#ffffff"
-              strokeWidth="1.2"
-              fill="none"
-              strokeLinecap="round"
-              className="signature-path"
-              style={{ animationDelay: "0.6s" }}
-            />
-          </svg>
         </div>
 
-        <div className="relative z-20 bg-black/30 mx-4 mb-8 rounded-lg border border-border/50 overflow-hidden">
-          <div className="p-4 pb-3">
-            <h2 className="font-display text-5xl text-primary uppercase leading-[0.85] tracking-tight drop-shadow-md">GIVE</h2>
-            <h2 className="font-display text-5xl text-primary uppercase leading-[0.85] tracking-tight drop-shadow-md">AWAY</h2>
+        {/* Background Video */}
+        <div className="fixed inset-0 -z-50">
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full h-full object-cover object-left"
+          >
+            <source src="/hero-bg.mp4" type="video/mp4" />
+          </video>
+        </div>
+
+        {/* Main Content - 상품 정보 (항상 보임) */}
+        <div className="relative z-20 bg-black/30 mx-4 mb-4 mt-16 sm:mt-20 rounded-lg border border-border/50 overflow-hidden" style={{ marginLeft: 'max(1rem, env(safe-area-inset-left))', marginRight: 'max(1rem, env(safe-area-inset-right))' }}>
+          <div className="p-4 pb-3 sm:p-6">
+            <h2 className="font-display text-4xl sm:text-5xl text-primary uppercase leading-[0.85] tracking-tight drop-shadow-md">GIVE</h2>
+            <h2 className="font-display text-4xl sm:text-5xl text-primary uppercase leading-[0.85] tracking-tight drop-shadow-md">AWAY</h2>
           </div>
 
-          <div className="px-4 pb-3 flex items-center gap-6">
-            <div className="relative w-56 h-44 flex-shrink-0">
-              {/* 🔻 모자 이미지 대신 들어갈 영상 코드 (소리 끔) */}
-<video
-  src="/cap-spin.mp4"
-  autoPlay
-  loop
-  muted
-  playsInline
-  className="w-full h-full object-contain rounded-xl"
-/>
-{/* 🔺 object-contain: 박스 안에 비율 유지하며 쏙 들어가게 함 */}
-{/* 🔺 rounded-xl: 모서리를 둥글게 깎아서 예쁘게 만듦 */}
+          <div className="px-4 pb-3 flex items-center gap-4 sm:gap-6">
+            <div className="relative w-40 h-32 sm:w-56 sm:h-44 flex-shrink-0">
+              <video
+                src="/cap-spin.mp4"
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-full h-full object-contain rounded-xl"
+              />
             </div>
             <div className="flex-1 flex justify-end">
-              <div className="font-display text-5xl font-bold text-primary neon-glow-subtle tracking-tight drop-shadow-md">
+              <div className="font-display text-3xl sm:text-5xl font-bold text-primary neon-glow-subtle tracking-tight drop-shadow-md">
                 {formatTime(timeRemaining)}
               </div>
             </div>
@@ -243,82 +184,102 @@ export function AuctionCard() {
           </div>
 
           <div className="mx-4 border-t border-primary/30" />
-
-          <div className="p-4 pt-3">
-            <p className="text-sm font-medium text-foreground mb-2 font-sans drop-shadow-md">Your Offer</p>
-
-            <div className="flex items-end gap-2 mb-4">
-              <span className="text-xs text-muted-foreground pb-1 font-sans">KRW</span>
-              <input
-                type="text"
-                inputMode="numeric"
-                value={offerAmount}
-                onChange={handleOfferChange}
-                onKeyDown={(e) => {
-                  // Allow: backspace, delete, tab, escape, enter, and arrow keys
-                  if (
-                    [8, 9, 27, 13, 46, 37, 38, 39, 40].indexOf(e.keyCode) !== -1 ||
-                    // Allow Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
-                    (e.keyCode === 65 && e.ctrlKey === true) ||
-                    (e.keyCode === 67 && e.ctrlKey === true) ||
-                    (e.keyCode === 86 && e.ctrlKey === true) ||
-                    (e.keyCode === 88 && e.ctrlKey === true) ||
-                    // Allow: home, end, left, right
-                    (e.keyCode >= 35 && e.keyCode <= 40)
-                  ) {
-                    return
-                  }
-                  // Ensure that it is a number and stop the keypress if not
-                  if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
-                    e.preventDefault()
-                  }
-                }}
-                className="flex-1 bg-transparent border-b border-primary/50 text-right text-4xl font-bold text-foreground focus:outline-none focus:border-primary pb-1 font-sans drop-shadow-md"
-              />
-            </div>
-
-            <button
-              onClick={handleSetOffer}
-              className="w-full py-4 bg-primary text-primary-foreground font-bold text-lg uppercase tracking-widest transition-all hover:brightness-110 active:scale-[0.98] font-sans"
-            >
-              SET OFFER
-            </button>
-          </div>
         </div>
 
-        {/* Bid Log */}
-        {bidLog.length > 0 && (
-          <div className="relative z-20 bg-black/10 mx-4 mb-8 rounded-lg border border-border/50 overflow-hidden">
-            <div className="p-4">
-              <h3 className="text-xs uppercase tracking-widest text-muted-foreground font-medium mb-3 font-sans">Log</h3>
-              <div className="space-y-1.5">
-                {bidLog.map((bid) => (
-                  <div
-                    key={bid.id}
-                    className={`flex items-center justify-between py-2 px-3 rounded-lg ${
-                      bidLog.indexOf(bid) === 0 ? "bg-primary/10 border border-primary/30 backdrop-blur-sm" : "bg-black/20 backdrop-blur-sm"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
-                        <span className="text-xs font-bold text-muted-foreground">{bid.username.charAt(0).toUpperCase()}</span>
-                      </div>
-                      <span className={`text-sm font-medium ${bidLog.indexOf(bid) === 0 ? "text-primary" : "text-foreground"} font-sans drop-shadow-md`}>
-                        {bid.username}
-                      </span>
-                    </div>
-                    <div className="text-right">
-                      <span className={`text-sm font-bold ${bidLog.indexOf(bid) === 0 ? "text-primary" : "text-foreground"} font-sans drop-shadow-md`}>
-                        ₩{bid.amount.toLocaleString()}
-                      </span>
-                      <span className="text-xs text-muted-foreground ml-2 font-sans">{bid.time}</span>
-                    </div>
-                  </div>
-                ))}
+
+        {/* Bottom Sheet - 입찰 입력 폼만 */}
+        {showAuctionCard && (
+          <>
+            {/* Backdrop */}
+            <div 
+              className="fixed inset-0 bg-black/50 z-30"
+              onClick={() => setShowAuctionCard(false)}
+            />
+            {/* Input Form Sheet */}
+            <div 
+              className="fixed bottom-0 left-0 right-0 z-40 bg-black/30 rounded-t-2xl border-t border-l border-r border-border/50 overflow-hidden animate-slide-up-bottom-sheet"
+              style={{ 
+                marginLeft: 'max(0, env(safe-area-inset-left))', 
+                marginRight: 'max(0, env(safe-area-inset-right))',
+                paddingBottom: 'calc(100px + env(safe-area-inset-bottom))'
+              }}
+            >
+              {/* Close Button */}
+              <div className="flex justify-end p-4 pb-2">
+                <button
+                  onClick={() => setShowAuctionCard(false)}
+                  className="w-8 h-8 flex items-center justify-center rounded-full bg-black/50 hover:bg-black/70 transition-colors"
+                >
+                  <svg className="w-5 h-5 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="p-4 pt-0">
+                <p className="text-sm font-medium text-foreground mb-2 font-sans drop-shadow-md">Your Offer</p>
+
+                <div className="flex items-end gap-2 mb-4">
+                  <span className="text-xs text-muted-foreground pb-1 font-sans">KRW</span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={offerAmount}
+                    onChange={handleOfferChange}
+                    onKeyDown={(e) => {
+                      // Allow: backspace, delete, tab, escape, enter, and arrow keys
+                      if (
+                        [8, 9, 27, 13, 46, 37, 38, 39, 40].indexOf(e.keyCode) !== -1 ||
+                        // Allow Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+                        (e.keyCode === 65 && e.ctrlKey === true) ||
+                        (e.keyCode === 67 && e.ctrlKey === true) ||
+                        (e.keyCode === 86 && e.ctrlKey === true) ||
+                        (e.keyCode === 88 && e.ctrlKey === true) ||
+                        // Allow: home, end, left, right
+                        (e.keyCode >= 35 && e.keyCode <= 40)
+                      ) {
+                        return
+                      }
+                      // Ensure that it is a number and stop the keypress if not
+                      if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+                        e.preventDefault()
+                      }
+                    }}
+                    className="flex-1 bg-transparent border-b border-primary/50 text-right text-2xl sm:text-4xl font-bold text-foreground focus:outline-none focus:border-primary pb-1 font-sans drop-shadow-md"
+                  />
+                </div>
+
+                <button
+                  onClick={handleSetOffer}
+                  className="w-full py-4 bg-primary text-primary-foreground font-display font-medium text-lg uppercase tracking-wide transition-all hover:brightness-110 active:scale-[0.98]"
+                >
+                  SET OFFER
+                </button>
               </div>
             </div>
+          </>
+        )}
+
+        {/* Fixed Footer - Place Bid Button */}
+        {!showAuctionCard && (
+          <div 
+            className="fixed bottom-0 left-0 right-0 z-50 bg-black w-full"
+            style={{ 
+              height: 'calc(100px + env(safe-area-inset-bottom))',
+              paddingLeft: 'max(0, env(safe-area-inset-left))',
+              paddingRight: 'max(0, env(safe-area-inset-right))',
+              paddingBottom: 'env(safe-area-inset-bottom)'
+            }}
+          >
+            <button
+              onClick={() => setShowAuctionCard(true)}
+              className="w-full h-full flex items-center justify-center bg-primary text-primary-foreground font-display font-medium text-xl uppercase tracking-wide transition-all hover:brightness-110 active:scale-[0.98]"
+            >
+              PLACE BID
+            </button>
           </div>
         )}
+
       </div>
     </>
   )

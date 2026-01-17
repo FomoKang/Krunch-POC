@@ -68,7 +68,15 @@ export function LiveBidTicker() {
   }, [])
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-black/70 backdrop-blur-sm border-t border-primary/20">
+    <div 
+      className="fixed left-0 right-0 bg-black/70 backdrop-blur-sm border-t border-primary/20"
+      style={{ zIndex: 45 }}
+      style={{ 
+        bottom: 'calc(100px + env(safe-area-inset-bottom))',
+        paddingLeft: 'max(1rem, env(safe-area-inset-left))',
+        paddingRight: 'max(1rem, env(safe-area-inset-right))'
+      }}
+    >
       <div className="px-4 py-2 overflow-hidden">
         <div className="flex flex-col gap-1">
           {bids.map((bid) => (
