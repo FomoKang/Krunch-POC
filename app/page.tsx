@@ -100,8 +100,10 @@ const uniqueDrops = [
 
 export default function HomePage() {
   const [showSplash, setShowSplash] = useState(true)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
     // 스플래시 화면을 3초 후에 사라지게 함
     const timer = setTimeout(() => {
       setShowSplash(false)
@@ -110,7 +112,7 @@ export default function HomePage() {
     return () => clearTimeout(timer)
   }, [])
 
-  if (showSplash) {
+  if (!mounted || showSplash) {
     return <SplashScreen />
   }
 
