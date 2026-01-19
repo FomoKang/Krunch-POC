@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { Search, Bell, Home, Users, User } from "lucide-react"
+import { Search, Bell, Home, Users, User, Trophy } from "lucide-react"
 
 // Splash Screen Component
 function SplashScreen() {
@@ -222,10 +222,17 @@ export default function HomePage() {
 
       {/* 하단 탭바 */}
       <nav className="fixed bottom-0 left-0 right-0 bg-black/95 backdrop-blur-sm border-t border-white/10 z-50">
-        <div className="flex items-center justify-around py-3">
+        <div className="flex items-center justify-between px-4 py-3">
           <Link href="/" className="flex flex-col items-center gap-1 text-[#FF6B9D]">
             <Home className="w-6 h-6" />
             <span className="text-xs font-medium">Home</span>
+          </Link>
+          <Link
+            href="/ranking"
+            className="flex flex-col items-center gap-1 text-white/50 hover:text-white/80 transition-colors"
+          >
+            <Trophy className="w-6 h-6" />
+            <span className="text-xs font-medium">Ranking</span>
           </Link>
           <Link
             href="/community"
