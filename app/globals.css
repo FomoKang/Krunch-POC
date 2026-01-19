@@ -76,10 +76,11 @@
 }
 
 @theme inline {
-  --font-sans: "Inter", "Inter Fallback", system-ui, sans-serif;
+  --font-sans: var(--font-inter), "Inter", "Inter Fallback", system-ui, sans-serif;
   --font-mono: "Geist Mono", "Geist Mono Fallback";
   --font-serif: "Playfair Display", "Georgia", serif;
-  --font-display: "Anton", "Impact", "Arial Narrow", sans-serif;
+  --font-display: var(--font-anton), "Anton", "Impact", "Arial Narrow", sans-serif;
+  --font-hype: var(--font-syne), "Syne", system-ui, sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { Home, Trophy, Users, User, Settings, QrCode, Wallet, Shield, Star, ChevronRight } from "lucide-react"
+import { Home, Trophy, Users, User, Settings, QrCode, Wallet, Shield, Star, ChevronRight, Store, Search, Bell } from "lucide-react"
 
 // Fixed barcode widths (generated once)
 const barcodeWidths = [2,1,2,1,1,2,1,2,2,1,1,2,1,1,2,2,1,2,1,1,2,1,2,1,1,2,2,1,1,2]
@@ -94,20 +94,33 @@ export default function ProfilePage() {
         {/* Header */}
         <header className="sticky top-0 z-40 bg-black/80 backdrop-blur-md border-b border-white/10">
           <div className="flex items-center justify-between px-4 py-3">
-            <h1 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-              MY VAULT
-            </h1>
-            <button type="button" className="p-2 rounded-full hover:bg-white/10 transition-colors">
-              <Settings className="w-5 h-5 text-white/70" />
-            </button>
+            <Link href="/">
+              <Image src="/logo-pink.png" alt="Krunch" width={150} height={48} className="h-12 w-auto" />
+            </Link>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <User className="w-5 h-5 text-[#FF6B9D]" />
+                <span className="font-display text-lg tracking-wide text-white uppercase">My Vault</span>
+              </div>
+              <Link href="/search" className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                <Search className="w-5 h-5 text-white/80" />
+              </Link>
+              <Link href="/notifications" className="p-2 hover:bg-white/10 rounded-full transition-colors relative">
+                <Bell className="w-5 h-5 text-white/80" />
+                <span className="absolute top-1 right-1 w-2 h-2 bg-[#FF6B9D] rounded-full" />
+              </Link>
+              <button type="button" className="p-2 rounded-full hover:bg-white/10 transition-colors">
+                <Settings className="w-5 h-5 text-white/70" />
+              </button>
+            </div>
           </div>
         </header>
 
-        <main className="relative z-10 px-4 py-6 space-y-6">
+        <main className="relative z-10 px-4 py-4 space-y-4">
           {/* Holographic ID Card */}
           <div className="relative">
             <div 
-              className="relative rounded-2xl p-6 overflow-hidden"
+              className="relative rounded-2xl p-4 overflow-hidden"
               style={{
                 background: "linear-gradient(135deg, rgba(139,92,246,0.3) 0%, rgba(236,72,153,0.3) 50%, rgba(59,130,246,0.3) 100%)",
                 boxShadow: "0 0 40px rgba(139,92,246,0.3), inset 0 0 60px rgba(255,255,255,0.05)",
@@ -142,7 +155,7 @@ export default function ProfilePage() {
                 </div>
 
                 {/* User info */}
-                <div className="flex items-center gap-4 mb-6">
+                <div className="flex items-center gap-4 mb-4">
                   <div className="relative">
                     <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 p-0.5">
                       <div className="w-full h-full rounded-full bg-black flex items-center justify-center">
@@ -165,7 +178,7 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Barcode */}
-                <div className="flex items-center gap-1 mb-4 opacity-60">
+                <div className="flex items-center gap-1 mb-3 opacity-60">
                   {barcodeWidths.map((w, i) => (
                     <div 
                       key={i} 
@@ -179,7 +192,7 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Stats row */}
-                <div className="flex items-center justify-between pt-4 border-t border-white/10">
+                <div className="flex items-center justify-between pt-3 border-t border-white/10">
                   {userStats.map((stat, index) => (
                     <div key={index} className="text-center">
                       <p className="text-lg font-bold">{stat.value}</p>
@@ -193,7 +206,7 @@ export default function ProfilePage() {
 
           {/* K-Point Balance */}
           <div 
-            className="rounded-xl p-5 border border-white/10"
+            className="rounded-xl p-4 border border-white/10"
             style={{
               background: "linear-gradient(135deg, rgba(0,0,0,0.8) 0%, rgba(30,20,40,0.8) 100%)",
             }}
@@ -215,7 +228,7 @@ export default function ProfilePage() {
           </div>
 
           {/* The Vault - Won Items */}
-          <section>
+          <section className="pt-2">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold flex items-center gap-2">
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">THE VAULT</span>
@@ -244,34 +257,36 @@ export default function ProfilePage() {
                       transformStyle: "preserve-3d",
                     }}
                   >
-                    {/* Background with concert stage effect */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-purple-900/50 via-black to-pink-900/50">
-                      <div className="absolute inset-0 opacity-30">
-                        {/* Spotlight effects */}
-                        <div 
-                          className="absolute top-0 left-1/4 w-20 h-full bg-gradient-to-b from-purple-500/40 to-transparent"
+                    {/* Background with stage effect */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-purple-950/60 to-transparent">
+                      {/* Stage floor */}
+                      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[110%] h-10 bg-gradient-to-t from-black via-purple-900/50 to-transparent rounded-[50%]" />
+                      {/* Spotlights */}
+                      <div className="absolute inset-0 opacity-40">
+                        <div
+                          className="absolute top-[-10%] left-1/4 w-24 h-full bg-gradient-to-b from-purple-500/50 to-transparent"
                           style={{
-                            transform: "rotate(-15deg)",
+                            transform: "rotate(-18deg)",
                             animation: "spotlight1 4s ease-in-out infinite",
                           }}
                         />
-                        <div 
-                          className="absolute top-0 right-1/4 w-16 h-full bg-gradient-to-b from-pink-500/40 to-transparent"
+                        <div
+                          className="absolute top-[-10%] right-1/4 w-20 h-full bg-gradient-to-b from-pink-500/50 to-transparent"
                           style={{
-                            transform: "rotate(15deg)",
+                            transform: "rotate(18deg)",
                             animation: "spotlight2 5s ease-in-out infinite",
                           }}
                         />
                       </div>
                     </div>
 
-                    {/* Item image */}
-                    <div className="relative aspect-square p-4">
+                    {/* Item image on stage */}
+                    <div className="relative aspect-[4/5] px-4 pt-4 pb-6 flex items-center justify-center">
                       <Image
                         src={item.image || "/placeholder.svg"}
                         alt={item.name}
                         fill
-                        className="object-cover rounded-lg"
+                        className="object-contain rounded-lg drop-shadow-[0_12px_25px_rgba(0,0,0,0.9)]"
                       />
                       
                       {/* Verified badge */}
@@ -298,7 +313,7 @@ export default function ProfilePage() {
                       <p className="text-xs text-pink-400">{item.artist}</p>
                       <div className="flex items-center justify-between mt-2">
                         <p className="text-xs text-white/50">{item.date}</p>
-                        <p className="text-xs font-mono text-green-400">{item.price}</p>
+                        <p className="text-xs font-mono text-[#FF6B9D]">{item.price}</p>
                       </div>
                     </div>
 
@@ -320,17 +335,17 @@ export default function ProfilePage() {
           {/* Quick Actions */}
           <section className="grid grid-cols-3 gap-3">
             {[
-              { icon: Wallet, label: "Charge", color: "from-green-500 to-emerald-600" },
-              { icon: Trophy, label: "Badges", color: "from-yellow-500 to-orange-600" },
-              { icon: Settings, label: "Settings", color: "from-gray-500 to-gray-600" },
+              { icon: Wallet, label: "Charge", iconColor: "text-white/80" },
+              { icon: Trophy, label: "Badges", iconColor: "text-white/80" },
+              { icon: Settings, label: "Settings", iconColor: "text-white/80" },
             ].map((action, index) => (
               <button
                 key={index}
                 type="button"
                 className="flex flex-col items-center gap-2 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
               >
-                <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${action.color} flex items-center justify-center`}>
-                  <action.icon className="w-5 h-5 text-white" />
+                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+                  <action.icon className={`w-5 h-5 ${action.iconColor}`} />
                 </div>
                 <span className="text-xs text-white/70">{action.label}</span>
               </button>
@@ -352,6 +367,10 @@ export default function ProfilePage() {
             <Link href="/community" className="flex flex-col items-center gap-1 text-white/50 hover:text-white/80 transition-colors">
               <Users className="w-6 h-6" />
               <span className="text-xs font-medium">Community</span>
+            </Link>
+            <Link href="/market" className="flex flex-col items-center gap-1 text-white/50 hover:text-white/80 transition-colors">
+              <Store className="w-6 h-6" />
+              <span className="text-xs font-medium">2nd Market</span>
             </Link>
             <Link href="/profile" className="flex flex-col items-center gap-1 text-[#FF6B9D]">
               <User className="w-6 h-6" />

@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { Search, Bell, Home, Trophy, Users, User, MessageCircle, Flame, Zap } from "lucide-react"
+import { Search, Bell, Home, Trophy, Users, User, MessageCircle, Flame, Zap, Store } from "lucide-react"
 
 // Fashion Battle 데이터
 const fashionBattles = [
@@ -250,8 +250,14 @@ export default function CommunityPage() {
       {/* 상단 네비게이션 */}
       <header className="sticky top-0 z-50 bg-black/90 backdrop-blur-sm border-b border-white/5">
         <div className="flex items-center justify-between px-4 py-3">
-          <Image src="/logo-pink.png" alt="Krunch" width={100} height={32} className="h-8 w-auto" />
+          <Link href="/">
+            <Image src="/logo-pink.png" alt="Krunch" width={150} height={48} className="h-12 w-auto" />
+          </Link>
           <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-[#FF6B9D]" />
+              <span className="font-display text-lg tracking-wide text-white uppercase">Community</span>
+            </div>
             <Link href="/search" className="p-2 hover:bg-white/10 rounded-full transition-colors">
               <Search className="w-5 h-5 text-white/80" />
             </Link>
@@ -266,7 +272,7 @@ export default function CommunityPage() {
       <main className="px-4 py-6">
         {/* 페이지 타이틀 */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+          <h1 className="font-display text-3xl tracking-wide text-white uppercase italic flex items-center gap-2">
             FASHION ARENA
             <Zap className="w-6 h-6 text-yellow-400" />
           </h1>
@@ -295,6 +301,10 @@ export default function CommunityPage() {
           <Link href="/community" className="flex flex-col items-center gap-1 text-[#FF6B9D]">
             <Users className="w-6 h-6" />
             <span className="text-xs font-medium">Community</span>
+          </Link>
+          <Link href="/market" className="flex flex-col items-center gap-1 text-white/50 hover:text-white/80 transition-colors">
+            <Store className="w-6 h-6" />
+            <span className="text-xs font-medium">2nd Market</span>
           </Link>
           <Link href="/profile" className="flex flex-col items-center gap-1 text-white/50 hover:text-white/80 transition-colors">
             <User className="w-6 h-6" />

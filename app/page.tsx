@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { Search, Bell, Home, Users, User, Trophy } from "lucide-react"
+import { Search, Bell, Home, Users, User, Trophy, Store } from "lucide-react"
 
 // Splash Screen Component
 function SplashScreen() {
@@ -121,7 +121,9 @@ export default function HomePage() {
       {/* 상단 네비게이션 */}
       <header className="sticky top-0 z-50 bg-black/90 backdrop-blur-sm border-b border-white/5">
         <div className="flex items-center justify-between px-4 py-3">
-          <Image src="/logo-pink.png" alt="Krunch" width={100} height={32} className="h-8 w-auto" />
+          <Link href="/">
+            <Image src="/logo-pink.png" alt="Krunch" width={150} height={48} className="h-12 w-auto" />
+          </Link>
           <div className="flex items-center gap-4">
             <Link href="/search" className="p-2 hover:bg-white/10 rounded-full transition-colors">
               <Search className="w-5 h-5 text-white/80" />
@@ -137,7 +139,7 @@ export default function HomePage() {
       <main className="px-4 py-6 space-y-8">
         {/* LEGEND DROP 섹션 */}
         <section>
-          <h2 className="text-xl font-bold text-[#FF6B9D] mb-4 tracking-wider">LEGEND DROP</h2>
+          <h2 className="font-display text-3xl tracking-wide text-white uppercase italic mb-4">LEGEND DROP</h2>
           <Link href="/auction" className="block">
             <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-[#2a1a1a] to-[#1a0a0a] border border-white/10">
               {/* 배경 이미지 오버레이 */}
@@ -194,31 +196,44 @@ export default function HomePage() {
 
         {/* UNIQUE DROPS 섹션 */}
         <section>
-          <h2 className="text-xl font-bold text-white mb-4 tracking-wider">UNIQUE DROPS</h2>
+          <h2 className="font-display text-3xl tracking-wide text-white uppercase italic mb-4">UNIQUE DROPS</h2>
           <div className="grid grid-cols-2 gap-3">
-            {uniqueDrops.map((item) => (
-              <div
-                key={item.id}
-                className="bg-[#1a1a1a] rounded-xl overflow-hidden border border-[#FF6B9D]/30 hover:border-[#FF6B9D]/50 transition-colors"
-              >
-                <div className="relative aspect-[4/3] bg-transparent">
-                  <Image src={item.image || "/placeholder.svg"} alt={item.name} fill className="object-cover" />
+            {uniqueDrops.map((item) => {
+              const isFelix = item.id === 4
+
+              return (
+                <div
+                  key={item.id}
+                  className="bg-[#1a1a1a] rounded-xl overflow-hidden border border-[#FF6B9D]/30 hover:border-[#FF6B9D]/50 transition-colors"
+                >
+                  <div className="relative aspect-[4/3] bg-transparent">
+                    <Image
+                      src={item.image || "/placeholder.svg"}
+                      alt={item.name}
+                      fill
+                      className={
+                        isFelix
+                          ? "object-cover"
+                          : "object-contain scale-[0.92] translate-x-2 translate-y-2"
+                      }
+                    />
+                  </div>
+                  <div className="p-3">
+                    <h3 className="text-white text-sm font-medium line-clamp-1">{item.name}</h3>
+                    <p className="text-white/40 text-xs mt-0.5 italic">{item.subtitle}</p>
+                    <p className="text-[#FF6B9D] text-xs mt-2 font-medium">
+                      {item.status === "Coming Soon"
+                        ? "Coming Soon"
+                        : item.status === "Live Now"
+                          ? "Live Now"
+                          : item.status === "Sold Out"
+                            ? "Sold Out"
+                            : item.date}
+                    </p>
+                  </div>
                 </div>
-                <div className="p-3">
-                  <h3 className="text-white text-sm font-medium line-clamp-1">{item.name}</h3>
-                  <p className="text-white/40 text-xs mt-0.5 italic">{item.subtitle}</p>
-                  <p className="text-[#FF6B9D] text-xs mt-2 font-medium">
-                    {item.status === "Coming Soon" 
-                      ? "Coming Soon" 
-                      : item.status === "Live Now"
-                      ? "Live Now"
-                      : item.status === "Sold Out"
-                      ? "Sold Out"
-                      : item.date}
-                  </p>
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </section>
       </main>
@@ -243,6 +258,13 @@ export default function HomePage() {
           >
             <Users className="w-6 h-6" />
             <span className="text-xs font-medium">Community</span>
+          </Link>
+          <Link
+            href="/market"
+            className="flex flex-col items-center gap-1 text-white/50 hover:text-white/80 transition-colors"
+          >
+            <Store className="w-6 h-6" />
+            <span className="text-xs font-medium">2nd Market</span>
           </Link>
           <Link
             href="/profile"

@@ -124,6 +124,9 @@ export function AuctionCard() {
             <Image
               src="/logo-pink.png"
               alt="Krunch Logo"
+              width={150}
+              height={48}
+              className="h-12 w-auto"
               width={120}
               height={40}
               className="h-auto w-24 sm:w-[120px] cursor-pointer hover:opacity-80 transition-opacity"
