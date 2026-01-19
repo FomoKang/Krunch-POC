@@ -29,7 +29,7 @@ export default function SecondMarketPage() {
         </div>
       </header>
 
-      <main className="px-4 py-10 flex flex-col items-center justify-center text-center gap-4">
+      <main className="px-4 flex flex-col items-center justify-center text-center gap-4 min-h-[calc(100vh-200px)]">
         <div className="w-16 h-16 rounded-2xl bg-[#1a1a1a] border border-[#FF6B9D]/40 flex items-center justify-center shadow-lg shadow-[#FF6B9D]/20">
           <Store className="w-8 h-8 text-[#FF6B9D]" />
         </div>

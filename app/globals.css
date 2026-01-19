@@ -188,6 +188,55 @@
   animation: confetti-fall linear forwards;
 }
 
+/* Premium confetti animation with physics */
+@keyframes confetti-fall-premium {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(var(--velocity-x, 0) * 100), calc(100vh + 200px)) rotate(var(--rotation, 1080deg)) scale(0.8);
+    opacity: 0;
+  }
+}
+
+/* Checkmark draw animation */
+@keyframes checkmark-draw {
+  0% {
+    stroke-dashoffset: 24;
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+/* Popup scale animation */
+@keyframes popup-scale {
+  0% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-popup-scale {
+  animation: popup-scale 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
 /* Profile page animations */
 @keyframes shimmer {
   0%, 100% { transform: translateX(-100%); }
@@ -203,4 +252,5 @@
   0%, 100% { transform: rotate(15deg) translateX(10px); }
   50% { transform: rotate(15deg) translateX(-10px); }
 }
+
 

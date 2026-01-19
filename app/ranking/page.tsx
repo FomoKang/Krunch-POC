@@ -3,44 +3,58 @@
 import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Home, Trophy, Users, User, ChevronRight, Sparkles, Flame, Zap, Store, Search, Bell } from "lucide-react"
+import { Home, Trophy, Users, User, ChevronRight, Sparkles, Flame, Zap, Store, Search, Bell, Star, Crown } from "lucide-react"
 
 // Artist Rank Data
 const artistRankData = [
   {
     rank: 1,
     name: "G-DRAGON",
-    avatar: "/images/gd-avatar.png",
+    avatar: "/images/gd-avatar.jpg",
     totalSales: 2847000000,
     itemsSold: 47,
   },
   {
     rank: 2,
+    name: "JENNIE",
+    avatar: "/images/jennie-avatar.jpg",
+    totalSales: 2150000000,
+    itemsSold: 38,
+  },
+  {
+    rank: 3,
     name: "SON HEUNG MIN",
     avatar: "/images/son-avatar.png",
     totalSales: 1923000000,
     itemsSold: 32,
   },
   {
-    rank: 3,
+    rank: 4,
     name: "GONG YOO",
-    avatar: "/images/gong-avatar.png",
+    avatar: "/images/gong-avatar.jpg",
     totalSales: 1456000000,
     itemsSold: 28,
   },
   {
-    rank: 4,
+    rank: 5,
     name: "FELIX",
-    avatar: "/images/felix-avatar.png",
+    avatar: "/images/felix-avatar.jpg",
     totalSales: 987000000,
     itemsSold: 19,
   },
   {
-    rank: 5,
+    rank: 6,
     name: "PARK GYU YOUNG",
     avatar: "/images/park-avatar.png",
     totalSales: 654000000,
     itemsSold: 15,
+  },
+  {
+    rank: 7,
+    name: "KARINA",
+    avatar: "/images/karina-avatar.jpg",
+    totalSales: 542000000,
+    itemsSold: 12,
   },
 ]
 
@@ -50,7 +64,8 @@ const topCollectorsData = [
     rank: 1,
     userId: "VIP_Dragon_01",
     artistFan: "G-DRAGON",
-    badge: "LEGENDARY",
+    avatar: "/images/collector1-avatar.jpg",
+    badge: "2 LEGEND 3 UNIQUE",
     totalSpent: 847000000,
     itemsOwned: 23,
   },
@@ -58,7 +73,8 @@ const topCollectorsData = [
     rank: 2,
     userId: "SonnyLover7",
     artistFan: "SON HEUNG MIN",
-    badge: "EPIC",
+    avatar: "/images/collector2-avatar.jpg",
+    badge: "1 LEGEND 7 UNIQUE",
     totalSpent: 523000000,
     itemsOwned: 18,
   },
@@ -66,7 +82,8 @@ const topCollectorsData = [
     rank: 3,
     userId: "GoblinHunter",
     artistFan: "GONG YOO",
-    badge: "EPIC",
+    avatar: "/images/collector3-avatar.jpg",
+    badge: "5 UNIQUE",
     totalSpent: 412000000,
     itemsOwned: 14,
   },
@@ -74,7 +91,8 @@ const topCollectorsData = [
     rank: 4,
     userId: "StayForever_",
     artistFan: "FELIX",
-    badge: "RARE",
+    avatar: "/images/collector4-avatar.jpg",
+    badge: "3 UNIQUE",
     totalSpent: 298000000,
     itemsOwned: 11,
   },
@@ -82,7 +100,8 @@ const topCollectorsData = [
     rank: 5,
     userId: "SquidFanatic",
     artistFan: "PARK GYU YOUNG",
-    badge: "RARE",
+    avatar: "/images/collector5-avatar.jpg",
+    badge: "1 UNIQUE",
     totalSpent: 187000000,
     itemsOwned: 8,
   },
@@ -99,16 +118,15 @@ function formatKRW(num: number) {
 }
 
 function getBadgeStyle(badge: string) {
-  switch (badge) {
-    case "LEGENDARY":
-      return "bg-gradient-to-r from-amber-400 via-yellow-500 to-orange-500 text-black shadow-lg shadow-amber-500/50"
-    case "EPIC":
-      return "bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/50"
-    case "RARE":
-      return "bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 text-white shadow-lg shadow-cyan-500/50"
-    default:
-      return "bg-zinc-600 text-white"
+  // LEGEND와 UNIQUE가 모두 있으면 골드+핑크 그라데이션, LEGEND만 있으면 골드, UNIQUE만 있으면 핑크
+  if (badge.includes("LEGEND") && badge.includes("UNIQUE")) {
+    return "bg-gradient-to-r from-amber-400 via-yellow-500 to-[#FF6B9D] text-white shadow-lg shadow-amber-500/50"
+  } else if (badge.includes("LEGEND")) {
+    return "bg-gradient-to-r from-amber-400 via-yellow-500 to-orange-500 text-black shadow-lg shadow-amber-500/50"
+  } else if (badge.includes("UNIQUE")) {
+    return "bg-gradient-to-r from-[#FF6B9D] via-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/50"
   }
+  return "bg-zinc-600 text-white"
 }
 
 export default function RankingPage() {
@@ -291,9 +309,9 @@ export default function RankingPage() {
         </div>
       ) : (
         <div className="px-4 pt-8 space-y-4 relative z-10">
-          <div className="flex items-center gap-2 mb-6">
-            <Zap className="w-5 h-5 text-yellow-400" />
-            <p className="text-white/60 text-sm uppercase tracking-widest font-bold">Top Fans by Artist</p>
+          <div className="flex items-center gap-3 mb-6">
+            <Crown className="w-5 h-5 text-[#FF6B9D]" />
+            <p className="text-white font-display text-lg tracking-wide font-medium">Top Fans by Artist</p>
           </div>
           {topCollectorsData.map((collector) => (
             <div
@@ -311,19 +329,30 @@ export default function RankingPage() {
               
               <div className="flex items-center justify-between mb-4 relative z-10">
                 <div className="flex items-center gap-4">
-                  <span
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-black shadow-lg transition-transform group-hover:scale-110 ${
-                      collector.rank === 1
-                        ? "bg-gradient-to-br from-amber-400 via-yellow-400 to-orange-500 text-black shadow-amber-400/50"
-                        : collector.rank === 2
-                          ? "bg-gradient-to-br from-slate-400 to-slate-600 text-black shadow-slate-400/50"
-                          : collector.rank === 3
-                            ? "bg-gradient-to-br from-amber-700 to-amber-900 text-white shadow-amber-700/50"
-                            : "bg-white/10 text-white/60"
-                    }`}
-                  >
-                    {collector.rank}
-                  </span>
+                  <div className="relative">
+                    <span
+                      className={`absolute -top-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-xs font-black shadow-lg z-10 ${
+                        collector.rank === 1
+                          ? "bg-gradient-to-br from-amber-400 via-yellow-400 to-orange-500 text-black shadow-amber-400/50"
+                          : collector.rank === 2
+                            ? "bg-gradient-to-br from-slate-400 to-slate-600 text-black shadow-slate-400/50"
+                            : collector.rank === 3
+                              ? "bg-gradient-to-br from-amber-700 to-amber-900 text-white shadow-amber-700/50"
+                              : "bg-white/10 text-white/60"
+                      }`}
+                    >
+                      {collector.rank}
+                    </span>
+                    <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-white/20 group-hover:ring-[#FF6B9D]/50 transition-all">
+                      <Image
+                        src={collector.avatar || "/placeholder-user.jpg"}
+                        alt={collector.userId}
+                        width={48}
+                        height={48}
+                        className="object-cover w-full h-full"
+                      />
+                    </div>
+                  </div>
                   <div>
                     <p className="text-white font-bold text-base group-hover:text-[#FF6B9D] transition-colors">{collector.userId}</p>
                     <p className="text-white/50 text-xs font-medium">{collector.artistFan}&apos;s No.1 Fan</p>

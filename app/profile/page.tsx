@@ -1,43 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Home, Trophy, Users, User, Settings, QrCode, Wallet, Shield, Star, ChevronRight, Store, Search, Bell } from "lucide-react"
 
-// Fixed barcode widths (generated once)
-const barcodeWidths = [2,1,2,1,1,2,1,2,2,1,1,2,1,1,2,2,1,2,1,1,2,1,2,1,1,2,2,1,1,2]
 
 export default function ProfilePage() {
-  const [displayPoints, setDisplayPoints] = useState(530000)
   const [hoveredItem, setHoveredItem] = useState<number | null>(null)
-  const [hasAnimated, setHasAnimated] = useState(false)
-
-  // K-Point ticker animation - runs only once on mount, super fast
-  useEffect(() => {
-    if (hasAnimated) return
-    
-    const targetPoints = 530000
-    const duration = 500 // 0.5초만에 완료
-    const steps = 20
-    const increment = targetPoints / steps
-    let current = 0
-    
-    setDisplayPoints(0)
-    
-    const timer = setInterval(() => {
-      current += increment
-      if (current >= targetPoints) {
-        setDisplayPoints(targetPoints)
-        clearInterval(timer)
-        setHasAnimated(true)
-      } else {
-        setDisplayPoints(Math.floor(current))
-      }
-    }, duration / steps)
-    
-    return () => clearInterval(timer)
-  }, [hasAnimated])
 
   // Won items data
   const wonItems = [
@@ -45,7 +15,7 @@ export default function ProfilePage() {
       id: 1,
       name: "PEACEMINUSONE Cap",
       artist: "G-DRAGON",
-      image: "/images/gd-avatar.png",
+      image: "/cap-spin.mp4",
       date: "2025.12.15",
       price: "₩6,733,184",
     },
@@ -53,23 +23,23 @@ export default function ProfilePage() {
       id: 2,
       name: "Burberry Trench",
       artist: "SON HEUNG MIN",
-      image: "/images/son-avatar.png",
+      image: "/son-burberry.png",
       date: "2025.11.28",
       price: "₩4,250,000",
     },
     {
       id: 3,
-      name: "Louis Vuitton Jacket",
+      name: "The Recruiter Suit",
       artist: "GONG YOO",
-      image: "/images/gong-avatar.png",
+      image: "/gongyoo-suit.png",
       date: "2025.10.05",
       price: "₩8,900,000",
     },
     {
       id: 4,
-      name: "Human Made Tee",
+      name: "Human Made Heart Tee",
       artist: "FELIX",
-      image: "/images/felix-avatar.png",
+      image: "/felix-human.png",
       date: "2025.09.20",
       price: "₩1,850,000",
     },
@@ -145,9 +115,15 @@ export default function ProfilePage() {
               <div className="relative z-10">
                 {/* Top row */}
                 <div className="flex items-start justify-between mb-6">
-                  <div>
-                    <p className="text-xs text-white/50 mb-1">MEMBER ID</p>
-                    <p className="text-lg font-mono tracking-wider">KR-2024-00847</p>
+                  <div className="flex items-start gap-6">
+                    <div>
+                      <p className="text-xs text-white/50 mb-1 uppercase tracking-wider">MEMBER ID</p>
+                      <p className="text-lg font-mono tracking-wider">KR-2024-00847</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-white/50 mb-1 uppercase tracking-wider">K-Point</p>
+                      <p className="text-lg font-mono text-orange-400 tracking-wider">530,000</p>
+                    </div>
                   </div>
                   <div className="flex items-center gap-2 bg-black/30 rounded-lg px-3 py-2">
                     <QrCode className="w-8 h-8 text-white/80" />
@@ -157,38 +133,29 @@ export default function ProfilePage() {
                 {/* User info */}
                 <div className="flex items-center gap-4 mb-4">
                   <div className="relative">
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 p-0.5">
-                      <div className="w-full h-full rounded-full bg-black flex items-center justify-center">
-                        <User className="w-8 h-8 text-white/80" />
-                      </div>
-                    </div>
-                    <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full p-1">
-                      <Star className="w-3 h-3 text-black" fill="black" />
+                    <div className="w-16 h-16 rounded-full overflow-hidden ring-2 ring-purple-500/50 bg-black/20">
+                      <img
+                        src="/profile-avatar.jpg"
+                        alt="Fomo_KR"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          // Fallback to images folder if root doesn't work
+                          const target = e.target as HTMLImageElement
+                          if (target.src.includes('/profile-avatar.jpg') && !target.src.includes('/images/')) {
+                            target.src = '/images/profile-avatar.jpg'
+                          }
+                        }}
+                      />
                     </div>
                   </div>
                   <div>
-                    <p className="font-bold text-lg">HYPEBEAST_KR</p>
+                    <p className="font-display text-lg tracking-wide uppercase">Fomo_KR</p>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-xs px-2 py-0.5 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 font-semibold">
                         LEVEL 3
                       </span>
-                      <span className="text-xs text-pink-400 font-medium">HYPE BEAST</span>
                     </div>
                   </div>
-                </div>
-
-                {/* Barcode */}
-                <div className="flex items-center gap-1 mb-3 opacity-60">
-                  {barcodeWidths.map((w, i) => (
-                    <div 
-                      key={i} 
-                      className="bg-white" 
-                      style={{ 
-                        width: `${w}px`, 
-                        height: "24px" 
-                      }} 
-                    />
-                  ))}
                 </div>
 
                 {/* Stats row */}
@@ -204,34 +171,12 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* K-Point Balance */}
-          <div 
-            className="rounded-xl p-4 border border-white/10"
-            style={{
-              background: "linear-gradient(135deg, rgba(0,0,0,0.8) 0%, rgba(30,20,40,0.8) 100%)",
-            }}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
-                  <Wallet className="w-6 h-6 text-black" />
-                </div>
-                <div>
-                  <p className="text-xs text-white/50">Available Balance</p>
-                  <p className="text-2xl font-bold font-mono">
-                    K-Point: <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400">{displayPoints.toLocaleString()}</span>
-                  </p>
-                </div>
-              </div>
-              <ChevronRight className="w-5 h-5 text-white/30" />
-            </div>
-          </div>
 
           {/* The Vault - Won Items */}
           <section className="pt-2">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold flex items-center gap-2">
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">THE VAULT</span>
+              <h2 className="text-lg font-display tracking-wide flex items-center gap-2">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 uppercase">MY VAULT</span>
                 <span className="text-xs text-white/50 font-normal">Won Items</span>
               </h2>
               <button type="button" className="text-xs text-pink-400 hover:text-pink-300 transition-colors">
@@ -282,12 +227,23 @@ export default function ProfilePage() {
 
                     {/* Item image on stage */}
                     <div className="relative aspect-[4/5] px-4 pt-4 pb-6 flex items-center justify-center">
-                      <Image
-                        src={item.image || "/placeholder.svg"}
-                        alt={item.name}
-                        fill
-                        className="object-contain rounded-lg drop-shadow-[0_12px_25px_rgba(0,0,0,0.9)]"
-                      />
+                      {item.image.endsWith('.mp4') ? (
+                        <video
+                          src={item.image}
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
+                          className="w-full h-full object-contain rounded-lg drop-shadow-[0_12px_25px_rgba(0,0,0,0.9)]"
+                        />
+                      ) : (
+                        <Image
+                          src={item.image || "/placeholder.svg"}
+                          alt={item.name}
+                          fill
+                          className="object-contain rounded-lg drop-shadow-[0_12px_25px_rgba(0,0,0,0.9)]"
+                        />
+                      )}
                       
                       {/* Verified badge */}
                       <div className="absolute top-2 right-2 flex items-center gap-1 bg-gradient-to-r from-yellow-600 to-yellow-500 rounded-full px-2 py-1">
