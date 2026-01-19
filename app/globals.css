@@ -187,6 +187,19 @@
   animation: confetti-fall linear forwards;
 }
 
+/* Profile page animations */
+@keyframes shimmer {
+  0%, 100% { transform: translateX(-100%); }
+  50% { transform: translateX(100%); }
+}
 
+@keyframes spotlight1 {
+  0%, 100% { transform: rotate(-15deg) translateX(-10px); }
+  50% { transform: rotate(-15deg) translateX(10px); }
+}
 
+@keyframes spotlight2 {
+  0%, 100% { transform: rotate(15deg) translateX(10px); }
+  50% { transform: rotate(15deg) translateX(-10px); }
+}
 

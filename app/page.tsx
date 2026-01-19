@@ -123,13 +123,13 @@ export default function HomePage() {
         <div className="flex items-center justify-between px-4 py-3">
           <Image src="/logo-pink.png" alt="Krunch" width={100} height={32} className="h-8 w-auto" />
           <div className="flex items-center gap-4">
-            <button className="p-2 hover:bg-white/10 rounded-full transition-colors">
+            <Link href="/search" className="p-2 hover:bg-white/10 rounded-full transition-colors">
               <Search className="w-5 h-5 text-white/80" />
-            </button>
-            <button className="p-2 hover:bg-white/10 rounded-full transition-colors relative">
+            </Link>
+            <Link href="/notifications" className="p-2 hover:bg-white/10 rounded-full transition-colors relative">
               <Bell className="w-5 h-5 text-white/80" />
               <span className="absolute top-1 right-1 w-2 h-2 bg-[#FF6B9D] rounded-full" />
-            </button>
+            </Link>
           </div>
         </div>
       </header>
@@ -147,7 +147,10 @@ export default function HomePage() {
                 {/* Live Now 뱃지 */}
                 <div className="flex items-center gap-2 mb-4">
                   <span className="flex items-center gap-1.5 bg-[#FF6B9D] text-black text-xs font-bold px-3 py-1 rounded-full">
-                    <span className="w-2 h-2 bg-black rounded-full animate-pulse" />
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-600 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-red-600" />
+                    </span>
                     LIVE NOW
                   </span>
                 </div>
@@ -222,7 +225,7 @@ export default function HomePage() {
 
       {/* 하단 탭바 */}
       <nav className="fixed bottom-0 left-0 right-0 bg-black/95 backdrop-blur-sm border-t border-white/10 z-50">
-        <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center justify-around py-3">
           <Link href="/" className="flex flex-col items-center gap-1 text-[#FF6B9D]">
             <Home className="w-6 h-6" />
             <span className="text-xs font-medium">Home</span>
