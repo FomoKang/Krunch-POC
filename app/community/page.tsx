@@ -13,19 +13,19 @@ const fashionBattles = [
     leftCeleb: {
       name: "JENNIE",
       outfit: "샤넬 실버백",
-      image: "/images/jennie-chanel.jpg",
+      image: "/jennie-bag.jpg",
       votes: 65,
     },
     rightCeleb: {
-      name: "미야오 가원",
-      outfit: "프라다",
-      image: "/images/miyao-prada.jpg",
+      name: "가원",
+      outfit: "백 공항패션",
+      image: "/gawon-bag.jpg",
       votes: 35,
     },
     totalVotes: 15234,
     comments: [
       { user: "ChanelLover", text: "JENNIE's Chanel bag is iconic!" },
-      { user: "PradaFan", text: "Miyao's Prada look is so elegant" },
+      { user: "PradaFan", text: "Gawon's airport style is so elegant" },
     ],
     isHot: true,
   },
@@ -35,13 +35,13 @@ const fashionBattles = [
     leftCeleb: {
       name: "FELIX",
       outfit: "카멜 코트 공항룩",
-      image: "/images/felix-airport.jpg",
+      image: "/felix-airport.jpg",
       votes: 58,
     },
     rightCeleb: {
       name: "민규",
       outfit: "공항 패션",
-      image: "/images/mingyu-airport.jpg",
+      image: "/mingyu-airport.jpg",
       votes: 42,
     },
     totalVotes: 18765,
@@ -53,17 +53,39 @@ const fashionBattles = [
   },
   {
     id: 3,
+    title: "Airport Style Battle",
+    leftCeleb: {
+      name: "카리나",
+      outfit: "공항 패션",
+      image: "/karina-airport.jpg",
+      votes: 62,
+    },
+    rightCeleb: {
+      name: "이나경",
+      outfit: "공항 패션",
+      image: "/nagyeong-airport.jpg",
+      votes: 38,
+    },
+    totalVotes: 14256,
+    comments: [
+      { user: "MYDay", text: "Karina's airport style is so chic!" },
+      { user: "FashionLover", text: "Inagyeong's style is amazing!" },
+    ],
+    isHot: true,
+  },
+  {
+    id: 4,
     title: "High Fashion Battle",
     leftCeleb: {
       name: "정해인",
       outfit: "돌체앤가바나",
-      image: "/images/junghaein-dg.jpg",
+      image: "/jhi-dgas.jpg",
       votes: 52,
     },
     rightCeleb: {
       name: "시온",
       outfit: "발렌티노",
-      image: "/images/sion-valentino.jpg",
+      image: "/xion-valentino.jpg",
       votes: 48,
     },
     totalVotes: 12456,
@@ -87,20 +109,6 @@ function VoteBar({ leftPercent, rightPercent }: { leftPercent: number; rightPerc
         className="bg-gradient-to-r from-[#3B8BFF] to-[#6BB3FF] transition-all duration-500"
         style={{ width: `${rightPercent}%` }}
       />
-    </div>
-  )
-}
-
-// VS 배지 컴포넌트
-function VSBadge() {
-  return (
-    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
-      <div className="relative">
-        <div className="absolute inset-0 bg-yellow-400/30 blur-xl rounded-full animate-pulse" />
-        <div className="relative w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg shadow-yellow-500/50">
-          <Zap className="w-6 h-6 text-black fill-black" />
-        </div>
-      </div>
     </div>
   )
 }
@@ -174,9 +182,6 @@ function BattleCard({ battle }: { battle: typeof fashionBattles[0] }) {
               {leftPercent}%
             </div>
           </button>
-
-          {/* VS 배지 */}
-          <VSBadge />
 
           {/* 오른쪽 셀럽 */}
           <button 
