@@ -3,6 +3,11 @@ import { ImageResponse } from '@vercel/og'
 export const runtime = 'edge'
 
 export async function GET() {
+  // Fetch Anton font from Google Fonts
+  const antonFont = await fetch(
+    new URL('https://fonts.gstatic.com/s/anton/v25/1Ptgg87LROyAm0K08i4gS7lu.woff')
+  ).then((res) => res.arrayBuffer())
+
   return new ImageResponse(
     (
       <div
@@ -20,8 +25,9 @@ export async function GET() {
         <div
           style={{
             display: 'flex',
+            fontFamily: 'Anton',
             fontSize: 180,
-            fontWeight: 900,
+            fontWeight: 400,
             background: 'linear-gradient(90deg, #FF1493 0%, #FF6B9D 30%, #FF1493 60%, #C9184A 100%)',
             backgroundClip: 'text',
             WebkitBackgroundClip: 'text',
@@ -66,6 +72,14 @@ export async function GET() {
     {
       width: 1200,
       height: 630,
+      fonts: [
+        {
+          name: 'Anton',
+          data: antonFont,
+          style: 'normal',
+          weight: 400,
+        },
+      ],
     }
   )
 }
