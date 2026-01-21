@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     siteName: "KRUNCH",
     images: [
       {
-        url: "/limited-edition-sneaker-streetwear-hypebeast-dark-.jpg",
+        url: "/api/og",
         width: 1200,
         height: 630,
         alt: "KRUNCH - PREMIUM K-POP AUCTION",
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "KRUNCH - PREMIUM K-POP AUCTION",
     description: "단 하나뿐인 스타의 의상과 연결되세요",
-    images: ["/limited-edition-sneaker-streetwear-hypebeast-dark-.jpg"],
+    images: ["/api/og"],
   },
   icons: {
     icon: [
