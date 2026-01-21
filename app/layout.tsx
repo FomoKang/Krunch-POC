@@ -25,9 +25,31 @@ const syne = Syne({
 })
 
 export const metadata: Metadata = {
-  title: "Krunch - Exclusive Drops & Auctions",
-  description: "Discover and bid on exclusive streetwear, sneakers, and collectibles",
+  title: "KRUNCH - PREMIUM K-POP AUCTION",
+  description: "단 하나뿐인 스타의 의상과 연결되세요",
   generator: "v0.app",
+  metadataBase: new URL('https://krunch.vercel.app'),
+  openGraph: {
+    title: "KRUNCH - PREMIUM K-POP AUCTION",
+    description: "단 하나뿐인 스타의 의상과 연결되세요",
+    type: "website",
+    locale: "ko_KR",
+    siteName: "KRUNCH",
+    images: [
+      {
+        url: "/limited-edition-sneaker-streetwear-hypebeast-dark-.jpg",
+        width: 1200,
+        height: 630,
+        alt: "KRUNCH - PREMIUM K-POP AUCTION",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "KRUNCH - PREMIUM K-POP AUCTION",
+    description: "단 하나뿐인 스타의 의상과 연결되세요",
+    images: ["/limited-edition-sneaker-streetwear-hypebeast-dark-.jpg"],
+  },
   icons: {
     icon: [
       {

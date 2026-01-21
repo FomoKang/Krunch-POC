@@ -3,34 +3,43 @@ import { LiveBidTicker } from "@/components/live-bid-ticker"
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-transparent relative">
-      {/* 1층 (맨 뒤, 핑크 연기) */}
-      <video
-        autoPlay
-        muted
-        loop
-        playsInline
-        className="fixed inset-0 w-full h-full object-cover z-[-20]"
-      >
-        <source src="/bg-main.mp4" type="video/mp4" />
-      </video>
+    <main className="relative min-h-screen w-full overflow-hidden bg-black">
       
-      {/* 2층 (중간, 지디) */}
-      <video
-        autoPlay
-        muted
-        loop
-        playsInline
-        className="fixed inset-0 w-full h-full object-cover object-[50%_center] z-[-10] opacity-50"
-      >
-        <source src="/hero-bg.mp4" type="video/mp4" />
-      </video>
-      
-      {/* 3층 (맨 앞, 어둡게) */}
-      <div className="fixed inset-0 bg-black/70 z-[-5]" />
+      {/* --- [Layer 1] 배경 비디오 그룹 (z-0) --- */}
+      <div className="absolute inset-0 z-0">
+        
+        {/* 1-1. Pink Smoke (가장 뒤) */}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 h-full w-full object-cover"
+        >
+          <source src="/bg-main.mp4" type="video/mp4" />
+        </video>
 
-      <AuctionCard />
-      <LiveBidTicker />
+        {/* 1-2. GD Video (중간, 반투명) */}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 h-full w-full object-cover object-[50%_center] opacity-50"
+        >
+          <source src="/hero-bg.mp4" type="video/mp4" />
+        </video>
+
+        {/* 1-3. 어두운 오버레이 (비디오 위, 콘텐츠 아래) */}
+        <div className="absolute inset-0 bg-black/70" />
+      </div>
+
+      {/* --- [Layer 2] 실제 콘텐츠 (z-10) --- */}
+      <div className="relative z-10 flex h-full flex-col">
+        <AuctionCard />
+        <LiveBidTicker />
+      </div>
+
     </main>
   )
 }

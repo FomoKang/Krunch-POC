@@ -143,21 +143,8 @@ export function AuctionCard() {
           </div>
         </div>
 
-        {/* Background Video */}
-        <div className="fixed inset-0 -z-50">
-          <video
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="w-full h-full object-cover object-left"
-          >
-            <source src="/hero-bg.mp4" type="video/mp4" />
-          </video>
-        </div>
-
         {/* Main Content - 상품 정보 (항상 보임) */}
-        <div className="relative z-20 bg-black/30 mx-4 mb-4 mt-24 sm:mt-28 rounded-lg border border-border/50 overflow-hidden" style={{ marginLeft: 'max(1rem, env(safe-area-inset-left))', marginRight: 'max(1rem, env(safe-area-inset-right))' }}>
+        <div className="relative bg-black/30 mx-4 mb-4 mt-24 sm:mt-28 rounded-lg border border-border/50 overflow-hidden" style={{ marginLeft: 'max(1rem, env(safe-area-inset-left))', marginRight: 'max(1rem, env(safe-area-inset-right))' }}>
           <div className="p-4 pb-3 sm:p-6">
             <h2 className="font-display text-4xl sm:text-5xl text-primary uppercase leading-[0.85] tracking-tight drop-shadow-md">LEGEND</h2>
             <h2 className="font-display text-4xl sm:text-5xl text-primary uppercase leading-[0.85] tracking-tight drop-shadow-md">AUCTION</h2>
