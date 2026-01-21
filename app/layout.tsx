@@ -26,12 +26,12 @@ const syne = Syne({
 
 export const metadata: Metadata = {
   title: "KRUNCH - PREMIUM K-POP AUCTION",
-  description: "단 하나뿐인 스타의 의상과 연결되세요",
+  description: "단 하나뿐인 스타의 의상을 소유하다",
   generator: "v0.app",
-  metadataBase: new URL('https://krunch.vercel.app'),
+  metadataBase: new URL('https://krunch-mockup.vercel.app'),
   openGraph: {
     title: "KRUNCH - PREMIUM K-POP AUCTION",
-    description: "단 하나뿐인 스타의 의상과 연결되세요",
+    description: "단 하나뿐인 스타의 의상을 소유하다",
     type: "website",
     locale: "ko_KR",
     siteName: "KRUNCH",
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "KRUNCH - PREMIUM K-POP AUCTION",
-    description: "단 하나뿐인 스타의 의상과 연결되세요",
+    description: "단 하나뿐인 스타의 의상을 소유하다",
     images: ["https://krunch-mockup.vercel.app/api/og"],
   },
   icons: {
