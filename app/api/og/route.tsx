@@ -18,7 +18,6 @@ export async function GET(request: Request) {
           alignItems: 'center',
           justifyContent: 'center',
           backgroundColor: '#000',
-          backgroundImage: 'radial-gradient(circle at 20% 30%, rgba(255, 107, 157, 0.3) 0%, transparent 60%), radial-gradient(circle at 80% 70%, rgba(255, 107, 157, 0.2) 0%, transparent 60%)',
         }}
       >
         {/* KRUNCH Logo - Anton Font */}
@@ -51,7 +50,7 @@ export async function GET(request: Request) {
             letterSpacing: '0.02em',
           }}
         >
-          단 하나뿐인 스타의 의상과 연결되세요
+          단 하나뿐인 스타의 의상을 소유하다
         </div>
 
         {/* Subtitle */}
