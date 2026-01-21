@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     url: "https://krunch-mockup.vercel.app",
     images: [
       {
-        url: "https://krunch-mockup.vercel.app/api/og",
+        url: "/og-image.png",
         width: 1200,
         height: 630,
         alt: "KRUNCH - PREMIUM K-POP AUCTION",
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "KRUNCH - PREMIUM K-POP AUCTION",
     description: "단 하나뿐인 스타의 의상을 소유하다",
-    images: ["https://krunch-mockup.vercel.app/api/og"],
+    images: ["/og-image.png"],
   },
   icons: {
     icon: [
