@@ -2,11 +2,7 @@ import { ImageResponse } from '@vercel/og'
 
 export const runtime = 'edge'
 
-export async function GET(request: Request) {
-  // Load Anton font from public folder using fetch
-  const fontUrl = new URL('/Anton-Regular.ttf', request.url)
-  const antonFont = await fetch(fontUrl).then((res) => res.arrayBuffer())
-
+export async function GET() {
   return new ImageResponse(
     (
       <div
@@ -20,18 +16,17 @@ export async function GET(request: Request) {
           backgroundColor: '#000',
         }}
       >
-        {/* KRUNCH Logo - Anton Font */}
+        {/* KRUNCH Logo */}
         <div
           style={{
             display: 'flex',
-            fontFamily: 'Anton',
-            fontSize: 170,
-            fontWeight: 400,
+            fontSize: 180,
+            fontWeight: 900,
             background: 'linear-gradient(90deg, #FF1493 0%, #FF6B9D 30%, #FF1493 60%, #C9184A 100%)',
             backgroundClip: 'text',
             WebkitBackgroundClip: 'text',
             color: 'transparent',
-            letterSpacing: '0.05em',
+            letterSpacing: '0.1em',
             marginBottom: 60,
             textTransform: 'uppercase',
           }}
@@ -43,10 +38,10 @@ export async function GET(request: Request) {
         <div
           style={{
             display: 'flex',
-            fontSize: 50,
+            fontSize: 52,
             color: '#ffffff',
             marginBottom: 32,
-            fontWeight: 600,
+            fontWeight: 700,
             letterSpacing: '0.02em',
           }}
         >
@@ -57,10 +52,10 @@ export async function GET(request: Request) {
         <div
           style={{
             display: 'flex',
-            fontSize: 30,
+            fontSize: 32,
             color: '#FF6B9D',
-            fontWeight: 700,
-            letterSpacing: '0.25em',
+            fontWeight: 800,
+            letterSpacing: '0.3em',
             textTransform: 'uppercase',
           }}
         >
@@ -71,14 +66,6 @@ export async function GET(request: Request) {
     {
       width: 1200,
       height: 630,
-      fonts: [
-        {
-          name: 'Anton',
-          data: antonFont,
-          style: 'normal',
-          weight: 400,
-        },
-      ],
     }
   )
 }
