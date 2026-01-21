@@ -3,6 +3,19 @@ import { ImageResponse } from '@vercel/og'
 export const runtime = 'edge'
 
 export async function GET() {
+  // Fetch fonts
+  const antonFont = fetch(
+    new URL('https://fonts.gstatic.com/s/anton/v25/1Ptgg87LROyAm0K08i4gS7lu.woff2')
+  ).then((res) => res.arrayBuffer())
+
+  const syneFont = fetch(
+    new URL('https://fonts.gstatic.com/s/syne/v22/8vIH7w4qzmVxm2BL9G98X8fv.woff2')
+  ).then((res) => res.arrayBuffer())
+
+  const interFont = fetch(
+    new URL('https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiA.woff2')
+  ).then((res) => res.arrayBuffer())
+
   return new ImageResponse(
     (
       <div
@@ -21,8 +34,9 @@ export async function GET() {
         <div
           style={{
             display: 'flex',
-            fontSize: 120,
-            fontWeight: 900,
+            fontFamily: 'Anton',
+            fontSize: 140,
+            fontWeight: 400,
             background: 'linear-gradient(to bottom right, #FF6B9D 0%, #C9184A 100%)',
             backgroundClip: 'text',
             WebkitBackgroundClip: 'text',
@@ -38,10 +52,11 @@ export async function GET() {
         <div
           style={{
             display: 'flex',
-            fontSize: 42,
+            fontFamily: 'Syne',
+            fontSize: 44,
             color: '#fff',
-            marginBottom: 20,
-            fontWeight: 600,
+            marginBottom: 24,
+            fontWeight: 700,
             letterSpacing: '-0.02em',
           }}
         >
@@ -52,10 +67,11 @@ export async function GET() {
         <div
           style={{
             display: 'flex',
-            fontSize: 28,
+            fontFamily: 'Inter',
+            fontSize: 26,
             color: '#FF6B9D',
-            fontWeight: 700,
-            letterSpacing: '0.1em',
+            fontWeight: 600,
+            letterSpacing: '0.15em',
           }}
         >
           PREMIUM K-POP AUCTION
@@ -65,6 +81,26 @@ export async function GET() {
     {
       width: 1200,
       height: 630,
+      fonts: [
+        {
+          name: 'Anton',
+          data: await antonFont,
+          style: 'normal',
+          weight: 400,
+        },
+        {
+          name: 'Syne',
+          data: await syneFont,
+          style: 'normal',
+          weight: 700,
+        },
+        {
+          name: 'Inter',
+          data: await interFont,
+          style: 'normal',
+          weight: 600,
+        },
+      ],
     }
   )
 }
