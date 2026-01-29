@@ -1,8 +1,16 @@
 import { ImageResponse } from "next/og"
+import { readFile } from "node:fs/promises"
+import { join } from "node:path"
 
 const size = { width: 1200, height: 630 }
 
+export const runtime = "nodejs"
+
 export async function GET() {
+  const antonData = await readFile(
+    join(process.cwd(), "public", "Anton-Regular.ttf")
+  )
+
   return new ImageResponse(
     (
       <div
@@ -13,35 +21,39 @@ export async function GET() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          background: "#0a0a0a",
-          fontFamily: "system-ui, sans-serif",
+          background: "#000000",
+          fontFamily: "Anton, system-ui, sans-serif",
         }}
       >
+        {/* 핑크 og-image.png와 동일 폰트·크기: Anton, KRUNCH만 하얀색 */}
         <div
           style={{
-            fontSize: 96,
-            fontWeight: 800,
-            color: "#e5e5e5",
+            fontSize: 140,
+            fontWeight: 400,
+            color: "#ffffff",
             letterSpacing: "0.02em",
-            marginBottom: 24,
+            marginBottom: 28,
           }}
         >
           KRUNCH
         </div>
         <div
           style={{
-            fontSize: 32,
-            color: "#a3a3a3",
-            marginBottom: 12,
+            fontSize: 36,
+            color: "#ffffff",
+            marginBottom: 14,
+            fontFamily: "system-ui, sans-serif",
           }}
         >
           단 하나뿐인 스타의 의상을 소유하다
         </div>
         <div
           style={{
-            fontSize: 24,
-            color: "#737373",
-            letterSpacing: "0.05em",
+            fontSize: 26,
+            color: "#ffffff",
+            letterSpacing: "0.08em",
+            opacity: 0.95,
+            fontFamily: "system-ui, sans-serif",
           }}
         >
           PREMIUM K-POP AUCTION
@@ -50,6 +62,14 @@ export async function GET() {
     ),
     {
       ...size,
+      fonts: [
+        {
+          name: "Anton",
+          data: antonData,
+          style: "normal",
+          weight: 400,
+        },
+      ],
       headers: {
         "Cache-Control": "public, max-age=86400",
         "Content-Type": "image/png",
