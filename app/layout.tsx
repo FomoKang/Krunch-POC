@@ -2,6 +2,7 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Geist, Geist_Mono, Inter, Anton, Syne } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
+import { ThemeProvider } from "@/components/theme-provider"
 import "./globals.css"
 
 const _geist = Geist({ subsets: ["latin"] })
@@ -78,8 +79,10 @@ export default function RootLayout({
   return (
     <html lang="ko" className={`dark ${inter.variable} ${anton.variable} ${syne.variable}`}>
       <body className={`font-sans antialiased bg-black text-white`}>
-        {children}
-        <Analytics />
+        <ThemeProvider>
+          {children}
+          <Analytics />
+        </ThemeProvider>
       </body>
     </html>
   )

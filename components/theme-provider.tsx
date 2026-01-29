@@ -1,11 +1,25 @@
-'use client'
+"use client"
 
-import * as React from 'react'
-import {
-  ThemeProvider as NextThemesProvider,
-  type ThemeProviderProps,
-} from 'next-themes'
+import { createContext, useContext, useMemo } from "react"
+import { usePathname } from "next/navigation"
 
-export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
-  return <NextThemesProvider {...props}>{children}</NextThemesProvider>
+export type SiteTheme = "default" | "black"
+
+const ThemeContext = createContext<SiteTheme>("default")
+
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname()
+  const theme = useMemo<SiteTheme>(
+    () => (pathname?.startsWith("/black") ? "black" : "default"),
+    [pathname]
+  )
+  return (
+    <ThemeContext.Provider value={theme}>
+      {children}
+    </ThemeContext.Provider>
+  )
+}
+
+export function useSiteTheme() {
+  return useContext(ThemeContext)
 }

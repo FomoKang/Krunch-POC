@@ -4,29 +4,24 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Search, Bell, Home, Users, User, Trophy, Store } from "lucide-react"
+import { useSiteTheme } from "@/components/theme-provider"
 
-// Splash Screen Component
-function SplashScreen() {
+// Splash Screen (테마 악센트)
+function SplashScreen({ accentBg }: { accentBg: string }) {
   return (
     <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
       <div className="flex flex-col items-center gap-4">
-        <Image
-          src="/logo-pink.png"
-          alt="Krunch Logo"
-          width={200}
-          height={67}
-          className="h-auto animate-pulse"
-        />
-        <div className="w-32 h-1 bg-primary/20 rounded-full overflow-hidden">
-          <div className="h-full bg-primary animate-[loading_3s_ease-in-out_forwards]" />
+        <Image src="/logo-pink.png" alt="Krunch Logo" width={200} height={67} className="h-auto animate-pulse" />
+        <div className="w-32 h-1 bg-white/20 rounded-full overflow-hidden">
+          <div className={`h-full ${accentBg} animate-[loading_3s_ease-in-out_forwards]`} />
         </div>
       </div>
     </div>
   )
 }
 
-// Legend Drop 타이머 컴포넌트
-function CountdownTimer() {
+// Legend Drop 타이머 (테마 악센트)
+function CountdownTimer({ accentText }: { accentText: string }) {
   const [time, setTime] = useState({ hours: 23, minutes: 58, seconds: 17 })
 
   useEffect(() => {
@@ -56,7 +51,7 @@ function CountdownTimer() {
   const formatTime = (n: number) => n.toString().padStart(2, "0")
 
   return (
-    <div className="font-mono text-3xl md:text-4xl font-bold text-[#FF6B9D] tracking-wider">
+    <div className={`font-mono text-3xl md:text-4xl font-bold ${accentText} tracking-wider`}>
       {formatTime(time.hours)}:{formatTime(time.minutes)}:{formatTime(time.seconds)}
     </div>
   )
@@ -99,6 +94,11 @@ const uniqueDrops = [
 ]
 
 export default function HomePage() {
+  const theme = useSiteTheme()
+  const basePath = theme === "black" ? "/black" : ""
+  const accentText = theme === "black" ? "text-white" : "text-primary"
+  const accentBg = theme === "black" ? "bg-white" : "bg-primary"
+
   const [showSplash, setShowSplash] = useState(true)
   const [mounted, setMounted] = useState(false)
 
@@ -113,7 +113,7 @@ export default function HomePage() {
   }, [])
 
   if (!mounted || showSplash) {
-    return <SplashScreen />
+    return <SplashScreen accentBg={accentBg} />
   }
 
   return (
@@ -125,7 +125,7 @@ export default function HomePage() {
             <Image src="/logo-pink.png" alt="Krunch" width={150} height={48} className="h-12 w-auto" />
           </Link>
           <div className="flex items-center gap-4">
-            <Link href="/search" className="p-2 hover:bg-white/10 rounded-full transition-colors">
+            <Link href={`${basePath}/search`} className="p-2 hover:bg-white/10 rounded-full transition-colors">
               <Search className="w-5 h-5 text-white/80" />
             </Link>
             <Link href="/notifications" className="p-2 hover:bg-white/10 rounded-full transition-colors relative">
@@ -140,7 +140,7 @@ export default function HomePage() {
         {/* LEGEND DROP 섹션 */}
         <section>
           <h2 className="font-display text-3xl tracking-wide text-white uppercase italic mb-4">LEGEND DROP</h2>
-          <Link href="/auction" className="block">
+          <Link href={`${basePath}/auction`} className="block">
             <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-[#2a1a1a] to-[#1a0a0a] border border-white/10">
               {/* 배경 이미지 오버레이 */}
               <div className="absolute inset-0 bg-gradient-to-br from-[#3d1a2a] via-[#1a0a0a] to-[#0d0505]" />
@@ -177,17 +177,15 @@ export default function HomePage() {
                     <p className="text-white/60 text-sm md:text-base mt-1">Übermensch 2025 World Tour Special Merch</p>
                     <p className="text-white/40 text-xs mt-0.5">Übermensch Cap (Burgundy) customized</p>
 
-                    {/* 타이머 */}
                     <div className="mt-5">
-                      <CountdownTimer />
+                      <CountdownTimer accentText={accentText} />
                     </div>
                   </div>
                 </div>
 
-                {/* 현재 입찰가 */}
                 <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between">
                   <span className="text-white/60 text-sm">Current Bid</span>
-                  <span className="text-[#FF6B9D] font-bold text-xl md:text-2xl">₩6,733,184</span>
+                  <span className={`${accentText} font-bold text-xl md:text-2xl`}>₩6,733,184</span>
                 </div>
               </div>
             </div>
@@ -221,7 +219,7 @@ export default function HomePage() {
                   <div className="p-3">
                     <h3 className="text-white text-sm font-medium line-clamp-1">{item.name}</h3>
                     <p className="text-white/40 text-xs mt-0.5 italic">{item.subtitle}</p>
-                    <p className="text-[#FF6B9D] text-xs mt-2 font-medium">
+                    <p className={`${accentText} text-xs mt-2 font-medium`}>
                       {item.status === "Coming Soon"
                         ? "Coming Soon"
                         : item.status === "Live Now"
@@ -241,33 +239,33 @@ export default function HomePage() {
       {/* 하단 탭바 */}
       <nav className="fixed bottom-0 left-0 right-0 bg-black/95 backdrop-blur-sm border-t border-white/10 z-50">
         <div className="flex items-center justify-around py-3">
-          <Link href="/" className="flex flex-col items-center gap-1 text-[#FF6B9D]">
+          <Link href={basePath || "/"} className={`flex flex-col items-center gap-1 ${theme === "black" ? "text-white" : "text-[#FF6B9D]"}`}>
             <Home className="w-6 h-6" />
             <span className="text-xs font-medium">Home</span>
           </Link>
           <Link
-            href="/ranking"
+            href={`${basePath}/ranking`}
             className="flex flex-col items-center gap-1 text-white/50 hover:text-white/80 transition-colors"
           >
             <Trophy className="w-6 h-6" />
             <span className="text-xs font-medium">Ranking</span>
           </Link>
           <Link
-            href="/community"
+            href={`${basePath}/community`}
             className="flex flex-col items-center gap-1 text-white/50 hover:text-white/80 transition-colors"
           >
             <Users className="w-6 h-6" />
             <span className="text-xs font-medium">Community</span>
           </Link>
           <Link
-            href="/market"
+            href={`${basePath}/market`}
             className="flex flex-col items-center gap-1 text-white/50 hover:text-white/80 transition-colors"
           >
             <Store className="w-6 h-6" />
             <span className="text-xs font-medium">2nd Market</span>
           </Link>
           <Link
-            href="/profile"
+            href={`${basePath}/profile`}
             className="flex flex-col items-center gap-1 text-white/50 hover:text-white/80 transition-colors"
           >
             <User className="w-6 h-6" />

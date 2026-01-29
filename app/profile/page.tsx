@@ -1,13 +1,58 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef, useCallback } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Home, Trophy, Users, User, Settings, QrCode, Wallet, Store, Search, Bell } from "lucide-react"
 
+// 원기둥 갤러리: 벽 개수, 드래그로 회전
+const GALLERY_WALLS = 16
+const GALLERY_RADIUS = 320
+const DRAG_SENSITIVITY = 0.45
+
+// 구매한 착장 슬롯 (나중에 사진 넣을 예정)
+// 0번 벽의 3개 슬롯에 기본 샘플(Cap / T-Shirts / Uniform)을 미리 걸어둠
+const GALLERY_ITEMS: (string | null)[][] = Array.from({ length: GALLERY_WALLS }, (_, wallIndex) => {
+  if (wallIndex === 0) {
+    return ["/Cap.png", "/T-Shirts.png", "/Uniform.png"]
+  }
+  return [null, null, null]
+})
 
 export default function ProfilePage() {
   const [showQR, setShowQR] = useState(false)
+  const [galleryAngle, setGalleryAngle] = useState(0)
+  const [isDragging, setIsDragging] = useState(false)
+  const galleryRef = useRef<HTMLDivElement>(null)
+  const isDraggingRef = useRef(false)
+  const startXRef = useRef(0)
+  const startAngleRef = useRef(0)
+
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    galleryRef.current?.setPointerCapture(e.pointerId)
+    isDraggingRef.current = true
+    setIsDragging(true)
+    startXRef.current = e.clientX
+    startAngleRef.current = galleryAngle
+  }, [galleryAngle])
+
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
+    if (!isDraggingRef.current) return
+    const deltaX = e.clientX - startXRef.current
+    setGalleryAngle(startAngleRef.current + deltaX * DRAG_SENSITIVITY)
+  }, [])
+
+  const handlePointerUp = useCallback((e: React.PointerEvent) => {
+    galleryRef.current?.releasePointerCapture(e.pointerId)
+    isDraggingRef.current = false
+    setIsDragging(false)
+  }, [])
+
+  const handlePointerLeave = useCallback(() => {
+    isDraggingRef.current = false
+    setIsDragging(false)
+  }, [])
+
   const userStats = [
     { label: "Total Bids", value: "127" },
     { label: "Won Items", value: "4" },
@@ -170,7 +215,7 @@ export default function ProfilePage() {
             ))}
           </section>
 
-          {/* 3D Gallery Section */}
+          {/* 3D Gallery Section - 좌우 스크롤 + 동그란 벽 회전 */}
           <section className="mt-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-display tracking-wide flex items-center gap-2">
@@ -181,99 +226,137 @@ export default function ProfilePage() {
               </button>
             </div>
 
-            {/* 3D Gallery Space */}
-            <div 
-              className="relative rounded-2xl overflow-hidden bg-black/40"
+            {/* 원기둥 장식장 — 3D 원근·곡면·광원 적용 */}
+            <div
+              ref={galleryRef}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerLeave={handlePointerLeave}
+              onPointerCancel={handlePointerLeave}
+              className="relative rounded-2xl overflow-hidden select-none touch-none"
               style={{
-                minHeight: "450px",
-                perspective: "1200px",
-                perspectiveOrigin: "center center",
+                height: "540px",
+                cursor: isDragging ? "grabbing" : "grab",
+                background: `
+                  radial-gradient(ellipse 70% 45% at 50% 55%, rgba(40,35,55,0.6) 0%, transparent 55%),
+                  radial-gradient(ellipse 90% 70% at 50% 50%, rgba(15,12,22,0.95) 0%, rgba(0,0,0,0.99) 70%)
+                `,
               }}
             >
-              {/* Gallery Container with 3D transform */}
-              <div 
-                className="relative w-full h-[450px]"
+              {/* 바닥 그림자 (원기둥이 서 있는 느낌) */}
+              <div
+                className="absolute left-1/2 bottom-0 -translate-x-1/2 rounded-full opacity-40"
                 style={{
+                  width: GALLERY_RADIUS * 2.2,
+                  height: 28,
+                  background: "radial-gradient(ellipse 100% 100%, rgba(0,0,0,0.8) 0%, transparent 70%)",
+                }}
+              />
+              <div
+                className="absolute inset-0 flex items-center justify-center"
+                style={{
+                  perspective: "900px",
+                  perspectiveOrigin: "50% 52%",
                   transformStyle: "preserve-3d",
-                  transform: "rotateX(5deg)",
                 }}
               >
-                {/* Back Wall - Main Display */}
-                <div 
-                  className="absolute inset-x-0 top-0 h-full bg-gradient-to-b from-white/15 via-white/8 to-black/30"
+                <div
+                  className="relative flex items-center justify-center"
                   style={{
-                    transform: "translateZ(-80px) scale(0.9)",
+                    width: GALLERY_RADIUS * 2,
+                    height: 480,
                     transformStyle: "preserve-3d",
                   }}
                 >
-                  {/* Grid pattern for gallery wall */}
-                  <div 
-                    className="absolute inset-0 opacity-20"
+                  {/* 원기둥 위쪽 뚜껑 (둥근 링) */}
+                  <div
+                    className="absolute left-1/2 top-0 -translate-x-1/2 z-20 rounded-full"
                     style={{
-                      backgroundImage: `
-                        linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-                        linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)
-                      `,
-                      backgroundSize: "40px 40px",
+                      width: GALLERY_RADIUS * 2.15,
+                      height: 28,
+                      background: "linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 30%, rgba(0,0,0,0.4) 100%)",
+                      boxShadow: "0 -2px 12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)",
+                      border: "1px solid rgba(255,255,255,0.08)",
                     }}
                   />
-                  
-                  {/* Art Hooks/Spots on Back Wall */}
-                  <div className="absolute top-1/4 left-1/4 w-24 h-32 bg-black/30 border border-white/20 rounded-lg cursor-pointer hover:border-pink-400/50 transition-colors" />
-                  <div className="absolute top-1/4 right-1/4 w-24 h-32 bg-black/30 border border-white/20 rounded-lg cursor-pointer hover:border-pink-400/50 transition-colors" />
-                  <div className="absolute top-2/3 left-1/2 -translate-x-1/2 w-24 h-32 bg-black/30 border border-white/20 rounded-lg cursor-pointer hover:border-pink-400/50 transition-colors" />
-                </div>
-
-                {/* Left Wall */}
-                <div 
-                  className="absolute left-0 top-0 w-1/4 h-full bg-gradient-to-r from-white/12 to-transparent"
-                  style={{
-                    transform: "rotateY(-25deg) translateX(-20%) translateZ(-60px)",
-                    transformStyle: "preserve-3d",
-                  }}
-                >
-                  <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-20 h-28 bg-black/30 border border-white/20 rounded-lg cursor-pointer hover:border-pink-400/50 transition-colors" />
-                  <div className="absolute top-2/3 left-1/2 -translate-x-1/2 w-20 h-28 bg-black/30 border border-white/20 rounded-lg cursor-pointer hover:border-pink-400/50 transition-colors" />
-                </div>
-
-                {/* Right Wall */}
-                <div 
-                  className="absolute right-0 top-0 w-1/4 h-full bg-gradient-to-l from-white/12 to-transparent"
-                  style={{
-                    transform: "rotateY(25deg) translateX(20%) translateZ(-60px)",
-                    transformStyle: "preserve-3d",
-                  }}
-                >
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 w-20 h-28 bg-black/30 border border-white/20 rounded-lg cursor-pointer hover:border-pink-400/50 transition-colors" />
-                </div>
-
-                {/* Gallery Floor */}
-                <div 
-                  className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-gray-900 via-gray-800/50 to-transparent"
-                  style={{
-                    transform: "rotateX(75deg) translateY(50%) translateZ(-100px)",
-                    transformStyle: "preserve-3d",
-                  }}
-                >
-                  {/* Floor reflection effect */}
-                  <div className="absolute inset-0 opacity-20" style={{
-                    background: "repeating-linear-gradient(90deg, transparent, transparent 20px, rgba(255,255,255,0.05) 20px, rgba(255,255,255,0.05) 21px)",
-                  }} />
-                </div>
-
-                {/* Gallery Lighting - Spotlights */}
-                <div className="absolute inset-0 pointer-events-none">
-                  <div className="absolute top-0 left-1/4 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
-                  <div className="absolute top-0 right-1/4 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl" />
-                </div>
-
-                {/* Empty State */}
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="text-center z-10">
-                    <p className="text-white/40 text-sm mb-2">Your gallery is empty</p>
-                    <p className="text-white/20 text-xs">Add items from your vault to display here</p>
+                  {/* 원기둥 본체 — 회전하는 벽들 (강한 원근) */}
+                  <div
+                    className="absolute"
+                    style={{
+                      top: 20,
+                      left: "50%",
+                      marginLeft: -GALLERY_RADIUS,
+                      width: GALLERY_RADIUS * 2,
+                      height: 420,
+                      transformStyle: "preserve-3d",
+                      transform: `rotateY(${galleryAngle}deg)`,
+                    }}
+                  >
+                    {Array.from({ length: GALLERY_WALLS }).map((_, i) => {
+                      const angle = (i / GALLERY_WALLS) * 360
+                      const items = GALLERY_ITEMS[i] ?? [null, null, null]
+                      // 정면에 가까운 벽만 보이게 하고, 뒤쪽은 아예 숨겨서 어지러운 느낌 제거
+                      const normalizedAngle = ((angle - galleryAngle) % 360 + 360) % 360
+                      const frontness = 1 - Math.min(normalizedAngle, 360 - normalizedAngle) / 180 // 0(완전 뒤) ~ 1(정면)
+                      if (frontness < 0.18) return null
+                      const opacity = 0.2 + frontness * 0.8
+                      return (
+                        <div
+                          key={i}
+                          className="absolute top-1/2 left-1/2 backface-hidden"
+                          style={{
+                            transform: `translate(-50%,-50%) rotateY(${angle}deg) translateZ(${GALLERY_RADIUS}px)`,
+                            transformStyle: "preserve-3d",
+                            backfaceVisibility: "hidden",
+                            opacity,
+                          }}
+                        >
+                          {/* 액자 3개가 원기둥 표면에 직접 붙어 있는 느낌으로 배치 */}
+                          {[0, 1, 2].map((slotIndex) => {
+                            const verticalOffset = (slotIndex - 1) * 110 // 위·중간·아래로 살짝씩 띄우기
+                            const item = items[slotIndex]
+                            return (
+                              <div
+                                key={slotIndex}
+                                className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center"
+                                style={{
+                                  top: `calc(50% + ${verticalOffset}px)`,
+                                  transform: "translateZ(1px)", // 표면 위로 약간 띄워 보이게
+                                }}
+                              >
+                                <div
+                                  className="rounded-2xl overflow-hidden flex items-center justify-center border border-white/15 bg-black/60"
+                                  style={{
+                                    width: 96,
+                                    height: 128,
+                                    boxShadow: "0 4px 14px rgba(0,0,0,0.6)",
+                                  }}
+                                >
+                                  {item ? (
+                                    <Image src={item} alt="" width={96} height={128} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <span className="text-white/25 text-[10px] font-medium">+</span>
+                                  )}
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )
+                    })}
                   </div>
+                  {/* 원기둥 아래쪽 뚜껑 */}
+                  <div
+                    className="absolute left-1/2 bottom-0 -translate-x-1/2 z-20 rounded-full"
+                    style={{
+                      width: GALLERY_RADIUS * 2.15,
+                      height: 28,
+                      background: "linear-gradient(0deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 30%, rgba(0,0,0,0.4) 100%)",
+                      boxShadow: "0 2px 12px rgba(0,0,0,0.5), inset 0 -1px 0 rgba(255,255,255,0.06)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                    }}
+                  />
                 </div>
               </div>
             </div>
