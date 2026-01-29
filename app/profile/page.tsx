@@ -12,12 +12,12 @@ const GALLERY_RADIUS = 320
 const DRAG_SENSITIVITY = 0.45
 
 // 구매한 착장 슬롯 (나중에 사진 넣을 예정)
-// 0번 벽의 3개 슬롯에 기본 샘플(Cap / T-Shirts / Uniform)을 미리 걸어둠
+// 0번 벽의 2개 슬롯에 기본 샘플(Cap / T-Shirts)을 미리 걸어둠 — 액자 두 개로 줄여 겹침 방지
 const GALLERY_ITEMS: (string | null)[][] = Array.from({ length: GALLERY_WALLS }, (_, wallIndex) => {
   if (wallIndex === 0) {
-    return ["/Cap.png", "/T-Shirts.png", "/Uniform.png"]
+    return ["/Cap.png", "/T-Shirts.png"]
   }
-  return [null, null, null]
+  return [null, null]
 })
 
 export default function ProfilePage() {
@@ -65,12 +65,14 @@ export default function ProfilePage() {
   return (
     <>
       <div className="min-h-screen bg-black text-white pb-24">
-        {/* Ambient lighting effects */}
-        <div className="fixed inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-600/20 rounded-full blur-[120px] animate-pulse" />
-          <div className="absolute bottom-1/3 right-0 w-80 h-80 bg-pink-600/20 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: "1s" }} />
-          <div className="absolute top-1/2 left-0 w-64 h-64 bg-blue-600/10 rounded-full blur-[80px] animate-pulse" style={{ animationDelay: "2s" }} />
-        </div>
+        {/* Ambient lighting effects — 블랙 모드에서는 끄거나 최소화 */}
+        {theme !== "black" && (
+          <div className="fixed inset-0 pointer-events-none overflow-hidden">
+            <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-600/20 rounded-full blur-[120px] animate-pulse" />
+            <div className="absolute bottom-1/3 right-0 w-80 h-80 bg-pink-600/20 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: "1s" }} />
+            <div className="absolute top-1/2 left-0 w-64 h-64 bg-blue-600/10 rounded-full blur-[80px] animate-pulse" style={{ animationDelay: "2s" }} />
+          </div>
+        )}
 
         {/* Header */}
         <header className="sticky top-0 z-40 bg-black/80 backdrop-blur-md border-b border-white/10">
@@ -98,29 +100,37 @@ export default function ProfilePage() {
         </header>
 
         <main className="relative z-10 px-4 py-4 space-y-4">
-          {/* Holographic ID Card */}
+          {/* Holographic ID Card — 블랙 모드: 카드 블랙 + 글씨 흰색 */}
           <div className="relative">
             <div 
               className="relative rounded-2xl p-4 overflow-hidden"
-              style={{
+              style={theme === "black" ? {
+                background: "#0a0a0a",
+                border: "1px solid rgba(255,255,255,0.08)",
+                boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
+              } : {
                 background: "linear-gradient(135deg, rgba(139,92,246,0.3) 0%, rgba(236,72,153,0.3) 50%, rgba(59,130,246,0.3) 100%)",
                 boxShadow: "0 0 40px rgba(139,92,246,0.3), inset 0 0 60px rgba(255,255,255,0.05)",
               }}
             >
-              {/* Holographic overlay effect */}
-              <div 
-                className="absolute inset-0 opacity-30"
-                style={{
-                  background: "repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(255,255,255,0.03) 2px, rgba(255,255,255,0.03) 4px)",
-                }}
-              />
-              <div 
-                className="absolute inset-0 opacity-20"
-                style={{
-                  background: "linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%)",
-                  animation: "shimmer 3s infinite",
-                }}
-              />
+              {/* Holographic overlay — 블랙 모드에서는 숨김 */}
+              {theme !== "black" && (
+                <>
+                  <div 
+                    className="absolute inset-0 opacity-30"
+                    style={{
+                      background: "repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(255,255,255,0.03) 2px, rgba(255,255,255,0.03) 4px)",
+                    }}
+                  />
+                  <div 
+                    className="absolute inset-0 opacity-20"
+                    style={{
+                      background: "linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%)",
+                      animation: "shimmer 3s infinite",
+                    }}
+                  />
+                </>
+              )}
 
               {/* Card content */}
               <div className="relative z-10">
@@ -133,11 +143,11 @@ export default function ProfilePage() {
                     </div>
                     <div>
                       <p className="text-xs text-white/50 mb-1 uppercase tracking-wider">K-Point</p>
-                      <p className="text-lg font-mono text-orange-400 tracking-wider">530,000</p>
+                      <p className={`text-lg font-mono tracking-wider ${theme === "black" ? "text-white" : "text-orange-400"}`}>530,000</p>
                     </div>
                   </div>
                   <div 
-                    className="relative flex items-center gap-2 bg-black/30 rounded-lg px-3 py-2 cursor-pointer"
+                    className={`relative flex items-center gap-2 rounded-lg px-3 py-2 cursor-pointer ${theme === "black" ? "bg-white/10" : "bg-black/30"}`}
                     onMouseEnter={() => setShowQR(true)}
                     onMouseLeave={() => setShowQR(false)}
                   >
@@ -160,7 +170,7 @@ export default function ProfilePage() {
                 {/* User info */}
                 <div className="flex items-center gap-4 mb-4">
                   <div className="relative">
-                    <div className="w-16 h-16 rounded-full overflow-hidden ring-2 ring-purple-500/50 bg-black/20">
+                    <div className={`w-16 h-16 rounded-full overflow-hidden ring-2 bg-black/20 ${theme === "black" ? "ring-white/20" : "ring-purple-500/50"}`}>
                       <img
                         src="/profile-avatar.jpg"
                         alt="Fomo_KR"
@@ -178,7 +188,7 @@ export default function ProfilePage() {
                   <div>
                     <p className="font-display text-lg tracking-wide uppercase">Fomo_KR</p>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 font-semibold">
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${theme === "black" ? "bg-white/15 text-white border border-white/20" : "bg-gradient-to-r from-purple-600 to-pink-600"}`}>
                         LEVEL 3
                       </span>
                     </div>
@@ -218,13 +228,13 @@ export default function ProfilePage() {
             ))}
           </section>
 
-          {/* 3D Gallery Section - 좌우 스크롤 + 동그란 벽 회전 */}
-          <section className="mt-6">
+          {/* 3D Gallery Section — 블랙 모드: MY GALLERY에만 분홍 테두리 살짝 */}
+          <section className={`mt-6 ${theme === "black" ? "rounded-2xl border border-[rgba(255,105,180,0.3)] p-4" : ""}`}>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-display tracking-wide flex items-center gap-2">
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 uppercase">MY GALLERY</span>
+                <span className={theme === "black" ? "text-white uppercase" : "text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 uppercase"}>MY GALLERY</span>
               </h2>
-              <button type="button" className="text-xs text-pink-400 hover:text-pink-300 transition-colors">
+              <button type="button" className={`text-xs transition-colors ${theme === "black" ? "text-white/80 hover:text-white" : "text-pink-400 hover:text-pink-300"}`}>
                 Add Item
               </button>
             </div>
@@ -237,7 +247,7 @@ export default function ProfilePage() {
               onPointerUp={handlePointerUp}
               onPointerLeave={handlePointerLeave}
               onPointerCancel={handlePointerLeave}
-              className="relative rounded-2xl overflow-hidden select-none touch-none"
+              className={`relative rounded-2xl overflow-hidden select-none touch-none ${theme === "black" ? "ring-1 ring-[rgba(255,105,180,0.2)]" : ""}`}
               style={{
                 height: "540px",
                 cursor: isDragging ? "grabbing" : "grab",
@@ -315,9 +325,9 @@ export default function ProfilePage() {
                             opacity,
                           }}
                         >
-                          {/* 액자 3개가 원기둥 표면에 직접 붙어 있는 느낌으로 배치 */}
-                          {[0, 1, 2].map((slotIndex) => {
-                            const verticalOffset = (slotIndex - 1) * 110 // 위·중간·아래로 살짝씩 띄우기
+                          {/* 액자 2개가 원기둥 표면에 붙어 있고, 세로 간격 넓혀 겹치지 않게 */}
+                          {[0, 1].map((slotIndex) => {
+                            const verticalOffset = (slotIndex - 0.5) * 160 // 위·아래 두 칸, 간격 넉넉히
                             const item = items[slotIndex]
                             return (
                               <div

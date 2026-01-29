@@ -121,16 +121,16 @@ export default function HomePage() {
       {/* 상단 네비게이션 */}
       <header className="sticky top-0 z-50 bg-black/90 backdrop-blur-sm border-b border-white/5">
         <div className="flex items-center justify-between px-4 py-3">
-          <Link href="/">
+          <Link href={basePath || "/"}>
             <Image src="/logo-pink.png" alt="Krunch" width={150} height={48} className="h-12 w-auto" />
           </Link>
           <div className="flex items-center gap-4">
             <Link href={`${basePath}/search`} className="p-2 hover:bg-white/10 rounded-full transition-colors">
               <Search className="w-5 h-5 text-white/80" />
             </Link>
-            <Link href="/notifications" className="p-2 hover:bg-white/10 rounded-full transition-colors relative">
+            <Link href={`${basePath}/notifications`} className="p-2 hover:bg-white/10 rounded-full transition-colors relative">
               <Bell className="w-5 h-5 text-white/80" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-[#FF6B9D] rounded-full" />
+              <span className={`absolute top-1 right-1 w-2 h-2 rounded-full ${theme === "black" ? "bg-white" : "bg-[#FF6B9D]"}`} />
             </Link>
           </div>
         </div>
@@ -139,16 +139,22 @@ export default function HomePage() {
       <main className="px-4 py-6 space-y-8">
         {/* LEGEND DROP 섹션 */}
         <section>
-          <h2 className="font-display text-3xl tracking-wide text-white uppercase italic mb-4">LEGEND DROP</h2>
+          <h2 className={`font-display text-3xl tracking-wide uppercase italic mb-4 ${theme === "black" ? "black-mode-legend-title" : "text-white"}`}>LEGEND DROP</h2>
           <Link href={`${basePath}/auction`} className="block">
-            <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-[#2a1a1a] to-[#1a0a0a] border border-white/10">
-              {/* 배경 이미지 오버레이 */}
-              <div className="absolute inset-0 bg-gradient-to-br from-[#3d1a2a] via-[#1a0a0a] to-[#0d0505]" />
+            <div className={`relative rounded-2xl overflow-hidden border ${theme === "black" ? "black-home-hero-card bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f]" : "bg-gradient-to-br from-[#2a1a1a] to-[#1a0a0a] border-white/10"}`}>
+              {/* 배경 이미지 오버레이 — 블랙 모드: 레이어 분리 */}
+              <div className={`absolute inset-0 ${theme === "black" ? "bg-gradient-to-br from-[#2a1a1a] via-[#0f0f0f] to-[#0a0a0a]" : "bg-gradient-to-br from-[#3d1a2a] via-[#1a0a0a] to-[#0d0505]"}`} />
 
               <div className="relative p-5">
-                {/* Live Now 뱃지 */}
+                {/* Live Now 뱃지 — 블랙 모드: 흰 글자 + 핑크 테두리 / 핑크 모드: 핑크 배경 + 살짝 glow */}
                 <div className="flex items-center gap-2 mb-4">
-                  <span className="flex items-center gap-1.5 bg-[#FF6B9D] text-black text-xs font-bold px-3 py-1 rounded-full">
+                  <span
+                    className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full ${
+                      theme === "black"
+                        ? "bg-transparent text-white border border-[rgba(255,105,180,0.5)]"
+                        : "bg-[#FF6B9D] text-black live-now-badge"
+                    }`}
+                  >
                     <span className="relative flex h-2 w-2">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-600 opacity-75" />
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-red-600" />
@@ -159,8 +165,7 @@ export default function HomePage() {
 
                 {/* 상품 이미지 */}
                 <div className="flex flex-col items-center">
-                  {/* 상품 비디오 - cap-spin.mp4 */}
-                  <div className="relative w-full aspect-[4/3] max-h-64 rounded-xl overflow-hidden bg-black/50 mb-5">
+                  <div className={`relative w-full aspect-[4/3] max-h-64 rounded-xl overflow-hidden mb-5 ${theme === "black" ? "bg-[radial-gradient(circle,#2a1a1a_0%,#0a0a0a_100%)]" : "bg-black/50"}`}>
                     <video
                       src="/cap-spin.mp4"
                       autoPlay
@@ -171,21 +176,20 @@ export default function HomePage() {
                     />
                   </div>
 
-                  {/* 상품 정보 */}
                   <div className="w-full text-center">
                     <h3 className="font-bold text-white text-lg md:text-xl">PEACEMINUSONE</h3>
-                    <p className="text-white/60 text-sm md:text-base mt-1">Übermensch 2025 World Tour Special Merch</p>
-                    <p className="text-white/40 text-xs mt-0.5">Übermensch Cap (Burgundy) customized</p>
+                    <p className={`text-sm md:text-base mt-1 ${theme === "black" ? "text-[#b0b0b0]" : "text-white/60"}`}>Übermensch 2025 World Tour Special Merch</p>
+                    <p className={`text-xs mt-0.5 ${theme === "black" ? "text-[#808080]" : "text-white/40"}`}>Übermensch Cap (Burgundy) customized</p>
 
-                    <div className="mt-5">
+                    <div className={`mt-5 ${theme === "black" ? "font-mono text-3xl md:text-4xl font-bold text-white tracking-wider" : ""}`} style={theme === "black" ? { textShadow: "0 0 20px rgba(255,255,255,0.3)", letterSpacing: "2px" } : undefined}>
                       <CountdownTimer accentText={accentText} />
                     </div>
                   </div>
                 </div>
 
                 <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between">
-                  <span className="text-white/60 text-sm">Current Bid</span>
-                  <span className={`${accentText} font-bold text-xl md:text-2xl`}>₩6,733,184</span>
+                  <span className={`text-sm uppercase tracking-wide ${theme === "black" ? "text-[#808080]" : "text-white/60"}`} style={theme === "black" ? { letterSpacing: "1px" } : undefined}>Current Bid</span>
+                  <span className={`font-bold ${theme === "black" ? "text-white text-2xl md:text-3xl" : `${accentText} text-xl md:text-2xl`}`} style={theme === "black" ? { textShadow: "0 2px 8px rgba(255,255,255,0.2)" } : undefined}>₩6,733,184</span>
                 </div>
               </div>
             </div>
@@ -194,15 +198,18 @@ export default function HomePage() {
 
         {/* UNIQUE DROPS 섹션 */}
         <section>
-          <h2 className="font-display text-3xl tracking-wide text-white uppercase italic mb-4">UNIQUE DROPS</h2>
+          <h2 className={`font-display text-3xl tracking-wide uppercase italic mb-4 ${theme === "black" ? "black-mode-legend-title" : "text-white"}`}>UNIQUE DROPS</h2>
           <div className="grid grid-cols-2 gap-3">
             {uniqueDrops.map((item) => {
               const isFelix = item.id === 4
+              const statusClass = theme === "black"
+                ? "text-white text-xs mt-2 font-medium"
+                : `${accentText} text-xs mt-2 font-medium`
 
               return (
                 <div
                   key={item.id}
-                  className="bg-[#1a1a1a] rounded-xl overflow-hidden border border-[#FF6B9D]/30 hover:border-[#FF6B9D]/50 transition-colors"
+                  className={`rounded-xl overflow-hidden ${theme === "black" ? "black-home-unique-card" : "bg-[#1a1a1a] border border-[#FF6B9D]/30 hover:border-[#FF6B9D]/50"} transition-colors`}
                 >
                   <div className="relative aspect-[4/3] bg-transparent">
                     <Image
@@ -218,8 +225,11 @@ export default function HomePage() {
                   </div>
                   <div className="p-3">
                     <h3 className="text-white text-sm font-medium line-clamp-1">{item.name}</h3>
-                    <p className="text-white/40 text-xs mt-0.5 italic">{item.subtitle}</p>
-                    <p className={`${accentText} text-xs mt-2 font-medium`}>
+                    <p className={`text-xs mt-0.5 italic ${theme === "black" ? "text-[#b0b0b0]" : "text-white/40"}`}>{item.subtitle}</p>
+                    <p
+                      className={statusClass}
+                      style={theme === "black" ? { WebkitTextStroke: "1px rgba(255,105,180,0.4)" } : undefined}
+                    >
                       {item.status === "Coming Soon"
                         ? "Coming Soon"
                         : item.status === "Live Now"

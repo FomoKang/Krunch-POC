@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useMemo } from "react"
+import { createContext, useContext, useMemo, useEffect } from "react"
 import { usePathname } from "next/navigation"
 
 export type SiteTheme = "default" | "black"
@@ -13,6 +13,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     () => (pathname?.startsWith("/black") ? "black" : "default"),
     [pathname]
   )
+
+  useEffect(() => {
+    const root = document.documentElement
+    if (theme === "black") {
+      root.setAttribute("data-theme", "black")
+    } else {
+      root.removeAttribute("data-theme")
+    }
+  }, [theme])
+
   return (
     <ThemeContext.Provider value={theme}>
       {children}

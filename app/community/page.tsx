@@ -98,7 +98,7 @@ const fashionBattles = [
   },
 ]
 
-// 투표 바 컴포넌트
+// 투표 바 컴포넌트 (원래 빨강/파랑 유지)
 function VoteBar({ leftPercent, rightPercent }: { leftPercent: number; rightPercent: number }) {
   return (
     <div className="flex h-2 rounded-full overflow-hidden bg-white/10">
@@ -114,8 +114,8 @@ function VoteBar({ leftPercent, rightPercent }: { leftPercent: number; rightPerc
   )
 }
 
-// Fashion Battle 카드 컴포넌트
-function BattleCard({ battle }: { battle: typeof fashionBattles[0] }) {
+// Fashion Battle 카드 컴포넌트 (블랙 모드: battle-card, hot-badge, vote-count, comment-user 등)
+function BattleCard({ battle, isBlack }: { battle: typeof fashionBattles[0]; isBlack?: boolean }) {
   const [voted, setVoted] = useState<"left" | "right" | null>(null)
   const [leftVotes, setLeftVotes] = useState(battle.leftCeleb.votes)
   const [rightVotes, setRightVotes] = useState(battle.rightCeleb.votes)
@@ -134,11 +134,18 @@ function BattleCard({ battle }: { battle: typeof fashionBattles[0] }) {
   const leftPercent = Math.round((leftVotes / total) * 100)
   const rightPercent = 100 - leftPercent
 
+  const leftBorder = voted === "left" ? "border-[#FF3B5C] shadow-lg shadow-[#FF3B5C]/30" : "border-transparent hover:border-[#FF3B5C]/50"
+  const rightBorder = voted === "right" ? "border-[#3B8BFF] shadow-lg shadow-[#3B8BFF]/30" : "border-transparent hover:border-[#3B8BFF]/50"
+  const leftOverlay = "from-[#FF3B5C]/40"
+  const rightOverlay = "from-[#3B8BFF]/40"
+  const leftBadge = "bg-[#FF3B5C]"
+  const rightBadge = "bg-[#3B8BFF]"
+
   return (
-    <div className="bg-[#0d0d0d] rounded-2xl overflow-hidden border border-white/10 relative">
+    <div className={`rounded-2xl overflow-hidden relative ${isBlack ? "battle-card" : "bg-[#0d0d0d] border border-white/10"}`}>
       {/* Hot 뱃지 */}
       {battle.isHot && (
-        <div className="absolute top-3 right-3 z-30 flex items-center gap-1 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+        <div className="absolute top-3 right-3 z-30 flex items-center gap-1 text-white text-xs font-bold px-2 py-1 rounded-full hot-badge">
           <Flame className="w-3 h-3" />
           HOT
         </div>
@@ -155,11 +162,7 @@ function BattleCard({ battle }: { battle: typeof fashionBattles[0] }) {
           {/* 왼쪽 셀럽 */}
           <button 
             onClick={() => handleVote("left")}
-            className={`flex-1 relative rounded-xl overflow-hidden border-2 transition-all duration-300 ${
-              voted === "left" 
-                ? "border-[#FF3B5C] shadow-lg shadow-[#FF3B5C]/30" 
-                : "border-transparent hover:border-[#FF3B5C]/50"
-            }`}
+            className={`flex-1 relative rounded-xl overflow-hidden border-2 transition-all duration-300 ${leftBorder}`}
           >
             <div className="aspect-[3/4] relative bg-gradient-to-br from-[#1a0a0a] to-[#0d0505]">
               <Image
@@ -168,18 +171,13 @@ function BattleCard({ battle }: { battle: typeof fashionBattles[0] }) {
                 fill
                 className="object-cover"
               />
-              {/* 레드 오버레이 */}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#FF3B5C]/40 to-transparent" />
-              {/* 이름 */}
+              <div className={`absolute inset-0 bg-gradient-to-t ${leftOverlay} to-transparent`} />
               <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 to-transparent">
                 <p className="text-white font-bold text-sm">{battle.leftCeleb.name}</p>
                 <p className="text-white/60 text-xs">{battle.leftCeleb.outfit}</p>
               </div>
             </div>
-            {/* 투표 퍼센트 */}
-            <div className={`absolute top-2 left-2 bg-[#FF3B5C] text-white text-xs font-bold px-2 py-1 rounded-full ${
-              voted ? "opacity-100" : "opacity-0"
-            } transition-opacity`}>
+            <div className={`absolute top-2 left-2 ${leftBadge} text-white text-xs font-bold px-2 py-1 rounded-full ${voted ? "opacity-100" : "opacity-0"} transition-opacity`}>
               {leftPercent}%
             </div>
           </button>
@@ -187,11 +185,7 @@ function BattleCard({ battle }: { battle: typeof fashionBattles[0] }) {
           {/* 오른쪽 셀럽 */}
           <button 
             onClick={() => handleVote("right")}
-            className={`flex-1 relative rounded-xl overflow-hidden border-2 transition-all duration-300 ${
-              voted === "right" 
-                ? "border-[#3B8BFF] shadow-lg shadow-[#3B8BFF]/30" 
-                : "border-transparent hover:border-[#3B8BFF]/50"
-            }`}
+            className={`flex-1 relative rounded-xl overflow-hidden border-2 transition-all duration-300 ${rightBorder}`}
           >
             <div className="aspect-[3/4] relative bg-gradient-to-br from-[#0a0a1a] to-[#05050d]">
               <Image
@@ -200,18 +194,13 @@ function BattleCard({ battle }: { battle: typeof fashionBattles[0] }) {
                 fill
                 className="object-cover"
               />
-              {/* 블루 오버레이 */}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#3B8BFF]/40 to-transparent" />
-              {/* 이름 */}
+              <div className={`absolute inset-0 bg-gradient-to-t ${rightOverlay} to-transparent`} />
               <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 to-transparent">
                 <p className="text-white font-bold text-sm">{battle.rightCeleb.name}</p>
                 <p className="text-white/60 text-xs">{battle.rightCeleb.outfit}</p>
               </div>
             </div>
-            {/* 투표 퍼센트 */}
-            <div className={`absolute top-2 right-2 bg-[#3B8BFF] text-white text-xs font-bold px-2 py-1 rounded-full ${
-              voted ? "opacity-100" : "opacity-0"
-            } transition-opacity`}>
+            <div className={`absolute top-2 right-2 ${rightBadge} text-white text-xs font-bold px-2 py-1 rounded-full ${voted ? "opacity-100" : "opacity-0"} transition-opacity`}>
               {rightPercent}%
             </div>
           </button>
@@ -221,7 +210,7 @@ function BattleCard({ battle }: { battle: typeof fashionBattles[0] }) {
       {/* 투표 바 */}
       <div className="px-4 pt-4">
         <VoteBar leftPercent={leftPercent} rightPercent={rightPercent} />
-        <p className="text-white/40 text-xs mt-2 text-center">
+        <p className={`text-xs mt-2 text-center ${isBlack ? "vote-count" : "text-white/40"}`}>
           {battle.totalVotes.toLocaleString()} votes
         </p>
       </div>
@@ -235,13 +224,13 @@ function BattleCard({ battle }: { battle: typeof fashionBattles[0] }) {
                 <User className="w-3 h-3 text-white/40" />
               </div>
               <div className="flex-1 min-w-0">
-                <span className="text-[#FF6B9D] text-xs font-medium">{comment.user}</span>
-                <p className="text-white/60 text-xs truncate">{comment.text}</p>
+                <span className={`text-xs font-medium ${isBlack ? "comment-user" : "text-[#FF6B9D]"}`}>{comment.user}</span>
+                <p className={`text-xs truncate ${isBlack ? "comment-text" : "text-white/60"}`}>{comment.text}</p>
               </div>
             </div>
           ))}
         </div>
-        <button className="flex items-center gap-1 text-white/40 text-xs mt-3 hover:text-white/60 transition-colors">
+        <button className={`flex items-center gap-1 text-xs mt-3 transition-colors ${isBlack ? "view-all-comments" : "text-white/40 hover:text-white/60"}`}>
           <MessageCircle className="w-4 h-4" />
           View all comments
         </button>
@@ -278,19 +267,19 @@ export default function CommunityPage() {
       </header>
 
       <main className="px-4 py-6">
-        {/* 페이지 타이틀 */}
+        {/* 페이지 타이틀 — 블랙 모드: arena-header, arena-icon, arena-subtitle */}
         <div className="mb-6">
-          <h1 className="font-display text-3xl tracking-wide text-white uppercase italic flex items-center gap-2">
+          <h1 className={`font-display text-3xl tracking-wide uppercase italic flex items-center gap-2 ${theme === "black" ? "arena-header" : "text-white"}`}>
             FASHION ARENA
-            <Zap className="w-6 h-6 text-yellow-400" />
+            <Zap className={`w-6 h-6 ${theme === "black" ? "arena-icon" : "text-yellow-400"}`} />
           </h1>
-          <p className="text-white/50 text-sm mt-1">Vote for your favorite celebrity style</p>
+          <p className={`text-sm mt-1 ${theme === "black" ? "arena-subtitle" : "text-white/50"}`}>Vote for your favorite celebrity style</p>
         </div>
 
         {/* 배틀 피드 */}
         <div className="space-y-6">
           {fashionBattles.map((battle) => (
-            <BattleCard key={battle.id} battle={battle} />
+            <BattleCard key={battle.id} battle={battle} isBlack={theme === "black"} />
           ))}
         </div>
       </main>

@@ -138,9 +138,210 @@
   }
 }
 
-/* Neon glow effects */
+/* Neon glow effects (default pink) */
 .neon-glow-subtle {
   text-shadow: 0 0 4px rgba(255, 107, 138, 0.6), 0 0 8px rgba(255, 107, 138, 0.4);
+}
+
+/* ========== Black Mode — 검은 배경 + 화이트 중심 + 포인트만 핑크 ========== */
+[data-theme="black"] {
+  --bg-primary: #000000;
+  --bg-card: #0a0a0a;
+  --bg-card-hover: #0f0f0f;
+  --text-primary: #ffffff;
+  --text-secondary: #999999;
+  --text-tertiary: #666666;
+  --border-card: #1f1f1f;
+  --accent-pink-outline: rgba(255, 105, 180, 0.3);
+}
+
+/* Black mode — LEGEND AUCTION: 화이트 + 핑크 외곽선 */
+.black-mode-legend-title {
+  color: var(--text-primary);
+  -webkit-text-stroke: 1px var(--accent-pink-outline);
+}
+
+/* Black mode — 카드: #0a0a0a 배경, 아주 연한 핑크 glow 테두리 */
+.black-mode-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-card);
+  box-shadow: 0 0 0 1px rgba(255, 105, 180, 0.08), 0 0 12px rgba(255, 105, 180, 0.06);
+}
+
+/* Black mode — PLACE BID: 검정 배경 + 화이트 텍스트 + 핑크 외곽선 1px */
+.black-mode-place-bid {
+  background-color: #000000;
+  color: #ffffff;
+  border: 1px solid var(--accent-pink-outline);
+}
+
+.black-mode-place-bid:hover {
+  border-color: rgba(255, 105, 180, 0.5);
+}
+
+/* ========== Black Mode — 메인(홈) 페이지 개선 ========== */
+[data-theme="black"] .black-home-hero-card {
+  background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+[data-theme="black"] .black-home-hero-card:hover {
+  border-color: rgba(255, 105, 180, 0.3) !important;
+  box-shadow: 0 8px 32px rgba(255, 105, 180, 0.15);
+  transform: translateY(-4px);
+}
+
+/* LIVE NOW 배지 — 핑크/블랙 공통, 원본과 강한 버전의 중간 (살짝만 glow) */
+.live-now-badge {
+  box-shadow: 0 0 10px rgba(255, 107, 157, 0.45);
+}
+.live-now-badge:hover {
+  box-shadow: 0 0 14px rgba(255, 107, 157, 0.55);
+}
+
+[data-theme="black"] .black-home-unique-card {
+  background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+[data-theme="black"] .black-home-unique-card:hover {
+  border-color: rgba(255, 105, 180, 0.3) !important;
+  box-shadow: 0 8px 32px rgba(255, 105, 180, 0.15);
+  transform: translateY(-4px);
+}
+
+/* ========== Ranking Podium & List — 양쪽 테마 통일 (default + black) ========== */
+/* 1등 (G-DRAGON) — default: 옅은 골드 (금색 덜 튀게) */
+.rank-1-name { font-weight: 900; background: linear-gradient(to right, #d4af37, #c9a227); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.rank-1-score { font-weight: 700; color: #FF6B9D; }
+.rank-1-badge { background: linear-gradient(to bottom right, #d4af37, #b8960c); color: #1a1a1a; }
+.rank-1-bar { background: linear-gradient(180deg, rgba(212, 175, 55, 0.28) 0%, rgba(184, 150, 12, 0.18) 50%, transparent 100%); border-top-width: 2px; border-color: rgba(212, 175, 55, 0.35); }
+[data-theme="black"] .rank-1-name { color: #ffffff; background: none; -webkit-background-clip: unset; background-clip: unset; }
+[data-theme="black"] .rank-1-score { color: #ffffff; }
+[data-theme="black"] .rank-1-badge { background: rgba(249, 168, 212, 0.9); color: #1a1a1a; border: 2px solid rgba(255,255,255,0.2); }
+[data-theme="black"] .rank-1-bar {
+  border-color: rgba(255, 105, 180, 0.2);
+  box-shadow: 0 8px 32px rgba(255, 105, 180, 0.1);
+  background-image:
+    repeating-linear-gradient(90deg, transparent 0, transparent 6px, rgba(255,255,255,0.05) 6px, rgba(255,255,255,0.05) 7px),
+    linear-gradient(180deg, rgba(36, 18, 24, 0.9) 0%, rgba(22, 22, 22, 0.95) 50%, rgba(12, 12, 12, 1) 100%);
+}
+[data-theme="black"] .rank-1-avatar-ring {
+  background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
+  box-shadow: 0 0 32px rgba(255, 105, 180, 0.2);
+  padding: 2px;
+  border-radius: 9999px;
+}
+
+/* 2등 (JENNIE) — default: 옅은 실버, black: white/30 링, white/20 배지 */
+.rank-2-badge { background: linear-gradient(to bottom right, #a8b4c4, #64748b); color: #1a1a1a; }
+.rank-2-name, .rank-2-score { color: #fff; font-weight: 700; }
+.rank-2-bar { border-color: rgba(148, 163, 184, 0.2); background: linear-gradient(180deg, rgba(148, 163, 184, 0.22) 0%, rgba(148, 163, 184, 0.12) 50%, transparent 100%); }
+[data-theme="black"] .rank-2-ring { border: 2px solid rgba(255, 255, 255, 0.3); box-shadow: none; }
+[data-theme="black"] .rank-2-badge { background: rgba(255, 255, 255, 0.2); color: #fff; }
+[data-theme="black"] .rank-2-bar {
+  border-color: rgba(255, 255, 255, 0.12);
+  background-image:
+    repeating-linear-gradient(90deg, transparent 0, transparent 6px, rgba(255,255,255,0.04) 6px, rgba(255,255,255,0.04) 7px),
+    linear-gradient(180deg, rgba(28, 28, 28, 0.95) 0%, rgba(18, 18, 18, 0.98) 100%);
+}
+
+/* 3등 (SON HEUNG MIN) — default: 옅은 브론즈 */
+.rank-3-badge { background: linear-gradient(to bottom right, #a67c52, #8b6914); color: #1a1a1a; }
+.rank-3-name, .rank-3-score { color: #fff; font-weight: 700; }
+.rank-3-bar { border-color: rgba(166, 124, 82, 0.22); background: linear-gradient(180deg, rgba(166, 124, 82, 0.22) 0%, rgba(120, 53, 15, 0.12) 50%, transparent 100%); }
+[data-theme="black"] .rank-3-ring { border: 2px solid rgba(255, 255, 255, 0.3); box-shadow: none; }
+[data-theme="black"] .rank-3-badge { background: rgba(255, 255, 255, 0.2); color: #fff; }
+[data-theme="black"] .rank-3-bar {
+  border-color: rgba(255, 255, 255, 0.12);
+  background-image:
+    repeating-linear-gradient(90deg, transparent 0, transparent 6px, rgba(255,255,255,0.04) 6px, rgba(255,255,255,0.04) 7px),
+    linear-gradient(180deg, rgba(28, 28, 28, 0.95) 0%, rgba(18, 18, 18, 0.98) 100%);
+}
+
+/* 리스트 (#4–7) — default: 핑크 악센트, black: #0a0a0a + 핑크 호버 */
+.rank-list-item .rank-list-number { color: #FF6B9D; }
+.rank-list-item .rank-list-name, .rank-list-item .rank-list-score { color: #ffffff; }
+[data-theme="black"] .rank-list-item .rank-list-number { color: #FF1493; }
+[data-theme="black"] .rank-list-item .rank-list-score { font-size: 1.125rem; }
+[data-theme="black"] .rank-list-item { background: #0a0a0a; border-color: rgba(255,255,255,0.05); }
+[data-theme="black"] .rank-list-item:focus,
+[data-theme="black"] .rank-list-item:active { outline: none; border-left-width: 1px; border-left-color: transparent; box-shadow: none; background: #0a0a0a; }
+[data-theme="black"] .rank-list-item:focus .rank-list-arrow,
+[data-theme="black"] .rank-list-item:active .rank-list-arrow { color: rgba(255,255,255,0.25); text-shadow: none; transform: none; }
+[data-theme="black"] .rank-list-item:hover { background: #0f0f0f; border-left-width: 3px; border-left-color: #FF1493; box-shadow: 0 4px 16px rgba(255, 105, 180, 0.15); }
+[data-theme="black"] .rank-list-item:hover .rank-list-arrow { color: #ffffff; text-shadow: 0 0 10px rgba(255,255,255,0.9), 0 0 16px rgba(255,255,255,0.5); transform: translateX(4px); }
+[data-theme="black"] .rank-list-item .rank-list-arrow { color: rgba(255,255,255,0.25); transition: color 0.2s, text-shadow 0.2s, transform 0.2s; }
+
+/* ========== Black Mode — Community (FASHION ARENA) ========== */
+[data-theme="black"] {
+  --arena-bg-primary: #000000;
+  --arena-bg-card: #0a0a0a;
+  --arena-bg-card-hover: #0f0f0f;
+  --arena-text-primary: #ffffff;
+  --arena-text-secondary: #a0a0a0;
+  --arena-accent-pink: #FF1493;
+  --arena-accent-pink-light: #FF69B4;
+  --arena-accent-purple: #A78BFA;
+}
+[data-theme="black"] .arena-header {
+  color: #ffffff;
+  font-style: italic;
+  font-weight: 800;
+}
+[data-theme="black"] .arena-icon { color: #ffffff; }
+[data-theme="black"] .arena-subtitle { color: var(--arena-text-secondary); }
+@keyframes pulse-pink {
+  0%, 100% { opacity: 1; box-shadow: 0 4px 12px rgba(255, 20, 147, 0.4); }
+  50% { opacity: 0.9; box-shadow: 0 4px 16px rgba(255, 20, 147, 0.5); }
+}
+/* HOT 배지 — Pink/Black 공통 분홍 스타일 */
+.hot-badge {
+  background: linear-gradient(90deg, #FF1493 0%, #FF69B4 100%);
+  color: #ffffff;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(255, 20, 147, 0.4);
+  animation: pulse-pink 2s infinite;
+}
+[data-theme="black"] .battle-card {
+  background: #0a0a0a;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+}
+[data-theme="black"] .vote-bar-container {
+  display: flex;
+  background: #1a1a1a;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+[data-theme="black"] .vote-bar-left {
+  background: linear-gradient(90deg, #FF1493 0%, #FF69B4 100%);
+  height: 100%;
+}
+[data-theme="black"] .vote-bar-right {
+  background: linear-gradient(90deg, #A78BFA 0%, #8B5CF6 100%);
+  height: 100%;
+}
+[data-theme="black"] .vote-count {
+  color: #808080;
+  font-size: 13px;
+  text-align: center;
+  margin-top: 8px;
+}
+[data-theme="black"] .comment-user { color: #ffffff; font-weight: 600; }
+[data-theme="black"] .comment-text { color: #b0b0b0; }
+[data-theme="black"] .view-all-comments { color: #808080; text-decoration: none; }
+[data-theme="black"] .view-all-comments:hover { color: #FF1493; }
+
+/* 블랙 모드 — 2nd Market 상점 아이콘 분홍 테두리 (살짝만) */
+[data-theme="black"] .store-icon-pink-outline {
+  filter: drop-shadow(0 0 1px rgba(255, 105, 180, 0.6)) drop-shadow(0 0 2px rgba(255, 105, 180, 0.35));
 }
 
 /* Bid pulse animation */

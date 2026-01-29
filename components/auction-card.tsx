@@ -34,18 +34,16 @@ const AUCTION_THEMES = {
   },
   black: {
     accent: "text-white",
-    accentBg: "bg-black",
-    accentBorder: "border-white/30",
-    accentBorderFocus: "border-white/50 focus:border-white",
-    accentForeground: "text-white",
-    chartColor: "#ffffff",
+    accentBorder: "border-[#1f1f1f]",
+    accentBorderFocus: "border-[rgba(255,105,180,0.4)] focus:border-[rgba(255,105,180,0.5)]",
+    chartGradient: true,
   },
 } as const
 
 type AuctionVariant = keyof typeof AUCTION_THEMES
 
-// 간략한 가격 흐름 선 (테마별 색상)
-function PriceFlowChart({ data, chartColor = "#FF6B9D" }: { data: number[]; chartColor?: string }) {
+// 간략한 가격 흐름 선 (테마별: 기본 핑크, 블랙 모드 화이트→그레이 라인 + 밑 잔상 핑크)
+function PriceFlowChart({ data, chartColor = "#FF6B9D", useWhiteGrayGradient = false }: { data: number[]; chartColor?: string; useWhiteGrayGradient?: boolean }) {
   if (data.length < 2) return null
   const step = Math.max(1, Math.floor(data.length / 16))
   const sampled = data.filter((_, i) => i % step === 0 || i === data.length - 1)
@@ -62,18 +60,33 @@ function PriceFlowChart({ data, chartColor = "#FF6B9D" }: { data: number[]; char
   })
   const pathD = `M ${points.join(" L ")}`
   const areaD = `${pathD} L ${w - padding.right},${h - padding.bottom} L ${padding.left},${h - padding.bottom} Z`
-  const opacity = chartColor === "#ffffff" ? "0.15" : "0.18"
+  const uid = `chart-${Math.random().toString(36).slice(2)}`
+  const fillColor = useWhiteGrayGradient ? "#FF69B4" : chartColor
+  const fillOpacity = useWhiteGrayGradient ? "0.18" : "0.18"
 
   return (
     <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="w-full h-full">
       <defs>
-        <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={chartColor} stopOpacity={opacity} />
-          <stop offset="100%" stopColor={chartColor} stopOpacity="0" />
+        <linearGradient id={`fill-${uid}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={fillColor} stopOpacity={fillOpacity} />
+          <stop offset="100%" stopColor={fillColor} stopOpacity="0" />
         </linearGradient>
+        {useWhiteGrayGradient && (
+          <linearGradient id={`line-${uid}`} x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#ffffff" />
+            <stop offset="100%" stopColor="#666666" />
+          </linearGradient>
+        )}
       </defs>
-      <path d={areaD} fill="url(#chartFill)" />
-      <path d={pathD} fill="none" stroke={chartColor} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d={areaD} fill={`url(#fill-${uid})`} />
+      <path
+        d={pathD}
+        fill="none"
+        stroke={useWhiteGrayGradient ? `url(#line-${uid})` : chartColor}
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   )
 }
@@ -220,7 +233,7 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
       <div className="relative flex flex-col min-h-[100dvh] bg-transparent" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'calc(100px + env(safe-area-inset-bottom))' }}>
         {/* Header - 로고만 */}
         <div className="relative z-50" style={{ minHeight: 'calc(4rem + env(safe-area-inset-top))' }}>
-          <Link href="/" className="absolute top-4 left-4" style={{ top: 'calc(1rem + env(safe-area-inset-top))' }}>
+          <Link href={variant === "black" ? "/black" : "/"} className="absolute top-4 left-4" style={{ top: 'calc(1rem + env(safe-area-inset-top))' }}>
             <Image
               src="/logo-pink.png"
               alt="Krunch Logo"
@@ -248,12 +261,15 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
 
         {/* Main Content - 팝업/상단과 PLACE BID 사이 세로 중앙 배치 */}
         <div className="flex-1 flex flex-col justify-center min-h-0 py-4">
-          <div className="relative bg-black/30 mx-4 mb-4 rounded-lg border border-border/50 overflow-hidden" style={{ marginLeft: 'max(1rem, env(safe-area-inset-left))', marginRight: 'max(1rem, env(safe-area-inset-right))' }}>
+          <div
+            className={`relative mx-4 mb-4 rounded-lg overflow-hidden border ${variant === "black" ? "black-mode-card" : "bg-black/30 border-border/50"}`}
+            style={{ marginLeft: 'max(1rem, env(safe-area-inset-left))', marginRight: 'max(1rem, env(safe-area-inset-right))' }}
+          >
           {/* LEGEND AUCTION + TIME REMAINING (우측, Current Bid 위) */}
           <div className="p-4 pt-5 sm:p-6 sm:pt-6 flex items-start justify-between gap-4">
             <div>
-              <h2 className={`font-display text-4xl sm:text-5xl ${theme.accent} uppercase leading-[0.85] tracking-tight drop-shadow-md`}>LEGEND</h2>
-              <h2 className={`font-display text-4xl sm:text-5xl ${theme.accent} uppercase leading-[0.85] tracking-tight drop-shadow-md`}>AUCTION</h2>
+              <h2 className={`font-display text-4xl sm:text-5xl uppercase leading-[0.85] tracking-tight ${variant === "black" ? "black-mode-legend-title" : `${theme.accent} drop-shadow-md`}`}>LEGEND</h2>
+              <h2 className={`font-display text-4xl sm:text-5xl uppercase leading-[0.85] tracking-tight ${variant === "black" ? "black-mode-legend-title" : `${theme.accent} drop-shadow-md`}`}>AUCTION</h2>
             </div>
             <div className="flex-shrink-0 bg-black/50 backdrop-blur-sm px-3 py-2.5 rounded-xl border border-white/15">
               <p className="text-[9px] text-white/60 uppercase tracking-widest font-sans mb-1">Time Remaining</p>
@@ -278,28 +294,28 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
             <div className="flex-1 flex flex-col justify-center items-end min-w-0 pl-2">
               <p className="text-[10px] text-white/60 uppercase tracking-widest font-sans mb-1">Current Bid</p>
               <p
-                className={`text-2xl sm:text-3xl font-bold ${theme.accent} font-sans tabular-nums leading-tight ${bidPulse ? "animate-bid-pulse" : ""}`}
+                className={`text-2xl sm:text-3xl font-bold font-sans tabular-nums leading-tight ${bidPulse ? "animate-bid-pulse" : ""} ${variant === "black" ? "text-white" : theme.accent}`}
               >
                 ₩{currentBid.toLocaleString()}
               </p>
-              <p className="text-sm font-semibold text-white/90 tabular-nums mt-1.5">
+              <p className={`text-sm font-semibold tabular-nums mt-1.5 ${variant === "black" ? "text-[#FF69B4]" : "text-white/90"}`}>
                 +{risePercent}%
               </p>
             </div>
           </div>
 
           <div className="px-4 pb-3">
-            <p className="text-xs font-semibold text-foreground tracking-wide font-sans drop-shadow-md">PEACEMINUSONE</p>
-            <p className="text-xs text-muted-foreground mt-0.5 font-sans">Übermensch 2025 World Tour Special Merch</p>
-            <p className="text-xs text-muted-foreground font-sans">Übermensch Cap (Burgundy) customized</p>
+            <p className={`text-xs font-semibold tracking-wide font-sans drop-shadow-md ${variant === "black" ? "text-white" : "text-foreground"}`}>PEACEMINUSONE</p>
+            <p className={`text-xs mt-0.5 font-sans ${variant === "black" ? "text-[#999999]" : "text-muted-foreground"}`}>Übermensch 2025 World Tour Special Merch</p>
+            <p className={`text-xs font-sans ${variant === "black" ? "text-[#999999]" : "text-muted-foreground"}`}>Übermensch Cap (Burgundy) customized</p>
           </div>
 
           {/* 시간별 가격 흐름 차트 — 간략한 선 + 가로 시간 라벨 + 밑에 Historical Data */}
           <div className="mx-4 mt-2 mb-3">
-            <div className="h-16 sm:h-20 rounded-t-lg bg-black/30 border border-b-0 border-white/10 overflow-hidden">
-              <PriceFlowChart data={priceHistory} chartColor={theme.chartColor} />
+            <div className={`h-16 sm:h-20 rounded-t-lg overflow-hidden border border-b-0 ${variant === "black" ? "bg-[#0a0a0a] border-[#1f1f1f]" : "bg-black/30 border-white/10"}`}>
+              <PriceFlowChart data={priceHistory} chartColor={variant === "black" ? "#ffffff" : theme.chartColor} useWhiteGrayGradient={variant === "black"} />
             </div>
-            <div className="flex justify-between px-2 py-1.5 rounded-b-lg bg-black/30 border border-t-0 border-white/10 text-[10px] text-white/50 font-sans">
+            <div className={`flex justify-between px-2 py-1.5 rounded-b-lg text-[10px] font-sans border border-t-0 ${variant === "black" ? "bg-[#0a0a0a] border-[#1f1f1f] text-[#666666]" : "bg-black/30 border-white/10 text-white/50"}`}>
               <span>3D ago</span>
               <span>24h ago</span>
               <span>12h ago</span>
@@ -307,26 +323,26 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
               <span>Now</span>
             </div>
             <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
-              <div className="rounded-lg bg-white/5 border border-white/10 px-3 py-2.5">
-                <p className="text-[10px] text-white/50 uppercase tracking-wider font-sans">Price Range · 12M</p>
-                <p className="text-sm font-semibold text-white/90 mt-0.5 tabular-nums">₩2.0M – ₩4.6M</p>
+              <div className={`rounded-lg px-3 py-2.5 ${variant === "black" ? "bg-[#0a0a0a] border border-[#1f1f1f]" : "bg-white/5 border border-white/10"}`}>
+                <p className={`text-[10px] uppercase tracking-wider font-sans ${variant === "black" ? "text-[#999999]" : "text-white/50"}`}>Price Range · 12M</p>
+                <p className={`text-sm font-semibold mt-0.5 tabular-nums ${variant === "black" ? "text-white" : "text-white/90"}`}>₩2.0M – ₩4.6M</p>
               </div>
-              <div className="rounded-lg bg-white/5 border border-white/10 px-3 py-2.5">
-                <p className="text-[10px] text-white/50 uppercase tracking-wider font-sans">Volatility</p>
-                <p className="text-sm font-semibold text-white/90 mt-0.5 tabular-nums">8%</p>
+              <div className={`rounded-lg px-3 py-2.5 ${variant === "black" ? "bg-[#0a0a0a] border border-[#1f1f1f]" : "bg-white/5 border border-white/10"}`}>
+                <p className={`text-[10px] uppercase tracking-wider font-sans ${variant === "black" ? "text-[#999999]" : "text-white/50"}`}>Volatility</p>
+                <p className={`text-sm font-semibold mt-0.5 tabular-nums ${variant === "black" ? "text-white" : "text-white/90"}`}>8%</p>
               </div>
-              <div className="rounded-lg bg-white/5 border border-white/10 px-3 py-2.5">
-                <p className="text-[10px] text-white/50 uppercase tracking-wider font-sans">Avg. Sale · 3M</p>
-                <p className="text-sm font-semibold text-white/90 mt-0.5 tabular-nums">₩3.2M</p>
+              <div className={`rounded-lg px-3 py-2.5 ${variant === "black" ? "bg-[#0a0a0a] border border-[#1f1f1f]" : "bg-white/5 border border-white/10"}`}>
+                <p className={`text-[10px] uppercase tracking-wider font-sans ${variant === "black" ? "text-[#999999]" : "text-white/50"}`}>Avg. Sale · 3M</p>
+                <p className={`text-sm font-semibold mt-0.5 tabular-nums ${variant === "black" ? "text-white" : "text-white/90"}`}>₩3.2M</p>
               </div>
-              <div className="rounded-lg bg-white/5 border border-white/10 px-3 py-2.5">
-                <p className="text-[10px] text-white/50 uppercase tracking-wider font-sans">Premium · Last</p>
-                <p className="text-sm font-semibold text-white/90 mt-0.5 tabular-nums">+{risePercent}%</p>
+              <div className={`rounded-lg px-3 py-2.5 ${variant === "black" ? "bg-[#0a0a0a] border border-[#1f1f1f]" : "bg-white/5 border border-white/10"}`}>
+                <p className={`text-[10px] uppercase tracking-wider font-sans ${variant === "black" ? "text-[#999999]" : "text-white/50"}`}>Premium · Last</p>
+                <p className={`text-sm font-semibold mt-0.5 tabular-nums ${variant === "black" ? "text-[#FF69B4]" : "text-white/90"}`}>+{risePercent}%</p>
               </div>
             </div>
           </div>
 
-          <div className={`mx-4 border-t ${theme.accentBorder}`} />
+          <div className={`mx-4 border-t ${variant === "black" ? "border-[#1f1f1f]" : theme.accentBorder}`} />
         </div>
         </div>
 
@@ -394,7 +410,7 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
 
                 <button
                   onClick={handleSetOffer}
-                  className={`w-full py-4 ${theme.accentBg} ${theme.accentForeground} font-display font-medium text-lg uppercase tracking-wide transition-all hover:brightness-110 active:scale-[0.98]`}
+                  className={`w-full py-4 font-display font-medium text-lg uppercase tracking-wide transition-all active:scale-[0.98] ${variant === "black" ? "black-mode-place-bid" : `${theme.accentBg} ${theme.accentForeground} hover:brightness-110`}`}
                 >
                   SET OFFER
                 </button>
@@ -416,7 +432,7 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
           >
             <button
               onClick={() => setShowAuctionCard(true)}
-              className={`w-full h-full flex items-center justify-center ${theme.accentBg} ${theme.accentForeground} font-display font-medium text-xl uppercase tracking-wide transition-all hover:brightness-110 active:scale-[0.98]`}
+              className={`w-full h-full flex items-center justify-center font-display font-medium text-xl uppercase tracking-wide transition-all active:scale-[0.98] ${variant === "black" ? "black-mode-place-bid" : `${theme.accentBg} ${theme.accentForeground} hover:brightness-110`}`}
             >
               PLACE BID
             </button>
