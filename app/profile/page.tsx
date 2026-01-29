@@ -77,8 +77,14 @@ export default function ProfilePage() {
         {/* Header */}
         <header className="sticky top-0 z-40 bg-black/80 backdrop-blur-md border-b border-white/10">
           <div className="flex items-center justify-between px-4 py-3">
-            <Link href={basePath || "/"}>
-              <Image src="/logo-pink.png" alt="Krunch" width={150} height={48} className="h-12 w-auto" />
+            <Link href={basePath || "/"} className={theme === "black" ? "block -mt-1" : ""}>
+              <Image
+                src={theme === "black" ? "/logo-white.png" : "/logo-pink.png"}
+                alt="Krunch"
+                width={theme === "black" ? 248 : 150}
+                height={theme === "black" ? 79 : 48}
+                className={theme === "black" ? "h-[79px] w-[247px] object-contain object-left" : "h-12 w-[150px] object-contain object-left"}
+              />
             </Link>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
@@ -106,7 +112,7 @@ export default function ProfilePage() {
               className="relative rounded-2xl p-4 overflow-hidden"
               style={theme === "black" ? {
                 background: "#0a0a0a",
-                border: "1px solid rgba(255,255,255,0.08)",
+                border: "1px solid rgba(255,105,180,0.28)",
                 boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
               } : {
                 background: "linear-gradient(135deg, rgba(139,92,246,0.3) 0%, rgba(236,72,153,0.3) 50%, rgba(59,130,246,0.3) 100%)",
@@ -218,7 +224,7 @@ export default function ProfilePage() {
               <button
                 key={index}
                 type="button"
-                className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
+                className={`flex flex-col items-center gap-1.5 p-3 rounded-xl transition-colors ${theme === "black" ? "bg-white/5 border border-[rgba(255,105,180,0.28)] hover:bg-white/10" : "bg-white/5 border border-white/10 hover:bg-white/10"}`}
               >
                 <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
                   <action.icon className={`w-4 h-4 ${action.iconColor}`} />

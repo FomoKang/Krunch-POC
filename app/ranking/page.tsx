@@ -147,6 +147,7 @@ export default function RankingPage() {
   const theme = useSiteTheme()
   const basePath = theme === "black" ? "/black" : ""
   const [activeTab, setActiveTab] = useState<"artist" | "collector">("artist")
+  const logoSrc = theme === "black" ? "/logo-white.png" : "/logo-pink.png"
 
   // 상위 3명
   const topThree = artistRankData.slice(0, 3)
@@ -164,8 +165,14 @@ export default function RankingPage() {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-black/80 backdrop-blur-md border-b border-[#FF6B9D]/20">
         <div className="flex items-center justify-between px-4 py-3">
-          <Link href={basePath || "/"}>
-            <Image src="/logo-pink.png" alt="Krunch" width={150} height={48} className="h-12 w-auto" />
+          <Link href={basePath || "/"} className={theme === "black" ? "block -mt-1" : ""}>
+            <Image
+              src={logoSrc}
+              alt="Krunch"
+              width={theme === "black" ? 248 : 150}
+              height={theme === "black" ? 79 : 48}
+              className={theme === "black" ? "h-[79px] w-[247px] object-contain object-left" : "h-12 w-[150px] object-contain object-left"}
+            />
           </Link>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">

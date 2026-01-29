@@ -294,18 +294,18 @@
 [data-theme="black"] .arena-icon { color: #ffffff; }
 [data-theme="black"] .arena-subtitle { color: var(--arena-text-secondary); }
 @keyframes pulse-pink {
-  0%, 100% { opacity: 1; box-shadow: 0 4px 12px rgba(255, 20, 147, 0.4); }
-  50% { opacity: 0.9; box-shadow: 0 4px 16px rgba(255, 20, 147, 0.5); }
+  0%, 100% { opacity: 1; box-shadow: 0 4px 12px rgba(244, 114, 182, 0.35); }
+  50% { opacity: 0.95; box-shadow: 0 4px 16px rgba(244, 114, 182, 0.45); }
 }
 /* HOT 배지 — Pink/Black 공통 분홍 스타일 */
 .hot-badge {
-  background: linear-gradient(90deg, #FF1493 0%, #FF69B4 100%);
+  background: linear-gradient(90deg, #f472b6 0%, #f9a8d4 100%);
   color: #ffffff;
   padding: 4px 12px;
   border-radius: 20px;
   font-size: 12px;
   font-weight: 700;
-  box-shadow: 0 4px 12px rgba(255, 20, 147, 0.4);
+  box-shadow: 0 4px 12px rgba(244, 114, 182, 0.35);
   animation: pulse-pink 2s infinite;
 }
 [data-theme="black"] .battle-card {

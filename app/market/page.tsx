@@ -8,13 +8,20 @@ import { useSiteTheme } from "@/components/theme-provider"
 export default function SecondMarketPage() {
   const theme = useSiteTheme()
   const basePath = theme === "black" ? "/black" : ""
+  const logoSrc = theme === "black" ? "/logo-white.png" : "/logo-pink.png"
   return (
     <div className="min-h-screen bg-black text-white pb-24">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-black/90 backdrop-blur-sm border-b border-white/5">
         <div className="flex items-center justify-between px-4 py-3">
-          <Link href={basePath || "/"}>
-            <Image src="/logo-pink.png" alt="Krunch" width={150} height={48} className="h-12 w-auto" />
+          <Link href={basePath || "/"} className={theme === "black" ? "block -mt-1" : ""}>
+            <Image
+              src={logoSrc}
+              alt="Krunch"
+              width={theme === "black" ? 248 : 150}
+              height={theme === "black" ? 79 : 48}
+              className={theme === "black" ? "h-[79px] w-[247px] object-contain object-left" : "h-12 w-[150px] object-contain object-left"}
+            />
           </Link>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">

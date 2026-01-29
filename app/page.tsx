@@ -7,11 +7,11 @@ import { Search, Bell, Home, Users, User, Trophy, Store } from "lucide-react"
 import { useSiteTheme } from "@/components/theme-provider"
 
 // Splash Screen (테마 악센트)
-function SplashScreen({ accentBg }: { accentBg: string }) {
+function SplashScreen({ accentBg, logoSrc }: { accentBg: string; logoSrc: string }) {
   return (
     <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
       <div className="flex flex-col items-center gap-4">
-        <Image src="/logo-pink.png" alt="Krunch Logo" width={200} height={67} className="h-auto animate-pulse" />
+        <Image src={logoSrc} alt="Krunch Logo" width={200} height={67} className="h-auto animate-pulse" />
         <div className="w-32 h-1 bg-white/20 rounded-full overflow-hidden">
           <div className={`h-full ${accentBg} animate-[loading_3s_ease-in-out_forwards]`} />
         </div>
@@ -98,6 +98,7 @@ export default function HomePage() {
   const basePath = theme === "black" ? "/black" : ""
   const accentText = theme === "black" ? "text-white" : "text-primary"
   const accentBg = theme === "black" ? "bg-white" : "bg-primary"
+  const logoSrc = theme === "black" ? "/logo-white.png" : "/logo-pink.png"
 
   const [showSplash, setShowSplash] = useState(true)
   const [mounted, setMounted] = useState(false)
@@ -113,7 +114,7 @@ export default function HomePage() {
   }, [])
 
   if (!mounted || showSplash) {
-    return <SplashScreen accentBg={accentBg} />
+    return <SplashScreen accentBg={accentBg} logoSrc={logoSrc} />
   }
 
   return (
@@ -121,8 +122,14 @@ export default function HomePage() {
       {/* 상단 네비게이션 */}
       <header className="sticky top-0 z-50 bg-black/90 backdrop-blur-sm border-b border-white/5">
         <div className="flex items-center justify-between px-4 py-3">
-          <Link href={basePath || "/"}>
-            <Image src="/logo-pink.png" alt="Krunch" width={150} height={48} className="h-12 w-auto" />
+          <Link href={basePath || "/"} className={theme === "black" ? "block -mt-1" : ""}>
+            <Image
+              src={logoSrc}
+              alt="Krunch"
+              width={theme === "black" ? 248 : 150}
+              height={theme === "black" ? 79 : 48}
+              className={theme === "black" ? "h-[79px] w-[247px] object-contain object-left" : "h-12 w-[150px] object-contain object-left"}
+            />
           </Link>
           <div className="flex items-center gap-4">
             <Link href={`${basePath}/search`} className="p-2 hover:bg-white/10 rounded-full transition-colors">

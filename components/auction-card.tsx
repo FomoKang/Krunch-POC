@@ -104,6 +104,7 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
   const [bidLog, setBidLog] = useState<BidLogEntry[]>([])
   const [showBidLog, setShowBidLog] = useState(false)
   const [showAuctionCard, setShowAuctionCard] = useState(false)
+  const logoSrc = variant === "black" ? "/logo-white.png" : "/logo-pink.png"
   // 시간별 가격 흐름 차트용 (포인트 적게 → 선 움직임 간략)
   const [priceHistory, setPriceHistory] = useState<number[]>(() =>
     Array.from({ length: 24 }, (_, i) => 2000000 + i * 18000 + Math.floor(Math.random() * 5000))
@@ -235,11 +236,11 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
         <div className="relative z-50" style={{ minHeight: 'calc(4rem + env(safe-area-inset-top))' }}>
           <Link href={variant === "black" ? "/black" : "/"} className="absolute top-4 left-4" style={{ top: 'calc(1rem + env(safe-area-inset-top))' }}>
             <Image
-              src="/logo-pink.png"
+              src={logoSrc}
               alt="Krunch Logo"
-              width={120}
-              height={40}
-              className="h-auto w-24 sm:w-[120px] cursor-pointer hover:opacity-80 transition-opacity"
+              width={variant === "black" ? 198 : 120}
+              height={variant === "black" ? 66 : 40}
+              className={variant === "black" ? "h-[66px] w-[198px] object-contain object-left cursor-pointer hover:opacity-80 transition-opacity" : "h-10 w-[120px] object-contain object-left cursor-pointer hover:opacity-80 transition-opacity"}
             />
           </Link>
         </div>
