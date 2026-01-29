@@ -34,10 +34,10 @@ const AUCTION_THEMES = {
   },
   black: {
     accent: "text-white",
-    accentBg: "bg-white",
+    accentBg: "bg-black",
     accentBorder: "border-white/30",
     accentBorderFocus: "border-white/50 focus:border-white",
-    accentForeground: "text-black",
+    accentForeground: "text-white",
     chartColor: "#ffffff",
   },
 } as const

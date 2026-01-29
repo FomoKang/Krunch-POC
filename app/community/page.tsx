@@ -4,6 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Search, Bell, Home, Trophy, Users, User, MessageCircle, Flame, Zap, Store } from "lucide-react"
+import { useSiteTheme } from "@/components/theme-provider"
 
 // Fashion Battle 데이터
 const fashionBattles = [
@@ -250,25 +251,27 @@ function BattleCard({ battle }: { battle: typeof fashionBattles[0] }) {
 }
 
 export default function CommunityPage() {
+  const theme = useSiteTheme()
+  const basePath = theme === "black" ? "/black" : ""
   return (
     <div className="min-h-screen bg-black text-white pb-24">
       {/* 상단 네비게이션 */}
       <header className="sticky top-0 z-50 bg-black/90 backdrop-blur-sm border-b border-white/5">
         <div className="flex items-center justify-between px-4 py-3">
-          <Link href="/">
+          <Link href={basePath || "/"}>
             <Image src="/logo-pink.png" alt="Krunch" width={150} height={48} className="h-12 w-auto" />
           </Link>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <Users className="w-5 h-5 text-[#FF6B9D]" />
+              <Users className={`w-5 h-5 ${theme === "black" ? "text-white" : "text-[#FF6B9D]"}`} />
               <span className="font-display text-lg tracking-wide text-white uppercase">Community</span>
             </div>
-            <Link href="/search" className="p-2 hover:bg-white/10 rounded-full transition-colors">
+            <Link href={`${basePath}/search`} className="p-2 hover:bg-white/10 rounded-full transition-colors">
               <Search className="w-5 h-5 text-white/80" />
             </Link>
-            <Link href="/notifications" className="p-2 hover:bg-white/10 rounded-full transition-colors relative">
+            <Link href={`${basePath}/notifications`} className="p-2 hover:bg-white/10 rounded-full transition-colors relative">
               <Bell className="w-5 h-5 text-white/80" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-[#FF6B9D] rounded-full" />
+              <span className={`absolute top-1 right-1 w-2 h-2 rounded-full ${theme === "black" ? "bg-white" : "bg-[#FF6B9D]"}`} />
             </Link>
           </div>
         </div>
@@ -295,23 +298,23 @@ export default function CommunityPage() {
       {/* 하단 탭바 */}
       <nav className="fixed bottom-0 left-0 right-0 bg-black/95 backdrop-blur-sm border-t border-white/10 z-50">
         <div className="flex items-center justify-around py-3">
-          <Link href="/" className="flex flex-col items-center gap-1 text-white/50 hover:text-white/80 transition-colors">
+          <Link href={basePath || "/"} className="flex flex-col items-center gap-1 text-white/50 hover:text-white/80 transition-colors">
             <Home className="w-6 h-6" />
             <span className="text-xs font-medium">Home</span>
           </Link>
-          <Link href="/ranking" className="flex flex-col items-center gap-1 text-white/50 hover:text-white/80 transition-colors">
+          <Link href={`${basePath}/ranking`} className="flex flex-col items-center gap-1 text-white/50 hover:text-white/80 transition-colors">
             <Trophy className="w-6 h-6" />
             <span className="text-xs font-medium">Ranking</span>
           </Link>
-          <Link href="/community" className="flex flex-col items-center gap-1 text-[#FF6B9D]">
+          <Link href={`${basePath}/community`} className={`flex flex-col items-center gap-1 ${theme === "black" ? "text-white" : "text-[#FF6B9D]"}`}>
             <Users className="w-6 h-6" />
             <span className="text-xs font-medium">Community</span>
           </Link>
-          <Link href="/market" className="flex flex-col items-center gap-1 text-white/50 hover:text-white/80 transition-colors">
+          <Link href={`${basePath}/market`} className="flex flex-col items-center gap-1 text-white/50 hover:text-white/80 transition-colors">
             <Store className="w-6 h-6" />
             <span className="text-xs font-medium">2nd Market</span>
           </Link>
-          <Link href="/profile" className="flex flex-col items-center gap-1 text-white/50 hover:text-white/80 transition-colors">
+          <Link href={`${basePath}/profile`} className="flex flex-col items-center gap-1 text-white/50 hover:text-white/80 transition-colors">
             <User className="w-6 h-6" />
             <span className="text-xs font-medium">My Profile</span>
           </Link>
