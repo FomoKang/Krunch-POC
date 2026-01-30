@@ -118,7 +118,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white pb-20">
+    <div className="min-h-screen bg-black text-white pb-for-nav">
       {/* 상단 네비게이션 */}
       <header className="sticky top-0 z-50 bg-black/90 backdrop-blur-sm border-b border-white/5">
         <div className="flex items-center justify-between px-4 py-3">
@@ -253,8 +253,8 @@ export default function HomePage() {
         </section>
       </main>
 
-      {/* 하단 탭바 */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-black/95 backdrop-blur-sm border-t border-white/10 z-50">
+      {/* 하단 탭바 — safe-area 적용으로 항상 보이게 */}
+      <nav className="nav-bottom-bar bg-black/95 backdrop-blur-sm border-t border-white/10">
         <div className="flex items-center justify-around py-3">
           <Link href={basePath || "/"} className={`flex flex-col items-center gap-1 ${theme === "black" ? "text-white" : "text-[#FF6B9D]"}`}>
             <Home className="w-6 h-6" />

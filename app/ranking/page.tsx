@@ -154,7 +154,7 @@ export default function RankingPage() {
   const restArtists = artistRankData.slice(3)
 
   return (
-    <div className="min-h-screen bg-black text-white pb-24 relative overflow-hidden">
+    <div className="min-h-screen bg-black text-white pb-for-nav relative overflow-hidden">
       {/* Ambient lighting effects */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#FF6B9D]/20 rounded-full blur-[120px] animate-pulse" />
@@ -417,8 +417,8 @@ export default function RankingPage() {
         </div>
       )}
 
-      {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-black/95 backdrop-blur-sm border-t border-white/10 z-50">
+      {/* Bottom Navigation — safe-area 적용으로 항상 보이게 */}
+      <nav className="nav-bottom-bar bg-black/95 backdrop-blur-sm border-t border-white/10">
         <div className="flex items-center justify-around py-3">
           <Link href={basePath || "/"} className="flex flex-col items-center gap-1 text-white/50 hover:text-white/80 transition-colors">
             <Home className="w-6 h-6" />

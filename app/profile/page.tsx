@@ -64,7 +64,7 @@ export default function ProfilePage() {
 
   return (
     <>
-      <div className="min-h-screen bg-black text-white pb-24">
+      <div className="min-h-screen bg-black text-white pb-for-nav">
         {/* Ambient lighting effects — 블랙 모드에서는 끄거나 최소화 */}
         {theme !== "black" && (
           <div className="fixed inset-0 pointer-events-none overflow-hidden">
@@ -382,8 +382,8 @@ export default function ProfilePage() {
           </section>
         </main>
 
-        {/* Bottom Navigation */}
-        <nav className="fixed bottom-0 left-0 right-0 bg-black/95 backdrop-blur-sm border-t border-white/10 z-50">
+        {/* Bottom Navigation — safe-area 적용으로 항상 보이게 */}
+        <nav className="nav-bottom-bar bg-black/95 backdrop-blur-sm border-t border-white/10">
           <div className="flex items-center justify-around py-3">
             <Link href={basePath || "/"} className="flex flex-col items-center gap-1 text-white/50 hover:text-white/80 transition-colors">
               <Home className="w-6 h-6" />

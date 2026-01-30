@@ -128,6 +128,20 @@
   }
 }
 
+/* 하단 탭바 항상 보이게 — safe-area 적용 (핑크/다크 모드 공통) */
+.nav-bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+/* 하단 바 높이만큼 본문 여백 (safe-area 포함) */
+.pb-for-nav {
+  padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+}
+
 /* Loading animation for splash screen */
 @keyframes loading {
   from {
