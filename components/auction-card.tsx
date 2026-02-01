@@ -329,7 +329,7 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
               alt="Krunch Logo"
               width={225}
               height={72}
-              className="h-[72px] w-[225px] object-contain object-left cursor-pointer hover:opacity-80 transition-opacity"
+              className={`h-[72px] w-[225px] object-contain object-left cursor-pointer hover:opacity-80 transition-opacity ${variant !== "black" ? "scale-[1.02] origin-center" : ""}`}
             />
           </Link>
         </div>

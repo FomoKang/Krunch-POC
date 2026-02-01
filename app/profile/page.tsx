@@ -136,7 +136,7 @@ export default function ProfilePage() {
                   alt="Krunch"
                   width={225}
                   height={72}
-                  className="h-[72px] w-[225px] object-contain object-left"
+                  className={`h-[72px] w-[225px] object-contain object-left ${theme !== "black" ? "scale-[1.02] origin-center" : ""}`}
                 />
               </Link>
             </div>

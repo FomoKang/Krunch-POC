@@ -99,7 +99,7 @@ export default function RankingPage() {
                 alt="Krunch"
                 width={225}
                 height={72}
-                className="h-[72px] w-[225px] object-contain object-left"
+                className={`h-[72px] w-[225px] object-contain object-left ${theme !== "black" ? "scale-[1.02] origin-center" : ""}`}
               />
             </Link>
           </div>
@@ -358,11 +358,11 @@ export default function RankingPage() {
           {topCollectorsData.map((collector) => (
             <div
               key={collector.rank}
-              className={`group p-5 rounded-2xl border transition-all duration-300 relative overflow-hidden ${
+              className={`group p-5 rounded-2xl border transition-all duration-300 relative overflow-hidden cursor-pointer ${
                 theme === "black"
                   ? collector.rank === 1
-                    ? "bg-[#1a1a1a] border-2 border-[rgba(255,105,180,0.3)] shadow-[0_8px_32px_rgba(255,105,180,0.2)]"
-                    : "bg-[#1a1a1a] border border-white/10 hover:border-[rgba(255,105,180,0.25)] hover:shadow-[0_4px_16px_rgba(255,105,180,0.12)]"
+                    ? "bg-[#1a1a1a] border-2 border-[rgba(255,105,180,0.3)] shadow-[0_8px_32px_rgba(255,105,180,0.2)] hover:bg-[#222] hover:border-[rgba(255,105,180,0.45)] hover:shadow-[0_8px_32px_rgba(255,105,180,0.28)]"
+                    : "bg-[#1a1a1a] border border-white/10 hover:bg-[#222] hover:border-[rgba(255,105,180,0.35)] hover:shadow-[0_4px_20px_rgba(255,105,180,0.18)]"
                   : collector.rank === 1
                     ? "bg-gradient-to-br from-amber-500/20 via-amber-500/10 to-transparent border-amber-500/40 shadow-2xl shadow-amber-500/20"
                     : "bg-gradient-to-r from-white/5 via-white/5 to-transparent border-white/10 hover:border-[#FF6B9D]/50 hover:shadow-lg hover:shadow-[#FF6B9D]/20"
@@ -417,7 +417,7 @@ export default function RankingPage() {
                     </div>
                   </div>
                   <div>
-                    <p className={`text-white font-bold text-base transition-colors ${theme === "black" ? "" : "group-hover:text-[#FF6B9D]"}`}>{collector.userId}</p>
+                    <p className={`text-white font-bold text-base transition-colors ${theme === "black" ? "group-hover:text-[#FF8FAB]" : "group-hover:text-[#FF6B9D]"}`}>{collector.userId}</p>
                     <p className={`text-xs font-medium ${theme === "black" ? "text-[#808080]" : "text-white/50"}`}>{collector.artistFan}&apos;s No.1 Fan</p>
                   </div>
                 </div>
@@ -428,7 +428,7 @@ export default function RankingPage() {
               <div className="flex items-center justify-between pt-4 border-t border-white/10 relative z-10">
                 <div>
                   <p className={`text-[10px] uppercase tracking-wider font-bold mb-1 ${theme === "black" ? "text-[#808080]" : "text-white/40"}`}>Total Spent</p>
-                  <p className={`text-white font-bold transition-colors ${theme === "black" ? "text-lg" : "text-base group-hover:text-[#FF6B9D]"}`}>₩{formatKRW(collector.totalSpent)}</p>
+                  <p className={`text-white font-bold transition-colors ${theme === "black" ? "text-lg group-hover:text-[#FF8FAB]" : "text-base group-hover:text-[#FF6B9D]"}`}>₩{formatKRW(collector.totalSpent)}</p>
                 </div>
                 <div className="text-right">
                   <p className={`text-[10px] uppercase tracking-wider font-bold mb-1 ${theme === "black" ? "text-[#808080]" : "text-white/40"}`}>Items Owned</p>

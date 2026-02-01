@@ -28,7 +28,7 @@ export function ArtistComingSoonPage({ artistId, artist, basePath = "" }: Props)
             <span className="text-sm font-medium">뒤로</span>
           </Link>
           <Link href={basePath || "/"} className="absolute left-1/2 -translate-x-1/2 block shrink-0">
-            <Image src={logoSrc} alt="Krunch" width={140} height={45} className="h-[45px] w-[140px] object-contain" />
+            <Image src={logoSrc} alt="Krunch" width={140} height={45} className={`h-[45px] w-[140px] object-contain ${!isBlack ? "scale-[1.02] origin-center" : ""}`} />
           </Link>
           <div className="w-14 flex justify-end">
             <ThemeToggle inline />

@@ -26,7 +26,7 @@ function SplashScreen({ accentBg, logoSrc }: { accentBg: string; logoSrc: string
   return (
     <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
       <div className="flex flex-col items-center">
-        <Image src={logoSrc} alt="Krunch Logo" width={SPLASH_LOGO_WIDTH} height={SPLASH_LOGO_HEIGHT} className="h-[108px] w-[338px] object-contain animate-pulse block" />
+        <Image src={logoSrc} alt="Krunch Logo" width={SPLASH_LOGO_WIDTH} height={SPLASH_LOGO_HEIGHT} className={`h-[108px] w-[338px] object-contain animate-pulse block ${logoSrc.includes("pink") ? "scale-[1.02] origin-center" : ""}`} />
         <div className="w-32 h-1 bg-white/20 rounded-full overflow-hidden -mt-2">
           <div className={`h-full ${accentBg} animate-[loading_3s_ease-in-out_forwards]`} />
         </div>
@@ -145,7 +145,7 @@ export default function HomePage() {
                 alt="Krunch"
                 width={LOGO_WIDTH}
                 height={LOGO_HEIGHT}
-                className="h-[72px] w-[225px] object-contain object-left"
+                className={`h-[72px] w-[225px] object-contain object-left ${theme !== "black" ? "scale-[1.02] origin-center" : ""}`}
               />
             </Link>
           </div>
