@@ -132,7 +132,7 @@ export default function ProfilePage() {
             <div className="h-[72px] flex items-center shrink-0">
               <Link href={basePath || "/"} className="block">
                 <Image
-                  src={theme === "black" ? "/logo-White.png" : "/logo-Pink.png"}
+                  src={theme === "black" ? "/logo-white.png" : "/logo-pink.png"}
                   alt="Krunch"
                   width={225}
                   height={72}

@@ -7,7 +7,7 @@ import { Search, Bell, Home, Users, User, Trophy, Store } from "lucide-react"
 import { useSiteTheme } from "@/components/theme-provider"
 import { ThemeToggle } from "@/components/theme-toggle"
 
-// 로고 크기 통일 (logo-White, logo-Pink, logo-Black 동일 높이, 150% 크기)
+// 로고 크기 통일 (logo-white, logo-pink, logo-black 동일 높이, 150% 크기)
 const LOGO_WIDTH = 225
 const LOGO_HEIGHT = 72
 // 로딩창 전용: 헤더보다 150% 더 크게
@@ -114,7 +114,7 @@ export default function HomePage() {
   const basePath = theme === "black" ? "/black" : ""
   const accentText = theme === "black" ? "text-white" : "text-primary"
   const accentBg = theme === "black" ? "bg-white" : "bg-primary"
-  const logoSrc = theme === "black" ? "/logo-White.png" : "/logo-Pink.png"
+  const logoSrc = theme === "black" ? "/logo-white.png" : "/logo-pink.png"
 
   const [showSplash, setShowSplash] = useState(true)
   const [mounted, setMounted] = useState(false)

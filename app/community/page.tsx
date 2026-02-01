@@ -316,7 +316,7 @@ function BattleCard({ battle, isBlack }: { battle: BattleItem; isBlack?: boolean
 export default function CommunityPage() {
   const { theme } = useSiteTheme()
   const basePath = theme === "black" ? "/black" : ""
-  const logoSrc = theme === "black" ? "/logo-White.png" : "/logo-Pink.png"
+  const logoSrc = theme === "black" ? "/logo-white.png" : "/logo-pink.png"
   return (
     <div className="min-h-screen bg-black text-white pb-for-nav">
       {/* 상단 네비게이션 */}

@@ -73,7 +73,7 @@ export default function RankingPage() {
   const [showMore, setShowMore] = useState(false)
   const [categoryFilter, setCategoryFilter] = useState("전체")
   const [sortBy, setSortBy] = useState<"sales" | "volume" | "new">("sales")
-  const logoSrc = theme === "black" ? "/logo-White.png" : "/logo-Pink.png"
+  const logoSrc = theme === "black" ? "/logo-white.png" : "/logo-pink.png"
 
   const topThree = artistRankDataFull.slice(0, 3)
   const listCount = showMore ? 20 : INITIAL_LIST_COUNT
