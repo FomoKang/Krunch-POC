@@ -11,13 +11,13 @@ export function ThemeToggle({ inline }: { inline?: boolean }) {
       <button
         type="button"
         onClick={() => setTheme(theme === "black" ? "default" : "black")}
-        className="p-2 hover:bg-white/10 rounded-full transition-colors"
+        className="p-1.5 sm:p-2 hover:bg-white/10 rounded-full transition-colors shrink-0"
         aria-label={theme === "black" ? "Pink mode" : "Black mode"}
       >
         {theme === "black" ? (
-          <Sparkles className="w-5 h-5 text-[#FF6B9D]" />
+          <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-[#FF6B9D]" />
         ) : (
-          <Moon className="w-5 h-5 text-white/80" />
+          <Moon className="w-4 h-4 sm:w-5 sm:h-5 text-white/80" />
         )}
       </button>
     )

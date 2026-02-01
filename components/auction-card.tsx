@@ -321,15 +321,15 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
       <SuccessPopup show={showPopup} onClose={handleClosePopup} amount={offerAmount} />
 
       <div className="relative flex flex-col min-h-[100dvh] bg-transparent" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'calc(100px + env(safe-area-inset-bottom))' }}>
-        {/* Header - 로고만 */}
-        <div className="relative z-50" style={{ minHeight: 'calc(5rem + env(safe-area-inset-top))' }}>
-          <Link href={variant === "black" ? "/black" : "/"} className="absolute top-4 left-4" style={{ top: 'calc(1rem + env(safe-area-inset-top))' }}>
+        {/* Header — 모바일: 로고 축소 */}
+        <div className="relative z-50 overflow-visible" style={{ minHeight: 'calc(5rem + env(safe-area-inset-top))' }}>
+          <Link href={variant === "black" ? "/black" : "/"} className="absolute block h-10 w-28 sm:h-[72px] sm:w-[225px]" style={{ top: 'calc(1rem + env(safe-area-inset-top))', left: '1rem' }}>
             <Image
               src={logoSrc}
               alt="Krunch Logo"
               width={225}
               height={72}
-              className={`h-[72px] w-[225px] object-contain object-left cursor-pointer hover:opacity-80 transition-opacity ${variant !== "black" ? "scale-[1.02] origin-center" : ""}`}
+              className={`h-full w-full object-contain object-left cursor-pointer hover:opacity-80 transition-opacity ${variant !== "black" ? "scale-[1.02] origin-center" : ""}`}
             />
           </Link>
         </div>
