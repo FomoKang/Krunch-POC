@@ -13,7 +13,7 @@ type Props = { artistId: string; artist?: ArtistInfo | null; basePath?: string }
 export function ArtistComingSoonPage({ artistId, artist, basePath = "" }: Props) {
   const { theme } = useSiteTheme()
   const isBlack = theme === "black"
-  const logoSrc = isBlack ? "/logo-White.png" : "/logo-Pink.png"
+  const logoSrc = isBlack ? "/logo-white.png" : "/logo-pink.png"
 
   return (
     <div className="min-h-screen bg-black text-white pb-for-nav flex flex-col">

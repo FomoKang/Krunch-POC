@@ -175,7 +175,7 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
   const [showBidLog, setShowBidLog] = useState(false)
   const [showAuctionCard, setShowAuctionCard] = useState(false)
   const [ripple, setRipple] = useState<{ x: number; y: number } | null>(null)
-  const logoSrc = variant === "black" ? "/logo-White.png" : "/logo-Pink.png"
+  const logoSrc = variant === "black" ? "/logo-white.png" : "/logo-pink.png"
   // 시간별 가격 흐름 차트용 (포인트 적게 → 선 움직임 간략)
   const [priceHistory, setPriceHistory] = useState<number[]>(() =>
     Array.from({ length: 24 }, (_, i) => 2000000 + i * 18000 + Math.floor(Math.random() * 5000))
