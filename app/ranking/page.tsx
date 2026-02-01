@@ -5,107 +5,23 @@ import Image from "next/image"
 import Link from "next/link"
 import { Home, Trophy, Users, User, ChevronRight, Sparkles, Flame, Zap, Store, Search, Bell, Star, Crown } from "lucide-react"
 import { useSiteTheme } from "@/components/theme-provider"
+import { ThemeToggle } from "@/components/theme-toggle"
+import { artistRankDataFull } from "@/lib/artist-rank-data"
 
-// Artist Rank Data
-const artistRankData = [
-  {
-    rank: 1,
-    name: "G-DRAGON",
-    avatar: "/images/gd-avatar.jpg",
-    totalSales: 2847000000,
-    itemsSold: 47,
-  },
-  {
-    rank: 2,
-    name: "JENNIE",
-    avatar: "/images/jennie-avatar.jpg",
-    totalSales: 2150000000,
-    itemsSold: 38,
-  },
-  {
-    rank: 3,
-    name: "SON HEUNG MIN",
-    avatar: "/images/son-avatar.png",
-    totalSales: 1923000000,
-    itemsSold: 32,
-  },
-  {
-    rank: 4,
-    name: "GONG YOO",
-    avatar: "/images/gong-avatar.jpg",
-    totalSales: 1456000000,
-    itemsSold: 28,
-  },
-  {
-    rank: 5,
-    name: "FELIX",
-    avatar: "/images/felix-avatar.jpg",
-    totalSales: 987000000,
-    itemsSold: 19,
-  },
-  {
-    rank: 6,
-    name: "PARK GYU YOUNG",
-    avatar: "/images/park-avatar.png",
-    totalSales: 654000000,
-    itemsSold: 15,
-  },
-  {
-    rank: 7,
-    name: "KARINA",
-    avatar: "/images/karina-avatar.jpg",
-    totalSales: 542000000,
-    itemsSold: 12,
-  },
+// 일반인 프로필 풀 (user1~10 + collector 혼합)
+const generalProfilePool = [
+  "/images/collector1-avatar.jpg", "/images/collector2-avatar.jpg", "/user1-profile.jpg", "/user2-profile.jpg", "/user3-profile.jpg",
+  "/user4-profile.jpg", "/images/collector3-avatar.jpg", "/user5-profile.jpg", "/user6-profile.jpg", "/images/collector4-avatar.jpg",
+  "/user7-profile.jpg", "/user8-profile.jpg", "/images/collector5-avatar.jpg", "/user9-profile.jpg", "/user10-profile.jpg",
 ]
 
-// Top Collectors Data
+// Top Collectors Data — 일반인 프로필 풀에서 혼합 사용 (collector + user1~10)
 const topCollectorsData = [
-  {
-    rank: 1,
-    userId: "VIP_Dragon_01",
-    artistFan: "G-DRAGON",
-    avatar: "/images/collector1-avatar.jpg",
-    badge: "2 LEGEND 3 UNIQUE",
-    totalSpent: 847000000,
-    itemsOwned: 23,
-  },
-  {
-    rank: 2,
-    userId: "SonnyLover7",
-    artistFan: "SON HEUNG MIN",
-    avatar: "/images/collector2-avatar.jpg",
-    badge: "1 LEGEND 7 UNIQUE",
-    totalSpent: 523000000,
-    itemsOwned: 18,
-  },
-  {
-    rank: 3,
-    userId: "GoblinHunter",
-    artistFan: "GONG YOO",
-    avatar: "/images/collector3-avatar.jpg",
-    badge: "5 UNIQUE",
-    totalSpent: 412000000,
-    itemsOwned: 14,
-  },
-  {
-    rank: 4,
-    userId: "StayForever_",
-    artistFan: "FELIX",
-    avatar: "/images/collector4-avatar.jpg",
-    badge: "3 UNIQUE",
-    totalSpent: 298000000,
-    itemsOwned: 11,
-  },
-  {
-    rank: 5,
-    userId: "SquidFanatic",
-    artistFan: "PARK GYU YOUNG",
-    avatar: "/images/collector5-avatar.jpg",
-    badge: "1 UNIQUE",
-    totalSpent: 187000000,
-    itemsOwned: 8,
-  },
+  { rank: 1, userId: "VIP_DRAGON", artistFan: "G-DRAGON", avatar: "/user11-profile.jpg", badge: "2 LEGEND 3 UNIQUE", totalSpent: 847000000, itemsOwned: 23 },
+  { rank: 2, userId: "SonnyLover7", artistFan: "SON HEUNG MIN", avatar: generalProfilePool[2], badge: "1 LEGEND 7 UNIQUE", totalSpent: 523000000, itemsOwned: 18 },
+  { rank: 3, userId: "GoblinHunter", artistFan: "GONG YOO", avatar: generalProfilePool[7], badge: "5 UNIQUE", totalSpent: 412000000, itemsOwned: 14 },
+  { rank: 4, userId: "StayForever_", artistFan: "FELIX", avatar: generalProfilePool[10], badge: "3 UNIQUE", totalSpent: 298000000, itemsOwned: 11 },
+  { rank: 5, userId: "SquidFanatic", artistFan: "PARK GYU YOUNG", avatar: generalProfilePool[13], badge: "1 UNIQUE", totalSpent: 187000000, itemsOwned: 8 },
 ]
 
 function formatKRW(num: number) {
@@ -143,15 +59,26 @@ function getBadgeStyle(badge: string, isBlack?: boolean) {
   return "bg-zinc-600 text-white"
 }
 
+const INITIAL_LIST_COUNT = 7
+const STATS = {
+  totalVolume: 2400000000,
+  activeCollectors: 15234,
+  newArtists: 23,
+}
+
 export default function RankingPage() {
-  const theme = useSiteTheme()
+  const { theme } = useSiteTheme()
   const basePath = theme === "black" ? "/black" : ""
   const [activeTab, setActiveTab] = useState<"artist" | "collector">("artist")
-  const logoSrc = theme === "black" ? "/logo-white.png" : "/logo-pink.png"
+  const [showMore, setShowMore] = useState(false)
+  const [categoryFilter, setCategoryFilter] = useState("전체")
+  const [sortBy, setSortBy] = useState<"sales" | "volume" | "new">("sales")
+  const logoSrc = theme === "black" ? "/logo-White.png" : "/logo-Pink.png"
 
-  // 상위 3명
-  const topThree = artistRankData.slice(0, 3)
-  const restArtists = artistRankData.slice(3)
+  const topThree = artistRankDataFull.slice(0, 3)
+  const listCount = showMore ? 20 : INITIAL_LIST_COUNT
+  const restArtists = artistRankDataFull.slice(3, listCount)
+  const hasMore = artistRankDataFull.length > INITIAL_LIST_COUNT
 
   return (
     <div className="min-h-screen bg-black text-white pb-for-nav relative overflow-hidden">
@@ -164,17 +91,19 @@ export default function RankingPage() {
 
       {/* Header */}
       <header className="sticky top-0 z-50 bg-black/80 backdrop-blur-md border-b border-[#FF6B9D]/20">
-        <div className="flex items-center justify-between px-4 py-3">
-          <Link href={basePath || "/"} className={theme === "black" ? "block -mt-1" : ""}>
-            <Image
-              src={logoSrc}
-              alt="Krunch"
-              width={theme === "black" ? 248 : 150}
-              height={theme === "black" ? 79 : 48}
-              className={theme === "black" ? "h-[79px] w-[247px] object-contain object-left" : "h-12 w-[150px] object-contain object-left"}
-            />
-          </Link>
-          <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between px-4 py-3 min-h-[6rem]">
+          <div className="h-[72px] flex items-center shrink-0">
+            <Link href={basePath || "/"} className="block">
+              <Image
+                src={logoSrc}
+                alt="Krunch"
+                width={225}
+                height={72}
+                className="h-[72px] w-[225px] object-contain object-left"
+              />
+            </Link>
+          </div>
+          <div className="flex items-center gap-1">
             <div className="flex items-center gap-2">
               <Sparkles className={`w-5 h-5 ${theme === "black" ? "text-white" : "text-[#FF6B9D]"}`} />
               <span className="font-display text-lg tracking-wide text-white uppercase">Ranking</span>
@@ -186,21 +115,27 @@ export default function RankingPage() {
               <Bell className="w-5 h-5 text-white/80" />
               <span className={`absolute top-1 right-1 w-2 h-2 rounded-full ${theme === "black" ? "bg-white" : "bg-[#FF6B9D]"}`} />
             </Link>
+            <ThemeToggle inline />
           </div>
         </div>
       </header>
 
-      {/* Tab Switcher */}
+      {/* Tab Switcher — 모드 바뀌어도 세로 높이 동일하게 (다크는 배경만 absolute) */}
       <div className="px-4 pt-6 relative z-10">
-        <div className={`flex bg-black/40 backdrop-blur-sm rounded-full p-1 ${theme === "black" ? "border border-[rgba(255,105,180,0.25)]" : "border border-[#FF6B9D]/30 shadow-lg shadow-[#FF6B9D]/10"}`}>
+        <div className="flex gap-2 rounded-full relative">
+          {theme === "black" && (
+            <div className="absolute inset-0 rounded-full bg-black/40 backdrop-blur-sm ring-1 ring-[rgba(255,105,180,0.25)] pointer-events-none" aria-hidden />
+          )}
           <button
             onClick={() => setActiveTab("artist")}
-            className={`flex-1 py-3 rounded-full text-sm font-bold transition-all relative overflow-hidden ${
+            className={`flex-1 py-3 px-6 rounded-[24px] text-sm font-bold transition-all duration-300 ease-in-out relative overflow-hidden ${
               activeTab === "artist"
                 ? theme === "black"
-                  ? "bg-transparent text-white border border-[rgba(255,105,180,0.4)]"
-                  : "bg-gradient-to-r from-[#FF6B9D] to-pink-500 text-black shadow-lg shadow-[#FF6B9D]/50"
-                : "text-white/50 hover:text-white/80"
+                  ? "bg-transparent text-white border-2 border-white/90"
+                  : "bg-gradient-to-r from-[#FF006E] to-[#FF4D94] text-white shadow-lg shadow-[#FF006E]/40"
+                : theme === "black"
+                  ? "text-white/50 hover:text-white/80 border border-white/10"
+                  : "bg-white/5 text-white/60 border border-white/10 hover:bg-white/10 hover:text-white/80"
             }`}
           >
             {activeTab === "artist" && theme !== "black" && (
@@ -210,12 +145,14 @@ export default function RankingPage() {
           </button>
           <button
             onClick={() => setActiveTab("collector")}
-            className={`flex-1 py-3 rounded-full text-sm font-bold transition-all relative overflow-hidden ${
+            className={`flex-1 py-3 px-6 rounded-[24px] text-sm font-bold transition-all duration-300 ease-in-out relative overflow-hidden ${
               activeTab === "collector"
                 ? theme === "black"
-                  ? "bg-transparent text-white border border-[rgba(255,105,180,0.4)]"
-                  : "bg-gradient-to-r from-[#FF6B9D] to-pink-500 text-black shadow-lg shadow-[#FF6B9D]/50"
-                : "text-white/50 hover:text-white/80"
+                  ? "bg-transparent text-white border-2 border-white/90"
+                  : "bg-gradient-to-r from-[#FF006E] to-[#FF4D94] text-white shadow-lg shadow-[#FF006E]/40"
+                : theme === "black"
+                  ? "text-white/50 hover:text-white/80 border border-white/10"
+                  : "bg-white/5 text-white/60 border border-white/10 hover:bg-white/10 hover:text-white/80"
             }`}
           >
             {activeTab === "collector" && theme !== "black" && (
@@ -227,42 +164,95 @@ export default function RankingPage() {
       </div>
 
       {activeTab === "artist" ? (
-        <div className="px-4 pt-8 relative z-10">
-          {/* 상위 3명 포디엄 — rank-1/2/3 클래스로 양쪽 테마 통일 */}
+        <div className="px-4 pt-6 relative z-10 space-y-4">
+          {/* 이번 주 통계 카드 — 세로 압축 */}
+          <div className="rounded-xl p-3 border border-white/10 bg-white/5">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/10 text-sm shrink-0" aria-hidden>📊</span>
+              <p className="text-xs font-bold text-white/90 uppercase tracking-wider">
+                이번 주 통계
+              </p>
+            </div>
+            <div className="grid grid-cols-1 gap-1.5 text-sm">
+              <p className="text-white/90"><span className="text-white/50 text-xs">총 거래액</span> <span className="font-bold text-white">₩{(STATS.totalVolume / 1000000000).toFixed(1)}B</span></p>
+              <p className="text-white/90"><span className="text-white/50 text-xs">활성 컬렉터</span> <span className="font-bold text-white">{STATS.activeCollectors.toLocaleString()}명</span></p>
+              <p className="text-white/90"><span className="text-white/50 text-xs">신규 아티스트</span> <span className="font-bold text-white">{STATS.newArtists}명</span></p>
+            </div>
+          </div>
+
+          {/* 필터 & 정렬 — 핑크/다크 공통 */}
+          <div className="flex flex-wrap items-center gap-2">
+            {["전체", "K-POP", "배우", "운동선수", "인플루언서"].map((cat) => (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setCategoryFilter(cat)}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                  categoryFilter === cat
+                    ? theme === "black"
+                      ? "bg-white/15 text-white border border-white/20"
+                      : "bg-[#FF006E]/20 text-[#FF6B9D] border border-[#FF6B9D]/40"
+                    : "bg-white/5 text-white/60 border border-white/10 hover:bg-white/10 hover:text-white/80"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+            <div className="ml-auto flex items-center gap-1">
+              <span className="text-[10px] text-white/50 uppercase">정렬</span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as "sales" | "volume" | "new")}
+                className="bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-xs font-medium text-white focus:outline-none focus:ring-1 focus:ring-[#FF6B9D]/50"
+              >
+                <option value="sales">판매량 순</option>
+                <option value="volume">거래액 순</option>
+                <option value="new">신규 등록 순</option>
+              </select>
+            </div>
+          </div>
+
+          {/* 상위 3명 포디엄 — 진입: 아래→위 페이드인 0.3초, 0.1초 간격 */}
           <div className="flex items-end justify-center gap-3 mb-10">
-            {/* 2위 (JENNIE) */}
-            <div className="flex flex-col items-center w-[30%] group">
+            {/* 2위 (JENNIE) — 클릭 시 아티스트 페이지 */}
+            <div className="rank-podium-in flex flex-col items-center w-[30%] group" style={{ animationDelay: "0s" }}>
+              <Link href={`${basePath}/artist/${topThree[1].rank}`} className="flex flex-col items-center w-full cursor-pointer hover:opacity-90 active:opacity-95 transition-opacity">
               <div className="relative mb-3">
-                <div className={`absolute inset-0 rounded-full blur-xl transition-opacity ${theme === "black" ? "bg-white/10 opacity-50" : "bg-gradient-to-r from-slate-400 to-slate-500 opacity-50 group-hover:opacity-75"}`} />
-                <div className={`relative w-18 h-18 rounded-full overflow-hidden ring-2 ring-offset-2 ring-offset-black bg-black ${theme === "black" ? "rank-2-ring" : "ring-slate-400/60"}`}>
+                <div className={`absolute inset-0 rounded-full blur-xl transition-opacity ${theme === "black" ? "bg-white/10 opacity-50" : "bg-[#C0C0C0]/30 opacity-50 group-hover:opacity-75"}`} />
+                <div
+                  className={`relative w-18 h-18 rounded-full overflow-hidden ring-2 ring-offset-2 ring-offset-black bg-black ${theme === "black" ? "rank-2-ring-dark" : ""}`}
+                  style={theme !== "black" ? { boxShadow: "0 0 0 2px #C0C0C0" } : undefined}
+                >
                   <Image src={topThree[1].avatar || "/placeholder.svg"} alt={topThree[1].name} width={72} height={72} className="object-cover w-full h-full" />
                 </div>
-                <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full flex items-center justify-center text-xs font-black border-2 border-black rank-2-badge ${theme === "black" ? "" : "shadow-lg shadow-slate-400/50"}`}>
+                <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full flex items-center justify-center text-xs font-black border-2 border-black rank-2-badge ${theme === "black" ? "" : "bg-[#C0C0C0] text-black shadow-lg shadow-[#C0C0C0]/50"}`}>
                   2
                 </div>
               </div>
               <p className="rank-2-name text-sm text-center truncate w-full mb-1">{topThree[1].name}</p>
               <p className="rank-2-score text-xs font-semibold mb-3">{formatKRW(topThree[1].totalSales)}</p>
               <div className="rank-2-bar w-full h-20 rounded-t-xl border-t" />
+              </Link>
             </div>
 
-            {/* 1위 (G-DRAGON) */}
-            <div className="flex flex-col items-center w-[36%] group">
+            {/* 1위 (G-DRAGON) — 클릭 시 아티스트 페이지 */}
+            <div className="rank-podium-in flex flex-col items-center w-[36%] group" style={{ animationDelay: "0.1s" }}>
+              <Link href={`${basePath}/artist/${topThree[0].rank}`} className="flex flex-col items-center w-full cursor-pointer hover:opacity-90 active:opacity-95 transition-opacity">
               <div className="relative mb-3">
-                <div className={`absolute inset-0 rounded-full blur-2xl ${theme === "black" ? "bg-[#f9a8d4]/20 opacity-70" : "bg-gradient-to-r from-amber-500/90 via-yellow-600/80 to-amber-600/90 opacity-45 animate-pulse"}`} style={theme === "black" ? { boxShadow: "0 0 32px rgba(255,105,180,0.18)" } : undefined} />
+                <div className={`absolute inset-0 rounded-full blur-2xl ${theme === "black" ? "opacity-0" : "bg-gradient-to-r from-amber-500/90 via-yellow-600/80 to-amber-600/90 opacity-45 rank-1-glow"}`} />
                 {theme === "black" ? (
-                  <div className="relative rank-1-avatar-ring w-24 h-24 rounded-full">
+                  <div className="relative rank-1-avatar-ring-dark w-24 h-24 rounded-full">
                     <div className="w-full h-full rounded-full overflow-hidden bg-black">
                       <Image src={topThree[0].avatar || "/placeholder.svg"} alt={topThree[0].name} width={96} height={96} className="object-cover w-full h-full" />
                     </div>
                   </div>
                 ) : (
-                  <div className="relative w-24 h-24 rounded-full overflow-hidden ring-4 ring-amber-500/55 ring-offset-4 ring-offset-black shadow-2xl shadow-amber-500/35">
+                  <div className="relative rank-1-gold-ring w-24 h-24 rounded-full overflow-hidden ring-4 ring-offset-4 ring-offset-black shadow-2xl">
                     <Image src={topThree[0].avatar || "/placeholder.svg"} alt={topThree[0].name} width={96} height={96} className="object-cover w-full h-full" />
                   </div>
                 )}
                 <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-9 h-9 rounded-full flex items-center justify-center text-base font-black rank-1-badge shadow-xl shadow-amber-500/40">
-                  <Trophy className="w-5 h-5" fill="currentColor" />
+                  <Crown className="w-5 h-5" fill="currentColor" />
                 </div>
                 {theme !== "black" && (
                   <div className="absolute -top-2 right-0">
@@ -270,41 +260,53 @@ export default function RankingPage() {
                   </div>
                 )}
               </div>
-              <p className="rank-1-name text-lg text-center mb-1">{topThree[0].name}</p>
-              <p className="rank-1-score text-sm mb-3">{formatKRW(topThree[0].totalSales)}</p>
+              <p className={`text-[10px] font-bold uppercase tracking-wider mb-0.5 ${theme === "black" ? "rank-1-label-dark text-white/90" : "text-amber-400/90"}`}>1st PLACE</p>
+              <p className={`rank-1-name text-lg text-center mb-1 ${theme === "black" ? "rank-1-name-dark" : ""}`}>{topThree[0].name}</p>
+              <p className={`rank-1-score mb-3 ${theme === "black" ? "rank-1-score-dark text-base font-bold" : "text-base font-bold scale-[1.3] origin-center"}`}>{formatKRW(topThree[0].totalSales)}</p>
               <div className="rank-1-bar w-full h-32 rounded-t-xl border-t-2" />
+              </Link>
             </div>
 
-            {/* 3위 (SON HEUNG MIN) — 2등과 동일 스타일 */}
-            <div className="flex flex-col items-center w-[30%] group">
+            {/* 3위 (SON HEUNG MIN) — 클릭 시 아티스트 페이지 */}
+            <div className="rank-podium-in flex flex-col items-center w-[30%] group" style={{ animationDelay: "0.2s" }}>
+              <Link href={`${basePath}/artist/${topThree[2].rank}`} className="flex flex-col items-center w-full cursor-pointer hover:opacity-90 active:opacity-95 transition-opacity">
               <div className="relative mb-3">
-                <div className={`absolute inset-0 rounded-full blur-xl transition-opacity ${theme === "black" ? "bg-white/10 opacity-40" : "bg-gradient-to-r from-amber-600 to-amber-700 opacity-35 group-hover:opacity-50"}`} />
-                <div className={`relative w-16 h-16 rounded-full overflow-hidden ring-2 ring-offset-2 ring-offset-black bg-black ${theme === "black" ? "rank-3-ring" : "ring-amber-600/50"}`}>
+                <div className={`absolute inset-0 rounded-full blur-xl transition-opacity ${theme === "black" ? "bg-white/10 opacity-40" : "bg-[#CD7F32]/40 opacity-35 group-hover:opacity-50"}`} />
+                <div
+                  className={`relative w-16 h-16 rounded-full overflow-hidden ring-2 ring-offset-2 ring-offset-black bg-black ${theme === "black" ? "rank-3-ring-dark" : ""}`}
+                  style={theme !== "black" ? { boxShadow: "0 0 0 2px #CD7F32" } : undefined}
+                >
                   <Image src={topThree[2].avatar || "/placeholder.svg"} alt={topThree[2].name} width={64} height={64} className="object-cover w-full h-full" />
                 </div>
-                <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black border-2 border-black rank-3-badge ${theme === "black" ? "" : "shadow-lg shadow-amber-600/40"}`}>
+                <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black border-2 border-black rank-3-badge ${theme === "black" ? "" : "bg-[#CD7F32] text-black shadow-lg shadow-[#CD7F32]/50"}`}>
                   3
                 </div>
               </div>
               <p className="rank-3-name text-sm font-bold text-center truncate w-full mb-1">{topThree[2].name}</p>
               <p className="rank-3-score text-xs font-semibold mb-3">{formatKRW(topThree[2].totalSales)}</p>
               <div className="rank-3-bar w-full h-16 rounded-t-xl border-t" />
+              </Link>
             </div>
           </div>
 
-          {/* 나머지 순위 (#4–7) — rank-list-item 클래스로 양쪽 테마 통일 */}
+          {/* 나머지 순위 — 진입은 wrapper에만 적용(하이라이트와 충돌 방지) / 순위 변동 시 3초 하이라이트 */}
           <div className="space-y-3">
-            {restArtists.map((artist) => (
-              <div
-                key={artist.rank}
-                className={`rank-list-item group flex items-center gap-4 p-4 rounded-2xl border transition-all duration-300 relative overflow-hidden ${
-                  theme === "black"
-                    ? "border-white/5"
-                    : "bg-gradient-to-r from-white/5 via-white/5 to-transparent border-white/10 hover:bg-white/10 hover:border-[#FF6B9D]/50 hover:shadow-lg hover:shadow-[#FF6B9D]/20"
-                }`}
-              >
+            {restArtists.map((artist, index) => (
+              <div key={artist.rank} className="rank-list-in" style={{ animationDelay: `${index * 0.1}s` }}>
+                <Link
+                  href={`${basePath}/artist/${artist.rank}`}
+                  className={`rank-list-item group flex items-center gap-4 p-4 rounded-xl border transition-all duration-300 relative overflow-hidden cursor-pointer ${
+                    theme === "black"
+                      ? "border-white/5 hover:bg-white/[0.08] hover:border-white/20 rank-list-item-dark"
+                      : "bg-white/[0.03] border-white/10 hover:bg-white/[0.08] hover:border-[#FF006E]/30 hover:translate-x-1"
+                  } ${artist.rankChange !== undefined && artist.rankChange !== 0 ? "rank-item-just-changed" : ""}`}
+                >
                 {theme !== "black" && <div className="absolute inset-0 bg-gradient-to-r from-[#FF6B9D]/0 via-[#FF6B9D]/5 to-[#FF6B9D]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />}
-                <span className="rank-list-number w-8 text-center font-black text-lg relative z-10">#{artist.rank}</span>
+                <span
+                  className={`rank-list-number w-8 h-8 min-w-[32px] rounded-full flex items-center justify-center text-sm font-black relative z-10 ${theme === "black" ? "bg-[rgba(255,0,110,0.2)] text-[#FF1493]" : "bg-[rgba(255,0,110,0.2)] text-[#FF6B9D]"}`}
+                >
+                  {artist.rank}
+                </span>
                 <div className={`relative w-12 h-12 rounded-full overflow-hidden ring-2 transition-all ${theme === "black" ? "ring-white/20 group-hover:ring-[rgba(255,105,180,0.4)]" : "ring-white/20 group-hover:ring-[#FF6B9D]/50"}`}>
                   <Image
                     src={artist.avatar || "/placeholder.svg"}
@@ -316,15 +318,36 @@ export default function RankingPage() {
                 </div>
                 <div className="flex-1 min-w-0 relative z-10">
                   <p className="rank-list-name text-white text-base font-bold truncate">{artist.name}</p>
-                  <p className={`text-xs font-medium ${theme === "black" ? "text-[#808080]" : "text-white/50"}`}>{artist.itemsSold} items sold</p>
+                  <p className={`text-xs font-medium ${theme === "black" ? "text-[#808080]" : "text-white/50"}`}>
+                    {artist.itemsSold} items sold
+                    {artist.rankChange !== undefined && artist.rankChange !== 0 && (
+                      <span className={`ml-1.5 font-semibold ${artist.rankChange > 0 ? "text-[#10B981]" : "text-[#EF4444]"}`}>
+                        {artist.rankChange > 0 ? `↑${artist.rankChange}` : `↓${Math.abs(artist.rankChange)}`}
+                      </span>
+                    )}
+                    {artist.rankChange === 0 && <span className="ml-1.5 text-[#6B7280]">-</span>}
+                  </p>
+                  <p className={`text-[10px] mt-0.5 ${theme === "black" ? "text-[#606060]" : "text-white/40"}`}>
+                    ₩{formatKRW(artist.totalSales)} ({artist.totalSales.toLocaleString()}원)
+                  </p>
                 </div>
                 <div className="text-right relative z-10">
                   <p className="rank-list-score text-white font-bold relative z-10 text-base">{formatKRW(artist.totalSales)}</p>
                 </div>
                 <ChevronRight className={`rank-list-arrow w-5 h-5 shrink-0 ${theme === "black" ? "" : "text-white/20 transition-all group-hover:text-[#FF6B9D] group-hover:translate-x-1"}`} />
+              </Link>
               </div>
             ))}
           </div>
+          {hasMore && (
+            <button
+              type="button"
+              onClick={() => setShowMore((v) => !v)}
+              className={`w-full py-3 rounded-xl text-sm font-bold transition-colors ${theme === "black" ? "bg-white/10 text-white border border-white/10 hover:bg-white/15" : "bg-white/5 text-white/80 border border-white/10 hover:bg-white/10"}`}
+            >
+              {showMore ? "접기" : "더보기 (8~20위)"}
+            </button>
+          )}
         </div>
       ) : (
         <div className="px-4 pt-8 space-y-4 relative z-10">
@@ -417,31 +440,6 @@ export default function RankingPage() {
         </div>
       )}
 
-      {/* Bottom Navigation — safe-area 적용으로 항상 보이게 */}
-      <nav className="nav-bottom-bar bg-black/95 backdrop-blur-sm border-t border-white/10">
-        <div className="flex items-center justify-around py-3">
-          <Link href={basePath || "/"} className="flex flex-col items-center gap-1 text-white/50 hover:text-white/80 transition-colors">
-            <Home className="w-6 h-6" />
-            <span className="text-xs">Home</span>
-          </Link>
-          <Link href={`${basePath}/ranking`} className={`flex flex-col items-center gap-1 ${theme === "black" ? "text-white" : "text-[#FF6B9D]"}`}>
-            <Trophy className="w-6 h-6" />
-            <span className="text-xs font-medium">Ranking</span>
-          </Link>
-          <Link href={`${basePath}/community`} className="flex flex-col items-center gap-1 text-white/50 hover:text-white/80 transition-colors">
-            <Users className="w-6 h-6" />
-            <span className="text-xs">Community</span>
-          </Link>
-          <Link href={`${basePath}/market`} className="flex flex-col items-center gap-1 text-white/50 hover:text-white/80 transition-colors">
-            <Store className="w-6 h-6" />
-            <span className="text-xs">2nd Market</span>
-          </Link>
-          <Link href={`${basePath}/profile`} className="flex flex-col items-center gap-1 text-white/50 hover:text-white/80 transition-colors">
-            <User className="w-6 h-6" />
-            <span className="text-xs">My Profile</span>
-          </Link>
-        </div>
-      </nav>
     </div>
   )
 }

@@ -4,26 +4,29 @@ import Link from "next/link"
 import Image from "next/image"
 import { Home, Trophy, Users, User, Store, Search, Bell } from "lucide-react"
 import { useSiteTheme } from "@/components/theme-provider"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 export default function SecondMarketPage() {
-  const theme = useSiteTheme()
+  const { theme } = useSiteTheme()
   const basePath = theme === "black" ? "/black" : ""
-  const logoSrc = theme === "black" ? "/logo-white.png" : "/logo-pink.png"
+  const logoSrc = theme === "black" ? "/logo-White.png" : "/logo-Pink.png"
   return (
     <div className="min-h-screen bg-black text-white pb-for-nav">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-black/90 backdrop-blur-sm border-b border-white/5">
-        <div className="flex items-center justify-between px-4 py-3">
-          <Link href={basePath || "/"} className={theme === "black" ? "block -mt-1" : ""}>
-            <Image
-              src={logoSrc}
-              alt="Krunch"
-              width={theme === "black" ? 248 : 150}
-              height={theme === "black" ? 79 : 48}
-              className={theme === "black" ? "h-[79px] w-[247px] object-contain object-left" : "h-12 w-[150px] object-contain object-left"}
-            />
-          </Link>
-          <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between px-4 py-3 min-h-[6rem]">
+          <div className="h-[72px] flex items-center shrink-0">
+            <Link href={basePath || "/"} className="block">
+              <Image
+                src={logoSrc}
+                alt="Krunch"
+                width={225}
+                height={72}
+                className="h-[72px] w-[225px] object-contain object-left"
+              />
+            </Link>
+          </div>
+          <div className="flex items-center gap-1">
             <div className="flex items-center gap-2">
               <Store className={`w-5 h-5 ${theme === "black" ? "text-white store-icon-pink-outline" : "text-[#FF6B9D]"}`} />
               <span className="font-display text-lg tracking-wide text-white uppercase">2nd Market</span>
@@ -35,6 +38,7 @@ export default function SecondMarketPage() {
               <Bell className="w-5 h-5 text-white/80" />
               <span className={`absolute top-1 right-1 w-2 h-2 rounded-full ${theme === "black" ? "bg-white" : "bg-[#FF6B9D]"}`} />
             </Link>
+            <ThemeToggle inline />
           </div>
         </div>
       </header>
@@ -55,31 +59,6 @@ export default function SecondMarketPage() {
         </p>
       </main>
 
-      {/* Bottom Navigation — safe-area 적용으로 항상 보이게 */}
-      <nav className="nav-bottom-bar bg-black/95 backdrop-blur-sm border-t border-white/10">
-        <div className="flex items-center justify-around py-3">
-          <Link href={basePath || "/"} className="flex flex-col items-center gap-1 text-white/50 hover:text-white/80 transition-colors">
-            <Home className="w-6 h-6" />
-            <span className="text-xs font-medium">Home</span>
-          </Link>
-          <Link href={`${basePath}/ranking`} className="flex flex-col items-center gap-1 text-white/50 hover:text-white/80 transition-colors">
-            <Trophy className="w-6 h-6" />
-            <span className="text-xs font-medium">Ranking</span>
-          </Link>
-          <Link href={`${basePath}/community`} className="flex flex-col items-center gap-1 text-white/50 hover:text-white/80 transition-colors">
-            <Users className="w-6 h-6" />
-            <span className="text-xs font-medium">Community</span>
-          </Link>
-          <Link href={`${basePath}/market`} className={`flex flex-col items-center gap-1 ${theme === "black" ? "text-white" : "text-[#FF6B9D]"}`}>
-            <Store className="w-6 h-6" />
-            <span className="text-xs font-medium">2nd Market</span>
-          </Link>
-          <Link href={`${basePath}/profile`} className="flex flex-col items-center gap-1 text-white/50 hover:text-white/80 transition-colors">
-            <User className="w-6 h-6" />
-            <span className="text-xs font-medium">My Profile</span>
-          </Link>
-        </div>
-      </nav>
     </div>
   )
 }

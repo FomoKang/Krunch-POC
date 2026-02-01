@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next"
 import { Geist, Geist_Mono, Inter, Anton, Syne } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { ThemeProvider } from "@/components/theme-provider"
+import { BottomNav } from "@/components/bottom-nav"
 import "./globals.css"
 
 const _geist = Geist({ subsets: ["latin"] })
@@ -87,6 +88,7 @@ export default function RootLayout({
       <body className={`font-sans antialiased bg-black text-white`}>
         <ThemeProvider>
           {children}
+          <BottomNav />
           <Analytics />
         </ThemeProvider>
       </body>

@@ -10,7 +10,7 @@ interface SuccessPopupProps {
 }
 
 export function SuccessPopup({ show, onClose, amount }: SuccessPopupProps) {
-  const theme = useSiteTheme()
+  const { theme } = useSiteTheme()
   const isBlack = theme === "black"
   const [isVisible, setIsVisible] = useState(false)
 

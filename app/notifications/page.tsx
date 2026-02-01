@@ -71,7 +71,7 @@ const notificationsData = [
     id: 7,
     type: "follow",
     title: "New follower",
-    message: "VIP_Dragon_01 started following you",
+    message: "VIP_DRAGON started following you",
     time: "2 days ago",
     read: true,
     image: null,

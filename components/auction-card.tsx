@@ -3,9 +3,14 @@
 import { useState, useEffect, useRef } from "react"
 import Image from "next/image"
 import Link from "next/link"
+import { Clock, ArrowUp } from "lucide-react"
 import { Confetti } from "./confetti"
 import { SuccessPopup } from "./success-popup"
 import { useSiteTheme } from "./theme-provider"
+
+const ONE_HOUR = 60 * 60
+const TEN_MINUTES = 10 * 60
+const TWENTY_FOUR_HOURS = 24 * 60 * 60
 
 // Format number with thousand separators
 const formatNumber = (value: string): string => {
@@ -34,16 +39,22 @@ const AUCTION_THEMES = {
   },
   black: {
     accent: "text-white",
+    accentBg: "bg-[#FF006E]",
+    accentForeground: "text-white",
     accentBorder: "border-[#1f1f1f]",
     accentBorderFocus: "border-[rgba(255,105,180,0.4)] focus:border-[rgba(255,105,180,0.5)]",
+    chartColor: "#FF6B9D",
     chartGradient: true,
   },
 } as const
 
 type AuctionVariant = keyof typeof AUCTION_THEMES
 
-// 간략한 가격 흐름 선 (테마별: 기본 핑크, 블랙 모드 화이트→그레이 라인 + 밑 잔상 핑크)
-function PriceFlowChart({ data, chartColor = "#FF6B9D", useWhiteGrayGradient = false }: { data: number[]; chartColor?: string; useWhiteGrayGradient?: boolean }) {
+// 가격 흐름 그래프: 그라디언트 채우기, 호버 툴팁, 다크모드 시 회색 + 호버 시 핑크
+function PriceFlowChart({ data, chartColor = "#FF6B9D", useWhiteGrayGradient = false, useDarkGrayGraph = false }: { data: number[]; chartColor?: string; useWhiteGrayGradient?: boolean; useDarkGrayGraph?: boolean }) {
+  const chartRef = useRef<HTMLDivElement>(null)
+  const [hovered, setHovered] = useState<{ index: number; x: number; y: number; value: number } | null>(null)
+
   if (data.length < 2) return null
   const step = Math.max(1, Math.floor(data.length / 16))
   const sampled = data.filter((_, i) => i % step === 0 || i === data.length - 1)
@@ -53,46 +64,103 @@ function PriceFlowChart({ data, chartColor = "#FF6B9D", useWhiteGrayGradient = f
   const padding = { top: 10, right: 10, bottom: 10, left: 10 }
   const w = 400
   const h = 72
-  const points = sampled.map((v, i) => {
-    const x = padding.left + (i / (sampled.length - 1)) * (w - padding.left - padding.right)
-    const y = padding.top + (1 - (v - min) / range) * (h - padding.top - padding.bottom)
-    return `${x},${y}`
-  })
-  const pathD = `M ${points.join(" L ")}`
+
+  const points: { x: number; y: number; value: number }[] = sampled.map((v, i) => ({
+    x: padding.left + (i / (sampled.length - 1)) * (w - padding.left - padding.right),
+    y: padding.top + (1 - (v - min) / range) * (h - padding.top - padding.bottom),
+    value: v,
+  }))
+  const pathD = `M ${points.map((p) => `${p.x},${p.y}`).join(" L ")}`
   const areaD = `${pathD} L ${w - padding.right},${h - padding.bottom} L ${padding.left},${h - padding.bottom} Z`
-  const uid = `chart-${Math.random().toString(36).slice(2)}`
-  const fillColor = useWhiteGrayGradient ? "#FF69B4" : chartColor
-  const fillOpacity = useWhiteGrayGradient ? "0.18" : "0.18"
+
+  // 주요 변동점: 로컬 최소/최대 + 첫·끝 점
+  const dotIndices = new Set<number>([0, sampled.length - 1])
+  for (let i = 1; i < sampled.length - 1; i++) {
+    const prev = sampled[i - 1]
+    const curr = sampled[i]
+    const next = sampled[i + 1]
+    if ((curr <= prev && curr <= next) || (curr >= prev && curr >= next)) dotIndices.add(i)
+  }
+
+  const uid = useRef(`chart-${Math.random().toString(36).slice(2)}`).current
+  const isHovered = hovered !== null
+  const lineColor = useDarkGrayGraph ? (isHovered ? "#FF6B9D" : "#6B7280") : useWhiteGrayGradient ? undefined : chartColor
+  const fillColor = useDarkGrayGraph ? (isHovered ? "#FF6B9D" : "#374151") : useWhiteGrayGradient ? "#FF69B4" : chartColor
+  const fillOpacityTop = useDarkGrayGraph ? (isHovered ? "0.4" : "0.5") : useWhiteGrayGradient ? "0.25" : "0.45"
+  const fillOpacityBottom = "0"
+  const dotColor = useDarkGrayGraph ? (isHovered ? "#FF6B9D" : "#6B7280") : useWhiteGrayGradient ? "#fff" : chartColor
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = chartRef.current
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    const xLocal = e.clientX - rect.left
+    const xRatio = xLocal / rect.width
+    const index = Math.round(xRatio * (sampled.length - 1))
+    const clamped = Math.max(0, Math.min(index, sampled.length - 1))
+    const p = points[clamped]
+    if (p) setHovered({ index: clamped, x: xLocal, y: 0, value: p.value })
+  }
+  const handleMouseLeave = () => setHovered(null)
 
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="w-full h-full">
-      <defs>
-        <linearGradient id={`fill-${uid}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={fillColor} stopOpacity={fillOpacity} />
-          <stop offset="100%" stopColor={fillColor} stopOpacity="0" />
-        </linearGradient>
-        {useWhiteGrayGradient && (
-          <linearGradient id={`line-${uid}`} x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#ffffff" />
-            <stop offset="100%" stopColor="#666666" />
+    <div
+      ref={chartRef}
+      className="relative w-full h-full cursor-crosshair"
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+    >
+      <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="w-full h-full block">
+        <defs>
+          <linearGradient id={`fill-${uid}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={fillColor} stopOpacity={fillOpacityTop} />
+            <stop offset="100%" stopColor={fillColor} stopOpacity={fillOpacityBottom} />
           </linearGradient>
-        )}
-      </defs>
-      <path d={areaD} fill={`url(#fill-${uid})`} />
-      <path
-        d={pathD}
-        fill="none"
-        stroke={useWhiteGrayGradient ? `url(#line-${uid})` : chartColor}
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
+          {useWhiteGrayGradient && !useDarkGrayGraph && (
+            <linearGradient id={`line-${uid}`} x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#ffffff" />
+              <stop offset="100%" stopColor="#666666" />
+            </linearGradient>
+          )}
+        </defs>
+        <path d={areaD} fill={`url(#fill-${uid})`} />
+        <path
+          d={pathD}
+          fill="none"
+          stroke={useDarkGrayGraph ? lineColor : useWhiteGrayGradient ? `url(#line-${uid})` : chartColor}
+          strokeWidth="1.6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        {Array.from(dotIndices).map((i) => (
+          <circle
+            key={i}
+            cx={points[i].x}
+            cy={points[i].y}
+            r="3"
+            fill={dotColor}
+            className="opacity-90"
+          />
+        ))}
+      </svg>
+      {hovered && (
+        <div
+          className="absolute z-10 px-2.5 py-1.5 rounded-lg bg-black/90 text-white text-xs font-mono tabular-nums whitespace-nowrap pointer-events-none border border-white/10 shadow-lg"
+          style={{
+            left: hovered.x,
+            top: 6,
+            transform: "translateX(-50%)",
+          }}
+        >
+          ₩{hovered.value.toLocaleString()}
+        </div>
+      )}
+    </div>
   )
 }
 
 export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant } = {}) {
-  const siteTheme = useSiteTheme()
+  const { theme: siteTheme } = useSiteTheme()
   const variant: AuctionVariant = variantProp ?? siteTheme
   const theme = AUCTION_THEMES[variant]
   const [offerAmount, setOfferAmount] = useState(formatNumber("1"))
@@ -100,11 +168,14 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
   const [bidPulse, setBidPulse] = useState(false)
   const [showConfetti, setShowConfetti] = useState(false)
   const [showPopup, setShowPopup] = useState(false)
-  const [timeRemaining, setTimeRemaining] = useState(24 * 60 * 60) // 24 hours in seconds
+  const [timeRemaining, setTimeRemaining] = useState(TWENTY_FOUR_HOURS) // 24 hours in seconds
+  const [demoTimePreset, setDemoTimePreset] = useState<0 | 1 | 2>(0) // 0=24h, 1=1h, 2=10min (시연용)
+  const [showRedTime, setShowRedTime] = useState(false) // 1h 미만일 때 2초마다 흰색↔빨강
   const [bidLog, setBidLog] = useState<BidLogEntry[]>([])
   const [showBidLog, setShowBidLog] = useState(false)
   const [showAuctionCard, setShowAuctionCard] = useState(false)
-  const logoSrc = variant === "black" ? "/logo-white.png" : "/logo-pink.png"
+  const [ripple, setRipple] = useState<{ x: number; y: number } | null>(null)
+  const logoSrc = variant === "black" ? "/logo-White.png" : "/logo-Pink.png"
   // 시간별 가격 흐름 차트용 (포인트 적게 → 선 움직임 간략)
   const [priceHistory, setPriceHistory] = useState<number[]>(() =>
     Array.from({ length: 24 }, (_, i) => 2000000 + i * 18000 + Math.floor(Math.random() * 5000))
@@ -176,6 +247,24 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
     return () => clearInterval(interval)
   }, [timeRemaining])
 
+  const timeRemainingRef = useRef(timeRemaining)
+  timeRemainingRef.current = timeRemaining
+  // 1시간 미만: 2초 간격으로 흰색 ↔ 빨강 토글 (timeRemaining 의존 제거해 interval이 매초 리셋되지 않게)
+  useEffect(() => {
+    const t = setInterval(() => {
+      const sec = timeRemainingRef.current
+      if (sec > 0 && sec < ONE_HOUR) setShowRedTime((prev) => !prev)
+    }, 2000)
+    return () => clearInterval(t)
+  }, [])
+
+  const handleDemoTimeClick = () => {
+    const next: 0 | 1 | 2 = demoTimePreset === 0 ? 1 : demoTimePreset === 1 ? 2 : 0
+    setDemoTimePreset(next)
+    setTimeRemaining(next === 0 ? TWENTY_FOUR_HOURS : next === 1 ? ONE_HOUR : TEN_MINUTES)
+    setShowRedTime(false)
+  }
+
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600)
     const minutes = Math.floor((seconds % 3600) / 60)
@@ -233,32 +322,36 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
 
       <div className="relative flex flex-col min-h-[100dvh] bg-transparent" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'calc(100px + env(safe-area-inset-bottom))' }}>
         {/* Header - 로고만 */}
-        <div className="relative z-50" style={{ minHeight: 'calc(4rem + env(safe-area-inset-top))' }}>
+        <div className="relative z-50" style={{ minHeight: 'calc(5rem + env(safe-area-inset-top))' }}>
           <Link href={variant === "black" ? "/black" : "/"} className="absolute top-4 left-4" style={{ top: 'calc(1rem + env(safe-area-inset-top))' }}>
             <Image
               src={logoSrc}
               alt="Krunch Logo"
-              width={variant === "black" ? 198 : 120}
-              height={variant === "black" ? 66 : 40}
-              className={variant === "black" ? "h-[66px] w-[198px] object-contain object-left cursor-pointer hover:opacity-80 transition-opacity" : "h-10 w-[120px] object-contain object-left cursor-pointer hover:opacity-80 transition-opacity"}
+              width={225}
+              height={72}
+              className="h-[72px] w-[225px] object-contain object-left cursor-pointer hover:opacity-80 transition-opacity"
             />
           </Link>
         </div>
 
-        {/* 비딩 알림 띠 — 절대 위치로 레이어 밀림 없음 */}
-        {bidRibbon && (
-          <div
-            className={`absolute left-4 right-4 z-40 rounded-lg bg-black/80 backdrop-blur-sm border ${theme.accentBorder} px-4 py-2.5 flex items-center justify-center animate-in fade-in slide-in-from-top-2 duration-300`}
-            style={{ top: 'calc(4rem + env(safe-area-inset-top) + 0.5rem)' }}
-          >
-            <p className="text-xs sm:text-sm text-white/90 font-sans">
-              <span className={`${theme.accent} font-semibold`}>{bidRibbon.username}</span>
-              <span className="text-white/70">님이 </span>
-              <span className={`${theme.accent} font-semibold`}>₩{bidRibbon.amount.toLocaleString()}</span>
-              <span className="text-white/70">에 비딩했습니다</span>
-            </p>
-          </div>
-        )}
+        {/* 비딩 알림 띠 — 로고 아래, LEGEND AUCTION 위. 최소 높이만 잡아서 화면 안 밀림 */}
+        <div
+          className="min-h-[40px] mb-2 flex items-stretch"
+          style={{ marginLeft: 'max(1rem, env(safe-area-inset-left))', marginRight: 'max(1rem, env(safe-area-inset-right))' }}
+        >
+          {bidRibbon && (
+            <div
+              className={`mx-4 w-full rounded-lg bg-black/80 backdrop-blur-sm border ${theme.accentBorder} px-4 py-2 flex items-center justify-center animate-in fade-in duration-300 z-40`}
+            >
+              <p className="text-xs sm:text-sm text-white/90 font-sans">
+                <span className={`${theme.accent} font-semibold`}>{bidRibbon.username}</span>
+                <span className="text-white/70">님이 </span>
+                <span className={`${theme.accent} font-semibold`}>₩{bidRibbon.amount.toLocaleString()}</span>
+                <span className="text-white/70">에 비딩했습니다</span>
+              </p>
+            </div>
+          )}
+        </div>
 
         {/* Main Content - 팝업/상단과 PLACE BID 사이 세로 중앙 배치 */}
         <div className="flex-1 flex flex-col justify-center min-h-0 py-4">
@@ -272,11 +365,24 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
               <h2 className={`font-display text-4xl sm:text-5xl uppercase leading-[0.85] tracking-tight ${variant === "black" ? "black-mode-legend-title" : `${theme.accent} drop-shadow-md`}`}>LEGEND</h2>
               <h2 className={`font-display text-4xl sm:text-5xl uppercase leading-[0.85] tracking-tight ${variant === "black" ? "black-mode-legend-title" : `${theme.accent} drop-shadow-md`}`}>AUCTION</h2>
             </div>
-            <div className="flex-shrink-0 bg-black/50 backdrop-blur-sm px-3 py-2.5 rounded-xl border border-white/15">
-              <p className="text-[9px] text-white/60 uppercase tracking-widest font-sans mb-1">Time Remaining</p>
-              <div className="font-mono text-lg sm:text-xl font-semibold text-white tracking-tight">
-                {formatTime(timeRemaining)}
+            <div className="flex-shrink-0 bg-black/50 backdrop-blur-sm pl-3 pr-2 py-2 rounded-xl border border-white/15 flex items-center gap-2">
+              <div>
+                <p className="text-[9px] text-white/60 uppercase tracking-widest font-sans mb-0.5">Time Remaining</p>
+                <span
+                  className={`font-mono text-lg sm:text-xl font-semibold tracking-tight transition-colors ${timeRemaining >= ONE_HOUR ? "auction-timer-normal" : timeRemaining < TEN_MINUTES ? "auction-timer-urgent" : showRedTime ? "auction-timer-urgent" : "auction-timer-normal"} ${timeRemaining < TEN_MINUTES && timeRemaining > 0 ? "animate-pulse" : ""}`}
+                >
+                  {formatTime(timeRemaining)}
+                </span>
               </div>
+              <button
+                type="button"
+                onClick={handleDemoTimeClick}
+                className="p-1 rounded-md text-white/50 hover:text-white/90 hover:bg-white/10 transition-colors shrink-0"
+                title="시연: 24h → 1h → 10분"
+                aria-label="시연용 남은시간 변경"
+              >
+                <Clock className="w-4 h-4" />
+              </button>
             </div>
           </div>
 
@@ -295,28 +401,29 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
             <div className="flex-1 flex flex-col justify-center items-end min-w-0 pl-2">
               <p className="text-[10px] text-white/60 uppercase tracking-widest font-sans mb-1">Current Bid</p>
               <p
-                className={`text-2xl sm:text-3xl font-bold font-sans tabular-nums leading-tight ${bidPulse ? "animate-bid-pulse" : ""} ${variant === "black" ? "text-white" : theme.accent}`}
+                className={`text-2xl sm:text-3xl font-bold font-sans tabular-nums leading-tight ${bidPulse ? "animate-bid-pulse" : ""} ${variant === "black" ? "black-mode-text-primary" : theme.accent}`}
               >
                 ₩{currentBid.toLocaleString()}
               </p>
-              <p className={`text-sm font-semibold tabular-nums mt-1.5 ${variant === "black" ? "text-[#FF69B4]" : "text-white/90"}`}>
+              <p className={`text-sm font-semibold tabular-nums mt-1.5 flex items-center justify-end gap-1 ${variant === "black" ? "text-[#FF69B4]" : "text-white/90"}`}>
                 +{risePercent}%
+                <ArrowUp className="w-4 h-4 shrink-0" />
               </p>
             </div>
           </div>
 
           <div className="px-4 pb-3">
-            <p className={`text-xs font-semibold tracking-wide font-sans drop-shadow-md ${variant === "black" ? "text-white" : "text-foreground"}`}>PEACEMINUSONE</p>
-            <p className={`text-xs mt-0.5 font-sans ${variant === "black" ? "text-[#999999]" : "text-muted-foreground"}`}>Übermensch 2025 World Tour Special Merch</p>
-            <p className={`text-xs font-sans ${variant === "black" ? "text-[#999999]" : "text-muted-foreground"}`}>Übermensch Cap (Burgundy) customized</p>
+            <p className={`text-xs font-semibold tracking-wide font-sans drop-shadow-md ${variant === "black" ? "black-mode-text-primary" : "text-foreground"}`}>PEACEMINUSONE</p>
+            <p className={`text-xs mt-0.5 font-sans ${variant === "black" ? "black-mode-text-secondary" : "text-muted-foreground"}`}>Übermensch 2025 World Tour Special Merch</p>
+            <p className={`text-xs font-sans ${variant === "black" ? "black-mode-text-secondary" : "text-muted-foreground"}`}>Übermensch Cap (Burgundy) customized</p>
           </div>
 
           {/* 시간별 가격 흐름 차트 — 간략한 선 + 가로 시간 라벨 + 밑에 Historical Data */}
           <div className="mx-4 mt-2 mb-3">
             <div className={`h-16 sm:h-20 rounded-t-lg overflow-hidden border border-b-0 ${variant === "black" ? "bg-[#0a0a0a] border-[#1f1f1f]" : "bg-black/30 border-white/10"}`}>
-              <PriceFlowChart data={priceHistory} chartColor={variant === "black" ? "#ffffff" : theme.chartColor} useWhiteGrayGradient={variant === "black"} />
+              <PriceFlowChart data={priceHistory} chartColor={theme.chartColor} useDarkGrayGraph={variant === "black"} />
             </div>
-            <div className={`flex justify-between px-2 py-1.5 rounded-b-lg text-[10px] font-sans border border-t-0 ${variant === "black" ? "bg-[#0a0a0a] border-[#1f1f1f] text-[#666666]" : "bg-black/30 border-white/10 text-white/50"}`}>
+            <div className={`flex justify-between px-2 py-1.5 rounded-b-lg text-[10px] font-sans border border-t-0 ${variant === "black" ? "bg-[#0a0a0a] border-[#1f1f1f] black-mode-text-secondary" : "bg-black/30 border-white/10 text-white/50"}`}>
               <span>3D ago</span>
               <span>24h ago</span>
               <span>12h ago</span>
@@ -325,20 +432,23 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
             </div>
             <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
               <div className={`rounded-lg px-3 py-2.5 ${variant === "black" ? "bg-[#0a0a0a] border border-[#1f1f1f]" : "bg-white/5 border border-white/10"}`}>
-                <p className={`text-[10px] uppercase tracking-wider font-sans ${variant === "black" ? "text-[#999999]" : "text-white/50"}`}>Price Range · 12M</p>
-                <p className={`text-sm font-semibold mt-0.5 tabular-nums ${variant === "black" ? "text-white" : "text-white/90"}`}>₩2.0M – ₩4.6M</p>
+                <p className={`text-[10px] uppercase tracking-wider font-sans ${variant === "black" ? "black-mode-text-secondary" : "text-white/50"}`}>Price Range · 12M</p>
+                <p className={`text-sm font-semibold mt-0.5 tabular-nums ${variant === "black" ? "black-mode-text-primary" : "text-white/90"}`}>₩2.0M – ₩4.6M</p>
               </div>
               <div className={`rounded-lg px-3 py-2.5 ${variant === "black" ? "bg-[#0a0a0a] border border-[#1f1f1f]" : "bg-white/5 border border-white/10"}`}>
-                <p className={`text-[10px] uppercase tracking-wider font-sans ${variant === "black" ? "text-[#999999]" : "text-white/50"}`}>Volatility</p>
-                <p className={`text-sm font-semibold mt-0.5 tabular-nums ${variant === "black" ? "text-white" : "text-white/90"}`}>8%</p>
+                <p className={`text-[10px] uppercase tracking-wider font-sans ${variant === "black" ? "black-mode-text-secondary" : "text-white/50"}`}>Volatility</p>
+                <p className={`text-sm font-semibold mt-0.5 tabular-nums ${variant === "black" ? "black-mode-text-primary" : "text-white/90"}`}>8%</p>
               </div>
               <div className={`rounded-lg px-3 py-2.5 ${variant === "black" ? "bg-[#0a0a0a] border border-[#1f1f1f]" : "bg-white/5 border border-white/10"}`}>
-                <p className={`text-[10px] uppercase tracking-wider font-sans ${variant === "black" ? "text-[#999999]" : "text-white/50"}`}>Avg. Sale · 3M</p>
-                <p className={`text-sm font-semibold mt-0.5 tabular-nums ${variant === "black" ? "text-white" : "text-white/90"}`}>₩3.2M</p>
+                <p className={`text-[10px] uppercase tracking-wider font-sans ${variant === "black" ? "black-mode-text-secondary" : "text-white/50"}`}>Avg. Sale · 3M</p>
+                <p className={`text-sm font-semibold mt-0.5 tabular-nums ${variant === "black" ? "black-mode-text-primary" : "text-white/90"}`}>₩3.2M</p>
               </div>
               <div className={`rounded-lg px-3 py-2.5 ${variant === "black" ? "bg-[#0a0a0a] border border-[#1f1f1f]" : "bg-white/5 border border-white/10"}`}>
-                <p className={`text-[10px] uppercase tracking-wider font-sans ${variant === "black" ? "text-[#999999]" : "text-white/50"}`}>Premium · Last</p>
-                <p className={`text-sm font-semibold mt-0.5 tabular-nums ${variant === "black" ? "text-[#FF69B4]" : "text-white/90"}`}>+{risePercent}%</p>
+                <p className={`text-[10px] uppercase tracking-wider font-sans ${variant === "black" ? "black-mode-text-secondary" : "text-white/50"}`}>Premium · Last</p>
+                <p className={`text-sm font-semibold mt-0.5 tabular-nums flex items-center gap-1 ${variant === "black" ? "text-[#FF69B4]" : "text-white/90"}`}>
+                  +{risePercent}%
+                  <ArrowUp className="w-3.5 h-3.5 shrink-0" />
+                </p>
               </div>
             </div>
           </div>
@@ -420,7 +530,7 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
           </>
         )}
 
-        {/* Fixed Footer - Place Bid Button */}
+        {/* Fixed Footer - Place Bid Button (sticky, 리플 + 그림자 + 호버 리프트) */}
         {!showAuctionCard && (
           <div 
             className="fixed bottom-0 left-0 right-0 z-50 bg-black w-full"
@@ -432,9 +542,33 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
             }}
           >
             <button
-              onClick={() => setShowAuctionCard(true)}
-              className={`w-full h-full flex items-center justify-center font-display font-medium text-xl uppercase tracking-wide transition-all active:scale-[0.98] ${variant === "black" ? "black-mode-place-bid" : `${theme.accentBg} ${theme.accentForeground} hover:brightness-110`}`}
+              type="button"
+              onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect()
+                setRipple({ x: e.clientX - rect.left, y: e.clientY - rect.top })
+                setTimeout(() => setRipple(null), 600)
+                setShowAuctionCard(true)
+              }}
+              className={`relative w-full h-full flex items-center justify-center font-display font-medium text-xl uppercase tracking-wide overflow-hidden transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] ${variant === "black" ? "black-mode-place-bid" : "bg-[#FF6B9D] text-black hover:brightness-110"}`}
+              style={{
+                boxShadow: variant === "black"
+                  ? "0 4px 20px rgba(255, 0, 110, 0.4)"
+                  : "0 4px 20px rgba(255, 0, 110, 0.4)",
+              }}
             >
+              {ripple && (
+                <span
+                  className="absolute rounded-full bg-white/40 pointer-events-none animate-place-bid-ripple"
+                  style={{
+                    left: ripple.x,
+                    top: ripple.y,
+                    width: 20,
+                    height: 20,
+                    marginLeft: -10,
+                    marginTop: -10,
+                  }}
+                />
+              )}
               PLACE BID
             </button>
           </div>

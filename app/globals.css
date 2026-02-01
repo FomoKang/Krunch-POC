@@ -119,21 +119,41 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* 핑크 ↔ 다크 모드 전환 시 색상 그라데이션처럼 부드럽게 */
+html {
+  transition: background-color 0.5s ease, color 0.5s ease;
+}
+body,
+body *:not(video):not(canvas):not(img):not(svg) {
+  transition: color 0.5s ease, background-color 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
+}
+body svg {
+  transition: fill 0.5s ease, stroke 0.5s ease;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    overflow-y: scroll; /* 스크롤바 항상 표시 → 페이지 전환 시 뷰포트 너비 고정 */
+    scrollbar-gutter: stable;
+  }
   body {
     @apply bg-black text-white;
+    overflow-x: hidden;
   }
 }
 
-/* 하단 탭바 항상 보이게 — safe-area 적용 (핑크/다크 모드 공통) */
+/* 하단 탭바 항상 보이게 — 너비 고정으로 전환 시 움직임 방지 */
 .nav-bottom-bar {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
+  width: 100%;
+  max-width: 100vw;
+  box-sizing: border-box;
   z-index: 50;
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
@@ -169,28 +189,62 @@
   --accent-pink-outline: rgba(255, 105, 180, 0.3);
 }
 
-/* Black mode — LEGEND AUCTION: 화이트 + 핑크 외곽선 */
+/* Black mode — LEGEND DROP / UNIQUE DROPS / LEGEND AUCTION: 대비 완화 (#F5F5F5) */
 .black-mode-legend-title {
-  color: var(--text-primary);
-  -webkit-text-stroke: 1px var(--accent-pink-outline);
+  color: #F5F5F5;
 }
 
-/* Black mode — 카드: #0a0a0a 배경, 아주 연한 핑크 glow 테두리 */
+/* Black mode — 옥션 페이지 텍스트 계층 */
+.black-mode-text-primary { color: #F5F5F5; }
+.black-mode-text-secondary { color: #A0A0A0; }
+
+/* Black mode — 카드: 미묘한 테두리 + 그림자 + 호버 시 테두리 밝아짐 */
 .black-mode-card {
   background-color: var(--bg-card);
-  border: 1px solid var(--border-card);
-  box-shadow: 0 0 0 1px rgba(255, 105, 180, 0.08), 0 0 12px rgba(255, 105, 180, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.black-mode-card:hover {
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
-/* Black mode — PLACE BID: 검정 배경 + 화이트 텍스트 + 핑크 외곽선 1px */
+/* Black mode — PLACE BID: 핑크모드와 동일 (#FF6B9D + 호버 brightness-110) */
 .black-mode-place-bid {
-  background-color: #000000;
-  color: #ffffff;
-  border: 1px solid var(--accent-pink-outline);
+  background-color: #FF6B9D !important;
+  color: #ffffff !important;
+  border: none !important;
+  transition: filter 0.2s ease;
+}
+.black-mode-place-bid:hover {
+  filter: brightness(1.1);
 }
 
-.black-mode-place-bid:hover {
-  border-color: rgba(255, 105, 180, 0.5);
+/* 경매 TIME REMAINING — 1시간 미만 시 빨강 강제, 흰색↔빨강 서서히 전환 */
+.auction-timer-urgent,
+.auction-timer-normal {
+  transition: color 0.7s ease;
+}
+.auction-timer-urgent {
+  color: #EF4444 !important;
+}
+.auction-timer-normal {
+  color: #ffffff !important;
+}
+
+/* PLACE BID 버튼 — 클릭 리플 효과 */
+@keyframes place-bid-ripple {
+  0% {
+    transform: scale(0);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(15);
+    opacity: 0;
+  }
+}
+.animate-place-bid-ripple {
+  animation: place-bid-ripple 0.6s ease-out forwards;
 }
 
 /* ========== Black Mode — 메인(홈) 페이지 개선 ========== */
@@ -226,7 +280,100 @@
   transform: translateY(-4px);
 }
 
+/* ========== Ranking — 페이지 진입 & 순위 변동 애니메이션 ========== */
+/* 포디엄: 아래→위 페이드인, 0.3초, 0.1초 간격 (both = 대기 중 from 적용, 끝난 뒤 to 유지) */
+.rank-podium-in {
+  animation: rank-podium-in 0.3s ease-out both;
+}
+@keyframes rank-podium-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 리스트: 위→아래 페이드인, 0.3초, 0.1초 간격 */
+.rank-list-in {
+  animation: rank-list-in 0.3s ease-out both;
+}
+@keyframes rank-list-in {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 순위 변동 시: 펄스(박스섀도우) + 3초 하이라이트 배경 (transform 미사용 → 호버와 충돌 방지) */
+.rank-item-just-changed {
+  animation: rank-item-highlight 3s ease-out forwards;
+}
+@keyframes rank-item-highlight {
+  0% {
+    background: rgba(255, 107, 157, 0.2) !important;
+    box-shadow: 0 0 0 2px rgba(255, 107, 157, 0.4), 0 4px 20px rgba(255, 107, 157, 0.2);
+  }
+  25% {
+    background: rgba(255, 107, 157, 0.14) !important;
+    box-shadow: 0 0 0 1px rgba(255, 107, 157, 0.3), 0 2px 12px rgba(255, 107, 157, 0.15);
+  }
+  70% {
+    background: rgba(255, 107, 157, 0.06) !important;
+    box-shadow: 0 0 0 1px rgba(255, 107, 157, 0.15);
+  }
+  100% {
+    background: transparent !important;
+    box-shadow: none;
+  }
+}
+[data-theme="black"] .rank-item-just-changed {
+  animation: rank-item-highlight-dark 3s ease-out forwards;
+}
+@keyframes rank-item-highlight-dark {
+  0% {
+    background: rgba(255, 20, 147, 0.18) !important;
+    box-shadow: 0 0 0 2px rgba(255, 20, 147, 0.35), 0 4px 20px rgba(255, 20, 147, 0.15);
+  }
+  25% {
+    background: rgba(255, 20, 147, 0.12) !important;
+    box-shadow: 0 0 0 1px rgba(255, 20, 147, 0.25), 0 2px 12px rgba(255, 20, 147, 0.1);
+  }
+  70% {
+    background: rgba(255, 20, 147, 0.05) !important;
+    box-shadow: 0 0 0 1px rgba(255, 20, 147, 0.12);
+  }
+  100% {
+    background: transparent !important;
+    box-shadow: none;
+  }
+}
+
 /* ========== Ranking Podium & List — 양쪽 테마 통일 (default + black) ========== */
+/* 1위 골드 링 반짝임 (핑크 모드) — 전역 transition 무시 */
+.rank-1-gold-ring {
+  border: 3px solid transparent;
+  border-radius: 9999px;
+  background: linear-gradient(black, black) padding-box, linear-gradient(45deg, #FFD700, #FFA500, #FFD700) border-box;
+  box-shadow: 0 0 24px rgba(255, 215, 0, 0.4);
+  transition: none !important;
+  animation: rank-1-shine 2s ease-in-out infinite;
+}
+.rank-1-glow {
+  transition: none !important;
+  animation: rank-1-shine 2s ease-in-out infinite;
+}
+@keyframes rank-1-shine {
+  0%, 100% { filter: brightness(1); opacity: 0.45; }
+  50% { filter: brightness(1.3); opacity: 0.55; }
+}
+
 /* 1등 (G-DRAGON) — default: 옅은 골드 (금색 덜 튀게) */
 .rank-1-name { font-weight: 900; background: linear-gradient(to right, #d4af37, #c9a227); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .rank-1-score { font-weight: 700; color: #FF6B9D; }
@@ -249,11 +396,44 @@
   border-radius: 9999px;
 }
 
-/* 2등 (JENNIE) — default: 옅은 실버, black: white/30 링, white/20 배지 */
+/* 다크 모드 1위 — 배경 제거, 흰색 3px 테두리, 깜빡임(전역 transition 무시) */
+.rank-1-avatar-ring-dark {
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  border-radius: 9999px;
+  padding: 0;
+  background: transparent;
+  transition: none !important;
+  animation: rank-1-shine-dark 2s ease-in-out infinite;
+}
+@keyframes rank-1-shine-dark {
+  0%, 100% {
+    filter: brightness(1);
+    box-shadow: 0 0 16px rgba(255, 255, 255, 0.12);
+  }
+  50% {
+    filter: brightness(1.35);
+    box-shadow: 0 0 32px rgba(255, 255, 255, 0.28);
+  }
+}
+
+/* 다크 모드 1위 — 1st PLACE 레이블 깜빡임 (눈에 띄게) */
+.rank-1-label-dark {
+  transition: none !important;
+  animation: rank-1-label-pulse-dark 2s ease-in-out infinite;
+}
+@keyframes rank-1-label-pulse-dark {
+  0%, 100% { opacity: 0.75; }
+  50% { opacity: 1; }
+}
+.rank-1-name-dark { transform: scale(1.3); transform-origin: center; }
+.rank-1-score-dark { transform: scale(1.3); transform-origin: center; }
+
+/* 2등 (JENNIE) — default: 옅은 실버, black: 흰색 2px 링, 순위 배지로 구분 */
 .rank-2-badge { background: linear-gradient(to bottom right, #a8b4c4, #64748b); color: #1a1a1a; }
 .rank-2-name, .rank-2-score { color: #fff; font-weight: 700; }
 .rank-2-bar { border-color: rgba(148, 163, 184, 0.2); background: linear-gradient(180deg, rgba(148, 163, 184, 0.22) 0%, rgba(148, 163, 184, 0.12) 50%, transparent 100%); }
 [data-theme="black"] .rank-2-ring { border: 2px solid rgba(255, 255, 255, 0.3); box-shadow: none; }
+.rank-2-ring-dark { border: 2px solid rgba(255, 255, 255, 0.3) !important; box-shadow: none; }
 [data-theme="black"] .rank-2-badge { background: rgba(255, 255, 255, 0.2); color: #fff; }
 [data-theme="black"] .rank-2-bar {
   border-color: rgba(255, 255, 255, 0.12);
@@ -267,6 +447,7 @@
 .rank-3-name, .rank-3-score { color: #fff; font-weight: 700; }
 .rank-3-bar { border-color: rgba(166, 124, 82, 0.22); background: linear-gradient(180deg, rgba(166, 124, 82, 0.22) 0%, rgba(120, 53, 15, 0.12) 50%, transparent 100%); }
 [data-theme="black"] .rank-3-ring { border: 2px solid rgba(255, 255, 255, 0.3); box-shadow: none; }
+.rank-3-ring-dark { border: 2px solid rgba(255, 255, 255, 0.3) !important; box-shadow: none; }
 [data-theme="black"] .rank-3-badge { background: rgba(255, 255, 255, 0.2); color: #fff; }
 [data-theme="black"] .rank-3-bar {
   border-color: rgba(255, 255, 255, 0.12);
@@ -288,6 +469,16 @@
 [data-theme="black"] .rank-list-item:hover { background: #0f0f0f; border-left-width: 3px; border-left-color: #FF1493; box-shadow: 0 4px 16px rgba(255, 105, 180, 0.15); }
 [data-theme="black"] .rank-list-item:hover .rank-list-arrow { color: #ffffff; text-shadow: 0 0 10px rgba(255,255,255,0.9), 0 0 16px rgba(255,255,255,0.5); transform: translateX(4px); }
 [data-theme="black"] .rank-list-item .rank-list-arrow { color: rgba(255,255,255,0.25); transition: color 0.2s, text-shadow 0.2s, transform 0.2s; }
+
+/* 다크 모드 리스트 — 호버 시 translateX(6px), border-left 3px white/0.3, bg white/0.08 */
+.rank-list-item-dark {
+  border-left: 3px solid transparent;
+}
+.rank-list-item-dark:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  transform: translateX(6px);
+  border-left-color: rgba(255, 255, 255, 0.3) !important;
+}
 
 /* ========== Black Mode — Community (FASHION ARENA) ========== */
 [data-theme="black"] {
@@ -311,14 +502,10 @@
   0%, 100% { opacity: 1; box-shadow: 0 4px 12px rgba(244, 114, 182, 0.35); }
   50% { opacity: 0.95; box-shadow: 0 4px 16px rgba(244, 114, 182, 0.45); }
 }
-/* HOT 배지 — Pink/Black 공통 분홍 스타일 */
+/* HOT 배지 — Pink/Black 공통 분홍 스타일 (두 줄 레이아웃용) */
 .hot-badge {
-  background: linear-gradient(90deg, #f472b6 0%, #f9a8d4 100%);
+  background: linear-gradient(135deg, #f472b6 0%, #f9a8d4 100%);
   color: #ffffff;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 700;
   box-shadow: 0 4px 12px rgba(244, 114, 182, 0.35);
   animation: pulse-pink 2s infinite;
 }
@@ -458,6 +645,19 @@
   50% { transform: translateX(100%); }
 }
 
+/* 로딩 스켈레톤 shimmer */
+.skeleton-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.skeleton-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+  animation: shimmer 1.5s infinite;
+}
+
 @keyframes spotlight1 {
   0%, 100% { transform: rotate(-15deg) translateX(-10px); }
   50% { transform: rotate(-15deg) translateX(10px); }
@@ -466,6 +666,18 @@
 @keyframes spotlight2 {
   0%, 100% { transform: rotate(15deg) translateX(10px); }
   50% { transform: rotate(15deg) translateX(-10px); }
+}
+
+/* Community: 하트 투표 시 팝 애니메이션 */
+@keyframes heart-pop {
+  0% { transform: scale(0.6); opacity: 0.6; }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Profile: Quick Action 호버 시 핑크 배경 */
+.profile-quick-action:hover {
+  background: rgba(255, 0, 110, 0.1) !important;
 }
 
 

@@ -5,16 +5,32 @@ import Link from "next/link"
 import Image from "next/image"
 import { Search, Bell, Home, Users, User, Trophy, Store } from "lucide-react"
 import { useSiteTheme } from "@/components/theme-provider"
+import { ThemeToggle } from "@/components/theme-toggle"
 
-// Splash Screen (테마 악센트)
+// 로고 크기 통일 (logo-White, logo-Pink, logo-Black 동일 높이, 150% 크기)
+const LOGO_WIDTH = 225
+const LOGO_HEIGHT = 72
+// 로딩창 전용: 헤더보다 150% 더 크게
+const SPLASH_LOGO_WIDTH = 338
+const SPLASH_LOGO_HEIGHT = 108
+
+// Splash Screen (테마 악센트 + 로딩 시간별 메시지)
 function SplashScreen({ accentBg, logoSrc }: { accentBg: string; logoSrc: string }) {
+  const [elapsed, setElapsed] = useState(0)
+  useEffect(() => {
+    const start = Date.now()
+    const t = setInterval(() => setElapsed(Math.floor((Date.now() - start) / 1000)), 500)
+    return () => clearInterval(t)
+  }, [])
+  const loadingMessage = elapsed >= 10 ? "조금만 더 기다려주세요..." : elapsed >= 3 ? "잠시만 기다려주세요..." : null
   return (
     <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
-      <div className="flex flex-col items-center gap-4">
-        <Image src={logoSrc} alt="Krunch Logo" width={200} height={67} className="h-auto animate-pulse" />
-        <div className="w-32 h-1 bg-white/20 rounded-full overflow-hidden">
+      <div className="flex flex-col items-center">
+        <Image src={logoSrc} alt="Krunch Logo" width={SPLASH_LOGO_WIDTH} height={SPLASH_LOGO_HEIGHT} className="h-[108px] w-[338px] object-contain animate-pulse block" />
+        <div className="w-32 h-1 bg-white/20 rounded-full overflow-hidden -mt-2">
           <div className={`h-full ${accentBg} animate-[loading_3s_ease-in-out_forwards]`} />
         </div>
+        {loadingMessage && <p className="text-white/60 text-sm mt-3 animate-in fade-in duration-300">{loadingMessage}</p>}
       </div>
     </div>
   )
@@ -94,11 +110,11 @@ const uniqueDrops = [
 ]
 
 export default function HomePage() {
-  const theme = useSiteTheme()
+  const { theme } = useSiteTheme()
   const basePath = theme === "black" ? "/black" : ""
   const accentText = theme === "black" ? "text-white" : "text-primary"
   const accentBg = theme === "black" ? "bg-white" : "bg-primary"
-  const logoSrc = theme === "black" ? "/logo-white.png" : "/logo-pink.png"
+  const logoSrc = theme === "black" ? "/logo-White.png" : "/logo-Pink.png"
 
   const [showSplash, setShowSplash] = useState(true)
   const [mounted, setMounted] = useState(false)
@@ -121,17 +137,19 @@ export default function HomePage() {
     <div className="min-h-screen bg-black text-white pb-for-nav">
       {/* 상단 네비게이션 */}
       <header className="sticky top-0 z-50 bg-black/90 backdrop-blur-sm border-b border-white/5">
-        <div className="flex items-center justify-between px-4 py-3">
-          <Link href={basePath || "/"} className={theme === "black" ? "block -mt-1" : ""}>
-            <Image
-              src={logoSrc}
-              alt="Krunch"
-              width={theme === "black" ? 248 : 150}
-              height={theme === "black" ? 79 : 48}
-              className={theme === "black" ? "h-[79px] w-[247px] object-contain object-left" : "h-12 w-[150px] object-contain object-left"}
-            />
-          </Link>
-          <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between px-4 py-3 min-h-[6rem]">
+          <div className="h-[72px] flex items-center shrink-0">
+            <Link href={basePath || "/"} className="block">
+              <Image
+                src={logoSrc}
+                alt="Krunch"
+                width={LOGO_WIDTH}
+                height={LOGO_HEIGHT}
+                className="h-[72px] w-[225px] object-contain object-left"
+              />
+            </Link>
+          </div>
+          <div className="flex items-center gap-1">
             <Link href={`${basePath}/search`} className="p-2 hover:bg-white/10 rounded-full transition-colors">
               <Search className="w-5 h-5 text-white/80" />
             </Link>
@@ -139,6 +157,7 @@ export default function HomePage() {
               <Bell className="w-5 h-5 text-white/80" />
               <span className={`absolute top-1 right-1 w-2 h-2 rounded-full ${theme === "black" ? "bg-white" : "bg-[#FF6B9D]"}`} />
             </Link>
+            <ThemeToggle inline />
           </div>
         </div>
       </header>
@@ -146,15 +165,15 @@ export default function HomePage() {
       <main className="px-4 py-6 space-y-8">
         {/* LEGEND DROP 섹션 */}
         <section>
-          <h2 className={`font-display text-3xl tracking-wide uppercase italic mb-4 ${theme === "black" ? "black-mode-legend-title" : "text-white"}`}>LEGEND DROP</h2>
+          <h2 className={`font-display text-3xl tracking-wide uppercase italic mb-4 min-h-10 leading-tight flex items-center ${theme === "black" ? "black-mode-legend-title" : "text-white"}`}>LEGEND DROP</h2>
           <Link href={`${basePath}/auction`} className="block">
             <div className={`relative rounded-2xl overflow-hidden border ${theme === "black" ? "black-home-hero-card bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f]" : "bg-gradient-to-br from-[#2a1a1a] to-[#1a0a0a] border-white/10"}`}>
               {/* 배경 이미지 오버레이 — 블랙 모드: 레이어 분리 */}
               <div className={`absolute inset-0 ${theme === "black" ? "bg-gradient-to-br from-[#2a1a1a] via-[#0f0f0f] to-[#0a0a0a]" : "bg-gradient-to-br from-[#3d1a2a] via-[#1a0a0a] to-[#0d0505]"}`} />
 
               <div className="relative p-5">
-                {/* Live Now 뱃지 — 블랙 모드: 흰 글자 + 핑크 테두리 / 핑크 모드: 핑크 배경 + 살짝 glow */}
-                <div className="flex items-center gap-2 mb-4">
+                {/* Live Now 뱃지 — 높이 고정해서 핑크/다크 전환 시 카드 시작 구간 동일 */}
+                <div className="min-h-[2.5rem] flex items-center gap-2 mb-4">
                   <span
                     className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full ${
                       theme === "black"
@@ -184,19 +203,19 @@ export default function HomePage() {
                   </div>
 
                   <div className="w-full text-center">
-                    <h3 className="font-bold text-white text-lg md:text-xl">PEACEMINUSONE</h3>
-                    <p className={`text-sm md:text-base mt-1 ${theme === "black" ? "text-[#b0b0b0]" : "text-white/60"}`}>Übermensch 2025 World Tour Special Merch</p>
-                    <p className={`text-xs mt-0.5 ${theme === "black" ? "text-[#808080]" : "text-white/40"}`}>Übermensch Cap (Burgundy) customized</p>
+                    <h3 className="font-bold text-white text-lg md:text-xl min-h-[2rem]">PEACEMINUSONE</h3>
+                    <p className={`text-sm md:text-base mt-1 min-h-[1.5rem] ${theme === "black" ? "text-[#b0b0b0]" : "text-white/60"}`}>Übermensch 2025 World Tour Special Merch</p>
+                    <p className={`text-xs mt-0.5 min-h-[1.25rem] ${theme === "black" ? "text-[#808080]" : "text-white/40"}`}>Übermensch Cap (Burgundy) customized</p>
 
-                    <div className={`mt-5 ${theme === "black" ? "font-mono text-3xl md:text-4xl font-bold text-white tracking-wider" : ""}`} style={theme === "black" ? { textShadow: "0 0 20px rgba(255,255,255,0.3)", letterSpacing: "2px" } : undefined}>
+                    <div className={`mt-5 min-h-[2.5rem] flex items-center justify-center ${theme === "black" ? "font-mono text-3xl md:text-4xl font-bold text-white tracking-wider" : ""}`} style={theme === "black" ? { textShadow: "0 0 20px rgba(255,255,255,0.3)", letterSpacing: "2px" } : undefined}>
                       <CountdownTimer accentText={accentText} />
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between">
+                <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between min-h-[3rem]">
                   <span className={`text-sm uppercase tracking-wide ${theme === "black" ? "text-[#808080]" : "text-white/60"}`} style={theme === "black" ? { letterSpacing: "1px" } : undefined}>Current Bid</span>
-                  <span className={`font-bold ${theme === "black" ? "text-white text-2xl md:text-3xl" : `${accentText} text-xl md:text-2xl`}`} style={theme === "black" ? { textShadow: "0 2px 8px rgba(255,255,255,0.2)" } : undefined}>₩6,733,184</span>
+                  <span className={`font-bold ${theme === "black" ? "text-white text-2xl md:text-3xl" : `${accentText} text-2xl md:text-3xl`}`} style={theme === "black" ? { textShadow: "0 2px 8px rgba(255,255,255,0.2)" } : undefined}>₩6,733,184</span>
                 </div>
               </div>
             </div>
@@ -205,7 +224,7 @@ export default function HomePage() {
 
         {/* UNIQUE DROPS 섹션 */}
         <section>
-          <h2 className={`font-display text-3xl tracking-wide uppercase italic mb-4 ${theme === "black" ? "black-mode-legend-title" : "text-white"}`}>UNIQUE DROPS</h2>
+          <h2 className={`font-display text-3xl tracking-wide uppercase italic mb-4 min-h-10 leading-tight flex items-center ${theme === "black" ? "black-mode-legend-title" : "text-white"}`}>UNIQUE DROPS</h2>
           <div className="grid grid-cols-2 gap-3">
             {uniqueDrops.map((item) => {
               const isFelix = item.id === 4
@@ -253,43 +272,6 @@ export default function HomePage() {
         </section>
       </main>
 
-      {/* 하단 탭바 — safe-area 적용으로 항상 보이게 */}
-      <nav className="nav-bottom-bar bg-black/95 backdrop-blur-sm border-t border-white/10">
-        <div className="flex items-center justify-around py-3">
-          <Link href={basePath || "/"} className={`flex flex-col items-center gap-1 ${theme === "black" ? "text-white" : "text-[#FF6B9D]"}`}>
-            <Home className="w-6 h-6" />
-            <span className="text-xs font-medium">Home</span>
-          </Link>
-          <Link
-            href={`${basePath}/ranking`}
-            className="flex flex-col items-center gap-1 text-white/50 hover:text-white/80 transition-colors"
-          >
-            <Trophy className="w-6 h-6" />
-            <span className="text-xs font-medium">Ranking</span>
-          </Link>
-          <Link
-            href={`${basePath}/community`}
-            className="flex flex-col items-center gap-1 text-white/50 hover:text-white/80 transition-colors"
-          >
-            <Users className="w-6 h-6" />
-            <span className="text-xs font-medium">Community</span>
-          </Link>
-          <Link
-            href={`${basePath}/market`}
-            className="flex flex-col items-center gap-1 text-white/50 hover:text-white/80 transition-colors"
-          >
-            <Store className="w-6 h-6" />
-            <span className="text-xs font-medium">2nd Market</span>
-          </Link>
-          <Link
-            href={`${basePath}/profile`}
-            className="flex flex-col items-center gap-1 text-white/50 hover:text-white/80 transition-colors"
-          >
-            <User className="w-6 h-6" />
-            <span className="text-xs font-medium">My Profile</span>
-          </Link>
-        </div>
-      </nav>
     </div>
   )
 }

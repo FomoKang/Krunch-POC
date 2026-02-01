@@ -3,8 +3,27 @@
 import { useState, useRef, useCallback } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { Home, Trophy, Users, User, Settings, QrCode, Wallet, Store, Search, Bell } from "lucide-react"
+import { Home, Trophy, Users, User, Settings, QrCode, Wallet, Store, Search, Bell, X, Share2, Plus } from "lucide-react"
 import { useSiteTheme } from "@/components/theme-provider"
+import { ThemeToggle } from "@/components/theme-toggle"
+
+// 등급 시스템: Bronze → Silver → Gold → Platinum → Diamond (VIP)
+const TIER_NAMES: Record<number, string> = {
+  1: "Bronze",
+  2: "Silver",
+  3: "Gold",
+  4: "Platinum",
+  5: "Diamond (VIP)",
+}
+const LEVEL_CURRENT = 3
+const LEVEL_NEXT = 4
+const XP_PERCENT = 87
+const XP_CURRENT = 870
+const XP_NEEDED = 1000
+function getTierName(level: number) {
+  if (level >= 5) return "Diamond (VIP)"
+  return TIER_NAMES[level] ?? "Bronze"
+}
 
 // 원기둥 갤러리: 벽 개수, 드래그로 회전
 const GALLERY_WALLS = 16
@@ -20,10 +39,37 @@ const GALLERY_ITEMS: (string | null)[][] = Array.from({ length: GALLERY_WALLS },
   return [null, null]
 })
 
+// SNS 공유 아이콘 (카카오톡, 인스타그램, X)
+function IconKakao({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M12 3c5.8 0 10.5 3.66 10.5 8.18 0 4.52-4.7 8.18-10.5 8.18-1.24 0-2.43-.18-3.53-.5L3 21l1.92-5.5C3.7 14.2 1.5 11.5 1.5 11.18 1.5 6.66 6.2 3 12 3z" />
+    </svg>
+  )
+}
+function IconInstagram({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+    </svg>
+  )
+}
+function IconX({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+    </svg>
+  )
+}
+
 export default function ProfilePage() {
-  const theme = useSiteTheme()
+  const { theme } = useSiteTheme()
   const basePath = theme === "black" ? "/black" : ""
   const [showQR, setShowQR] = useState(false)
+  const [showLevelModal, setShowLevelModal] = useState(false)
+  const [showAddItem, setShowAddItem] = useState(false)
   const [galleryAngle, setGalleryAngle] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
   const galleryRef = useRef<HTMLDivElement>(null)
@@ -57,9 +103,9 @@ export default function ProfilePage() {
   }, [])
 
   const userStats = [
-    { label: "Total Bids", value: "127" },
-    { label: "Won Items", value: "4" },
-    { label: "Win Rate", value: "18%" },
+    { label: "Total Bids", value: "127", change: "+12", icon: "🔨", tooltipLines: ["이번 달 입찰 42회", "가장 많이 입찰한 카테고리: 스니커즈"] },
+    { label: "Won Items", value: "4", change: "+1", icon: "🏆", tooltipLines: ["이번 달 낙찰 1건", "LEGEND 1, UNIQUE 3"] },
+    { label: "Win Rate", value: "18%", change: "+2%", icon: "📈", tooltipLines: ["전월 16% → 이번 달 18%"] },
   ]
 
   return (
@@ -74,19 +120,27 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* Header */}
-        <header className="sticky top-0 z-40 bg-black/80 backdrop-blur-md border-b border-white/10">
-          <div className="flex items-center justify-between px-4 py-3">
-            <Link href={basePath || "/"} className={theme === "black" ? "block -mt-1" : ""}>
-              <Image
-                src={theme === "black" ? "/logo-white.png" : "/logo-pink.png"}
-                alt="Krunch"
-                width={theme === "black" ? 248 : 150}
-                height={theme === "black" ? 79 : 48}
-                className={theme === "black" ? "h-[79px] w-[247px] object-contain object-left" : "h-12 w-[150px] object-contain object-left"}
-              />
-            </Link>
-            <div className="flex items-center gap-3">
+        {/* Header — 블랙 모드: 살짝 밝게 + 아래 구분선 */}
+        <header
+          className="sticky top-0 z-40 backdrop-blur-md"
+          style={theme === "black"
+            ? { background: "rgba(255,255,255,0.03)", borderBottom: "1px solid rgba(255,255,255,0.1)" }
+            : { background: "rgba(0,0,0,0.8)", borderBottom: "1px solid rgba(255,255,255,0.1)" }
+          }
+        >
+          <div className="flex items-center justify-between px-4 py-3 min-h-[6rem]">
+            <div className="h-[72px] flex items-center shrink-0">
+              <Link href={basePath || "/"} className="block">
+                <Image
+                  src={theme === "black" ? "/logo-White.png" : "/logo-Pink.png"}
+                  alt="Krunch"
+                  width={225}
+                  height={72}
+                  className="h-[72px] w-[225px] object-contain object-left"
+                />
+              </Link>
+            </div>
+            <div className="flex items-center gap-1">
               <div className="flex items-center gap-2">
                 <User className={`w-5 h-5 ${theme === "black" ? "text-white" : "text-[#FF6B9D]"}`} />
                 <span className="font-display text-lg tracking-wide text-white uppercase">My Vault</span>
@@ -98,6 +152,7 @@ export default function ProfilePage() {
                 <Bell className="w-5 h-5 text-white/80" />
                 <span className={`absolute top-1 right-1 w-2 h-2 rounded-full ${theme === "black" ? "bg-white" : "bg-[#FF6B9D]"}`} />
               </Link>
+              <ThemeToggle inline />
               <button type="button" className="p-2 rounded-full hover:bg-white/10 transition-colors">
                 <Settings className="w-5 h-5 text-white/70" />
               </button>
@@ -152,37 +207,54 @@ export default function ProfilePage() {
                       <p className={`text-lg font-mono tracking-wider ${theme === "black" ? "text-white" : "text-orange-400"}`}>530,000</p>
                     </div>
                   </div>
-                  <div 
-                    className={`relative flex items-center gap-2 rounded-lg px-3 py-2 cursor-pointer ${theme === "black" ? "bg-white/10" : "bg-black/30"}`}
-                    onMouseEnter={() => setShowQR(true)}
-                    onMouseLeave={() => setShowQR(false)}
-                  >
-                    <QrCode className="w-8 h-8 text-white/80" />
-                    {/* QR Image on Hover */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setShowQR((v) => !v)}
+                      className={`flex items-center justify-center rounded-lg p-2 cursor-pointer ${theme === "black" ? "bg-white/10 hover:bg-white/15" : "bg-black/30 hover:bg-black/40"} transition-colors`}
+                      aria-label="프로필 공유"
+                    >
+                      <QrCode className="w-8 h-8 text-white/80" />
+                    </button>
                     {showQR && (
-                      <div className="absolute top-full right-0 mt-2 z-50 p-2 bg-white rounded-lg shadow-2xl">
-                        <Image 
-                          src="/Krunch-QR.jpg" 
-                          alt="Krunch QR Code" 
-                          width={200} 
-                          height={200}
-                          className="rounded"
-                        />
-                      </div>
+                      <>
+                        <div className="fixed inset-0 z-40 bg-black/20 cursor-default" onClick={() => setShowQR(false)} aria-hidden />
+                        <div className="fixed top-24 right-4 z-50 p-4 bg-black/95 border border-white/10 rounded-xl shadow-2xl w-[220px]" onClick={(e) => e.stopPropagation()}>
+                          <p className="text-xs font-semibold text-white/90 mb-3 flex items-center gap-1.5">
+                            <Share2 className="w-3.5 h-3.5" /> 프로필 공유하기
+                          </p>
+                          <div className="flex justify-center mb-3">
+                            <Image src="/Krunch-QR.jpg" alt="QR" width={160} height={160} className="rounded-lg" />
+                          </div>
+                          <div className="flex items-center justify-center gap-2">
+                            <a href="#" className="p-2.5 rounded-full bg-white/10 hover:bg-[#FEE500] hover:text-black transition-colors" title="카카오톡" aria-label="카카오톡">
+                              <IconKakao className="w-5 h-5" />
+                            </a>
+                            <a href="#" className="p-2.5 rounded-full bg-white/10 hover:bg-gradient-to-br hover:from-[#f09433] hover:from-10% hover:via-[#e6683c] hover:via-30% hover:to-[#dc2743] hover:to-90% hover:text-white transition-colors" title="인스타그램" aria-label="인스타그램">
+                              <IconInstagram className="w-5 h-5" />
+                            </a>
+                            <a href="#" className="p-2.5 rounded-full bg-white/10 hover:bg-white hover:text-black transition-colors" title="X (트위터)" aria-label="X">
+                              <IconX className="w-5 h-5" />
+                            </a>
+                          </div>
+                        </div>
+                      </>
                     )}
                   </div>
                 </div>
 
-                {/* User info */}
+                {/* User info + 레벨 진행률 + XP 바 */}
                 <div className="flex items-center gap-4 mb-4">
                   <div className="relative">
-                    <div className={`w-16 h-16 rounded-full overflow-hidden ring-2 bg-black/20 ${theme === "black" ? "ring-white/20" : "ring-purple-500/50"}`}>
+                    <div
+                      className={`w-16 h-16 rounded-full overflow-hidden bg-black/20 ${theme === "black" ? "" : "ring-2 ring-purple-500/50"}`}
+                      style={theme === "black" ? { border: "2px solid rgba(255,255,255,0.2)" } : undefined}
+                    >
                       <img
                         src="/profile-avatar.jpg"
                         alt="Fomo_KR"
                         className="w-full h-full object-cover"
                         onError={(e) => {
-                          // Fallback to images folder if root doesn't work
                           const target = e.target as HTMLImageElement
                           if (target.src.includes('/profile-avatar.jpg') && !target.src.includes('/images/')) {
                             target.src = '/images/profile-avatar.jpg'
@@ -191,22 +263,44 @@ export default function ProfilePage() {
                       />
                     </div>
                   </div>
-                  <div>
+                  <div className="flex-1 min-w-0">
                     <p className="font-display text-lg tracking-wide uppercase">Fomo_KR</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${theme === "black" ? "bg-white/15 text-white border border-white/20" : "bg-gradient-to-r from-purple-600 to-pink-600"}`}>
-                        LEVEL 3
-                      </span>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowLevelModal(true)}
+                      className={`text-left mt-1 flex flex-col gap-1 rounded-lg px-2.5 py-1.5 transition-colors ${theme === "black" ? "border border-white/30 hover:bg-white/5" : "bg-black/20 hover:bg-black/30"}`}
+                      style={theme === "black" ? { background: "rgba(255,255,255,0.05)" } : undefined}
+                    >
+                      <span className="text-[10px] font-semibold text-white/80">{getTierName(LEVEL_CURRENT)} → {getTierName(LEVEL_NEXT)} ({XP_PERCENT}%)</span>
+                      <div className="h-1.5 w-full rounded-full bg-white/10 overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-[#ec4899] to-[#f472b6] transition-all duration-500"
+                          style={{ width: `${XP_PERCENT}%` }}
+                        />
+                      </div>
+                    </button>
                   </div>
                 </div>
 
-                {/* Stats row */}
-                <div className="flex items-center justify-between pt-3 border-t border-white/10">
+                {/* Stats row: 핑크/다크 동일 — 카드 안 컴팩트, 아이콘·숫자·라벨 */}
+                <div className="flex items-center justify-between pt-3 border-t border-white/10 gap-2">
                   {userStats.map((stat, index) => (
-                    <div key={index} className="text-center">
-                      <p className="text-lg font-bold">{stat.value}</p>
-                      <p className="text-xs text-white/50">{stat.label}</p>
+                    <div
+                      key={index}
+                      className="flex-1 text-center relative group"
+                      title={stat.tooltipLines.join(" · ")}
+                    >
+                      <p className="text-lg font-bold flex items-center justify-center gap-1">
+                        <span className="text-base" aria-hidden>{stat.icon}</span>
+                        {stat.value}
+                        {stat.change && <span className="text-xs font-normal text-emerald-400/90">({stat.change} ↑)</span>}
+                      </p>
+                      <p className="text-xs text-white/50 mt-0.5">{stat.label}</p>
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-3 py-2 rounded-lg bg-black/95 text-xs text-white/90 min-w-[200px] max-w-[280px] whitespace-normal text-left opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-10 border border-white/10 shadow-xl">
+                        {stat.tooltipLines.map((line, i) => (
+                          <p key={i} className="leading-snug">{line}</p>
+                        ))}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -214,7 +308,7 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Quick Actions */}
+          {/* Quick Actions — 블랙 모드: 배경/테두리/호버 밝아짐 */}
           <section className="grid grid-cols-3 gap-3">
             {[
               { icon: Wallet, label: "Charge", iconColor: "text-white/80" },
@@ -224,28 +318,32 @@ export default function ProfilePage() {
               <button
                 key={index}
                 type="button"
-                className={`flex flex-col items-center gap-1.5 p-3 rounded-xl transition-colors ${theme === "black" ? "bg-white/5 border border-[rgba(255,105,180,0.28)] hover:bg-white/10" : "bg-white/5 border border-white/10 hover:bg-white/10"}`}
+                className={`profile-quick-action flex flex-col items-center gap-1.5 rounded-xl transition-colors ${theme === "black" ? "p-4 border border-white/10 hover:bg-white/10" : "p-3"}`}
+                style={theme === "black"
+                  ? { background: "rgba(255,255,255,0.05)" }
+                  : { background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }
+                }
               >
-                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-                  <action.icon className={`w-4 h-4 ${action.iconColor}`} />
+                <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
+                  <action.icon className={`w-[1.1rem] h-[1.1rem] ${action.iconColor}`} />
                 </div>
                 <span className="text-xs text-white/70">{action.label}</span>
               </button>
             ))}
           </section>
 
-          {/* 3D Gallery Section — 블랙 모드: MY GALLERY에만 분홍 테두리 살짝 */}
-          <section className={`mt-6 ${theme === "black" ? "rounded-2xl border border-[rgba(255,105,180,0.3)] p-4" : ""}`}>
-            <div className="flex items-center justify-between mb-4">
+          {/* 3D Gallery Section — MY GALLERY·Add Item는 박스 위(공통), 다크모드만 갤러리 박스에 테두리 */}
+          <section className="mt-6">
+            <div className="flex items-center justify-between mb-4 px-0">
               <h2 className="text-lg font-display tracking-wide flex items-center gap-2">
                 <span className={theme === "black" ? "text-white uppercase" : "text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 uppercase"}>MY GALLERY</span>
               </h2>
-              <button type="button" className={`text-xs transition-colors ${theme === "black" ? "text-white/80 hover:text-white" : "text-pink-400 hover:text-pink-300"}`}>
+              <button type="button" onClick={() => setShowAddItem(true)} className={`text-xs transition-colors ${theme === "black" ? "text-white/80 hover:text-white" : "text-pink-400 hover:text-pink-300"}`}>
                 Add Item
               </button>
             </div>
 
-            {/* 원기둥 장식장 — 3D 원근·곡면·광원 적용 */}
+            {/* 원기둥 장식장 — 테두리/링 제거 (두 모드 공통) */}
             <div
               ref={galleryRef}
               onPointerDown={handlePointerDown}
@@ -253,7 +351,7 @@ export default function ProfilePage() {
               onPointerUp={handlePointerUp}
               onPointerLeave={handlePointerLeave}
               onPointerCancel={handlePointerLeave}
-              className={`relative rounded-2xl overflow-hidden select-none touch-none ${theme === "black" ? "ring-1 ring-[rgba(255,105,180,0.2)]" : ""}`}
+              className="relative rounded-2xl overflow-hidden select-none touch-none"
               style={{
                 height: "540px",
                 cursor: isDragging ? "grabbing" : "grab",
@@ -288,7 +386,7 @@ export default function ProfilePage() {
                     transformStyle: "preserve-3d",
                   }}
                 >
-                  {/* 원기둥 위쪽 뚜껑 (둥근 링) */}
+                  {/* 원기둥 위쪽 뚜껑 (둥근 링) — 테두리 제거 */}
                   <div
                     className="absolute left-1/2 top-0 -translate-x-1/2 z-20 rounded-full"
                     style={{
@@ -296,7 +394,6 @@ export default function ProfilePage() {
                       height: 28,
                       background: "linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 30%, rgba(0,0,0,0.4) 100%)",
                       boxShadow: "0 -2px 12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)",
-                      border: "1px solid rgba(255,255,255,0.08)",
                     }}
                   />
                   {/* 원기둥 본체 — 회전하는 벽들 (강한 원근) */}
@@ -344,20 +441,26 @@ export default function ProfilePage() {
                                   transform: "translateZ(1px)", // 표면 위로 약간 띄워 보이게
                                 }}
                               >
-                                <div
-                                  className="rounded-2xl overflow-hidden flex items-center justify-center border border-white/15 bg-black/60"
-                                  style={{
-                                    width: 96,
-                                    height: 128,
-                                    boxShadow: "0 4px 14px rgba(0,0,0,0.6)",
-                                  }}
+                                <button
+                                  type="button"
+                                  onClick={() => !item && setShowAddItem(true)}
+                                  className={`rounded-2xl overflow-hidden flex items-center justify-center w-[96px] h-[128px] transition-colors ${theme === "black" ? "border hover:border-white/25" : "border border-white/15 bg-black/60 hover:border-[rgba(255,105,180,0.4)]"}`}
+                                  style={theme === "black"
+                                    ? item
+                                      ? { border: "1px solid rgba(255,255,255,0.15)", boxShadow: "0 4px 14px rgba(0,0,0,0.6)", background: "rgba(0,0,0,0.6)" }
+                                      : { border: "1px dashed rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.03)", boxShadow: "0 4px 14px rgba(0,0,0,0.4)" }
+                                    : { boxShadow: "0 4px 14px rgba(0,0,0,0.6)" }
+                                  }
                                 >
                                   {item ? (
-                                    <Image src={item} alt="" width={96} height={128} className="w-full h-full object-cover" />
+                                    <Image src={item} alt="" width={96} height={128} className="w-full h-full object-cover pointer-events-none" />
                                   ) : (
-                                    <span className="text-white/25 text-[10px] font-medium">+</span>
+                                    <span className={`flex flex-col items-center justify-center gap-0.5 ${theme === "black" ? "text-[#9CA3AF]" : "text-white/50"}`}>
+                                      <Plus className={`w-5 h-5 ${theme === "black" ? "text-[#9CA3AF]" : "text-white/50"}`} />
+                                      <span className="text-[10px] font-medium">추가</span>
+                                    </span>
                                   )}
-                                </div>
+                                </button>
                               </div>
                             )
                           })}
@@ -365,7 +468,7 @@ export default function ProfilePage() {
                       )
                     })}
                   </div>
-                  {/* 원기둥 아래쪽 뚜껑 */}
+                  {/* 원기둥 아래쪽 뚜껑 — 테두리 제거 */}
                   <div
                     className="absolute left-1/2 bottom-0 -translate-x-1/2 z-20 rounded-full"
                     style={{
@@ -373,7 +476,6 @@ export default function ProfilePage() {
                       height: 28,
                       background: "linear-gradient(0deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 30%, rgba(0,0,0,0.4) 100%)",
                       boxShadow: "0 2px 12px rgba(0,0,0,0.5), inset 0 -1px 0 rgba(255,255,255,0.06)",
-                      border: "1px solid rgba(255,255,255,0.08)",
                     }}
                   />
                 </div>
@@ -382,31 +484,50 @@ export default function ProfilePage() {
           </section>
         </main>
 
-        {/* Bottom Navigation — safe-area 적용으로 항상 보이게 */}
-        <nav className="nav-bottom-bar bg-black/95 backdrop-blur-sm border-t border-white/10">
-          <div className="flex items-center justify-around py-3">
-            <Link href={basePath || "/"} className="flex flex-col items-center gap-1 text-white/50 hover:text-white/80 transition-colors">
-              <Home className="w-6 h-6" />
-              <span className="text-xs font-medium">Home</span>
-            </Link>
-            <Link href={`${basePath}/ranking`} className="flex flex-col items-center gap-1 text-white/50 hover:text-white/80 transition-colors">
-              <Trophy className="w-6 h-6" />
-              <span className="text-xs font-medium">Ranking</span>
-            </Link>
-            <Link href={`${basePath}/community`} className="flex flex-col items-center gap-1 text-white/50 hover:text-white/80 transition-colors">
-              <Users className="w-6 h-6" />
-              <span className="text-xs font-medium">Community</span>
-            </Link>
-            <Link href={`${basePath}/market`} className="flex flex-col items-center gap-1 text-white/50 hover:text-white/80 transition-colors">
-              <Store className="w-6 h-6" />
-              <span className="text-xs font-medium">2nd Market</span>
-            </Link>
-            <Link href={`${basePath}/profile`} className={`flex flex-col items-center gap-1 ${theme === "black" ? "text-white" : "text-[#FF6B9D]"}`}>
-              <User className="w-6 h-6" />
-              <span className="text-xs font-medium">My Profile</span>
-            </Link>
+        {/* 등급 시스템 설명 모달 */}
+        {showLevelModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setShowLevelModal(false)}>
+            <div className="bg-[#0d0d0d] border border-white/20 rounded-2xl p-5 max-w-sm w-full shadow-xl" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-display text-lg uppercase tracking-wide text-white">등급</h3>
+                <button type="button" onClick={() => setShowLevelModal(false)} className="p-1 rounded-full hover:bg-white/10">
+                  <X className="w-5 h-5 text-white/70" />
+                </button>
+              </div>
+              <p className="text-xs text-white/70 leading-relaxed mb-4">
+                입찰·낙찰·커뮤니티 활동으로 XP를 쌓아 등급이 올라갑니다. 등급이 높을수록 LEGEND 드롭 참여 기회와 보상이 늘어납니다.
+              </p>
+              <div className="text-[10px] text-white/50 space-y-2">
+                <p>Bronze → Silver → Gold → Platinum → Diamond (VIP)</p>
+                <p className="text-white/60 font-medium mt-2">달성 조건</p>
+                <ul className="space-y-0.5 list-none pl-0">
+                  <li>Diamond (VIP) — 1억 원 이상</li>
+                  <li>Platinum — 5,000만 원 이상</li>
+                  <li>Gold — 1,000만 원 이상</li>
+                  <li>Silver — 300만 원 이상</li>
+                  <li>Bronze — 가입 즉시</li>
+                </ul>
+                <p className="mt-2 pt-2 border-t border-white/10">현재: {getTierName(LEVEL_CURRENT)} · {XP_CURRENT} / {XP_NEEDED} XP (다음 등급까지 {XP_NEEDED - XP_CURRENT} XP)</p>
+              </div>
+            </div>
           </div>
-        </nav>
+        )}
+
+        {/* Add Item 모달 (플레이스홀더) */}
+        {showAddItem && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setShowAddItem(false)}>
+            <div className="bg-[#0d0d0d] border border-white/20 rounded-2xl p-5 max-w-sm w-full shadow-xl" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-display text-lg uppercase tracking-wide text-white">아이템 추가</h3>
+                <button type="button" onClick={() => setShowAddItem(false)} className="p-1 rounded-full hover:bg-white/10">
+                  <X className="w-5 h-5 text-white/70" />
+                </button>
+              </div>
+              <p className="text-sm text-white/60">2nd Market에서 구매한 아이템을 갤러리에 걸 수 있습니다. (준비 중)</p>
+            </div>
+          </div>
+        )}
+
       </div>
     </>
   )
