@@ -21,7 +21,12 @@ export function BottomNav() {
     { href: `${basePath}/profile`, label: "My Profile", icon: User },
   ]
 
-  const activeIndex = tabs.findIndex((t) => pathname === t.href || (pathname === "/" && t.href === "/") || (pathname === "/black" && t.href === "/black"))
+  /* 모드 바꿔도 활성 탭 유지: pathname을 basePath 제거한 경로로 비교 */
+  const pathSegment = pathname?.replace(/^\/black/, "") || "/"
+  const activeIndex = tabs.findIndex((t) => {
+    const tSegment = t.href.replace(/^\/black/, "") || "/"
+    return tSegment === pathSegment
+  })
   const activeIndexResolved = activeIndex >= 0 ? activeIndex : 0
 
   const isPink = theme !== "black"
