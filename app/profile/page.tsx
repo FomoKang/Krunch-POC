@@ -227,7 +227,8 @@ export default function ProfilePage() {
                         <div className="fixed top-24 right-4 z-50 p-4 bg-black/95 border border-white/10 rounded-xl shadow-2xl w-[220px]" onClick={(e) => e.stopPropagation()}>
                           <button
                             type="button"
-                            onClick={async () => {
+                            onClick={async (e) => {
+                              e.stopPropagation()
                               try {
                                 const profileUrl = `${window.location.origin}${basePath}/profile`
                                 await navigator.clipboard.writeText(profileUrl)
@@ -243,7 +244,7 @@ export default function ProfilePage() {
                                 })
                               }
                             }}
-                            className="text-xs font-semibold text-white/90 mb-3 flex items-center gap-1.5 hover:text-white transition-colors cursor-pointer"
+                            className="text-xs font-semibold text-white/90 mb-3 flex items-center gap-1.5 hover:text-white transition-colors cursor-pointer w-full text-left"
                           >
                             <Share2 className="w-3.5 h-3.5" /> {isKo ? "프로필 공유" : "Share profile"}
                           </button>
