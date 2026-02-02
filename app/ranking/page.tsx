@@ -135,11 +135,11 @@ export default function RankingPage() {
           )}
           <button
             onClick={() => setActiveTab("artist")}
-            className={`flex-1 py-3 px-6 rounded-[24px] text-sm font-bold transition-all duration-300 ease-in-out relative overflow-hidden ${
+            className={`flex-1 py-3 px-6 rounded-[24px] text-sm font-bold transition-all duration-300 ease-in-out relative overflow-hidden border-2 ${
               activeTab === "artist"
                 ? theme === "black"
-                  ? "bg-transparent text-white border-2 border-white/90"
-                  : "bg-gradient-to-r from-[#FF006E] to-[#FF4D94] text-white shadow-lg shadow-[#FF006E]/40"
+                  ? "bg-transparent text-white border-white/90"
+                  : "bg-gradient-to-r from-[#FF006E] to-[#FF4D94] text-white shadow-lg shadow-[#FF006E]/40 border-transparent"
                 : theme === "black"
                   ? "text-white/50 hover:text-white/80 border border-white/10"
                   : "bg-white/5 text-white/60 border border-white/10 hover:bg-white/10 hover:text-white/80"
@@ -152,11 +152,11 @@ export default function RankingPage() {
           </button>
           <button
             onClick={() => setActiveTab("collector")}
-            className={`flex-1 py-3 px-6 rounded-[24px] text-sm font-bold transition-all duration-300 ease-in-out relative overflow-hidden ${
+            className={`flex-1 py-3 px-6 rounded-[24px] text-sm font-bold transition-all duration-300 ease-in-out relative overflow-hidden border-2 ${
               activeTab === "collector"
                 ? theme === "black"
-                  ? "bg-transparent text-white border-2 border-white/90"
-                  : "bg-gradient-to-r from-[#FF006E] to-[#FF4D94] text-white shadow-lg shadow-[#FF006E]/40"
+                  ? "bg-transparent text-white border-white/90"
+                  : "bg-gradient-to-r from-[#FF006E] to-[#FF4D94] text-white shadow-lg shadow-[#FF006E]/40 border-transparent"
                 : theme === "black"
                   ? "text-white/50 hover:text-white/80 border border-white/10"
                   : "bg-white/5 text-white/60 border border-white/10 hover:bg-white/10 hover:text-white/80"
