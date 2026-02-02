@@ -429,7 +429,9 @@ export default function RankingPage() {
                   </div>
                 </div>
                 <span className={`px-3 py-1.5 rounded-xl text-xs font-black tracking-wider whitespace-pre-line text-center leading-tight ${getBadgeStyle(collector.badge, theme === "black")}`}>
-                  {collector.badge.replace(/(\d+\s+(?:LEGEND|UNIQUE))\s+(?=\d+)/g, "$1\n")}
+                  {collector.badge
+                    .replace(/(\d+)\s+(LEGEND|UNIQUE)/g, "$1\u00A0$2") // 숫자와 단어 사이를 non-breaking space로
+                    .replace(/(\d+\u00A0(?:LEGEND|UNIQUE))\s+(?=\d+)/g, "$1\n")} {/* 숫자+단어 쌍 사이에만 줄바꿈 */}
                 </span>
               </div>
               <div className="flex items-center justify-between pt-4 border-t border-white/10 relative z-10">
