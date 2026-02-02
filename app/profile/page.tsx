@@ -279,7 +279,7 @@ export default function ProfilePage() {
                     <button
                       type="button"
                       onClick={() => setShowLevelModal(true)}
-                      className={`text-left mt-1 flex flex-col gap-1 rounded-lg px-2.5 py-1.5 transition-colors ${theme === "black" ? "border border-white/30 hover:bg-white/5" : "bg-black/20 hover:bg-black/30"}`}
+                      className={`text-left mt-1 flex flex-col gap-1 rounded-lg px-2.5 py-1.5 transition-colors border ${theme === "black" ? "border-white/30 hover:bg-white/5" : "border-transparent bg-black/20 hover:bg-black/30"}`}
                       style={theme === "black" ? { background: "rgba(255,255,255,0.05)" } : undefined}
                     >
                       <span className="text-[10px] font-semibold text-white/80">{getTierName(LEVEL_CURRENT)} → {getTierName(LEVEL_NEXT)} ({XP_PERCENT}%)</span>
