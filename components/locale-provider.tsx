@@ -1,8 +1,9 @@
 "use client"
 
-import { createContext, useContext, useState, useCallback, useEffect } from "react"
+import { createContext, useContext, useState, useCallback, useEffect, useRef } from "react"
 
 const STORAGE_KEY = "krunch-locale"
+const TRANSITION_MS = 220
 
 export type Locale = "ko" | "en"
 
@@ -14,6 +15,8 @@ const LocaleContext = createContext<{
 export function LocaleProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>("en")
   const [mounted, setMounted] = useState(false)
+  const [transitioning, setTransitioning] = useState(false)
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     setMounted(true)
@@ -23,21 +26,43 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const setLocale = useCallback((next: Locale) => {
-    setLocaleState(next)
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(STORAGE_KEY, next)
-      document.documentElement.lang = next === "ko" ? "ko" : "en"
-    }
-  }, [])
+    if (next === locale) return
+    if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    setTransitioning(true)
+    timeoutRef.current = setTimeout(() => {
+      setLocaleState(next)
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(STORAGE_KEY, next)
+        document.documentElement.lang = next === "ko" ? "ko" : "en"
+      }
+      setTransitioning(false)
+      timeoutRef.current = null
+    }, TRANSITION_MS)
+  }, [locale])
 
   useEffect(() => {
     if (!mounted || typeof document === "undefined") return
     document.documentElement.lang = locale === "ko" ? "ko" : "en"
   }, [locale, mounted])
 
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    }
+  }, [])
+
   return (
     <LocaleContext.Provider value={{ locale, setLocale }}>
-      {children}
+      <div
+        className="min-h-full"
+        style={{
+          opacity: transitioning ? 0 : 1,
+          transition: `opacity ${TRANSITION_MS}ms ease-in-out`,
+          pointerEvents: transitioning ? "none" : "auto",
+        }}
+      >
+        {children}
+      </div>
     </LocaleContext.Provider>
   )
 }

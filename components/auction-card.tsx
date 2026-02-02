@@ -331,9 +331,9 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
       <SuccessPopup show={showPopup} onClose={handleClosePopup} amount={offerAmount} />
 
       <div className="relative flex flex-col min-h-[100dvh] bg-transparent" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'calc(100px + env(safe-area-inset-bottom))' }}>
-        {/* Header — 로고 좌측, 테마·언어 우측 */}
-        <div className="relative z-50 flex items-center justify-between overflow-visible px-4" style={{ minHeight: 'calc(5rem + env(safe-area-inset-top))', paddingTop: 'calc(1rem + env(safe-area-inset-top))' }}>
-          <Link href={variant === "black" ? "/black" : "/"} className="block h-10 w-28 sm:h-[72px] sm:w-[225px] shrink-0">
+        {/* Header — 로고·아이콘 크기 다른 페이지와 동일 (모바일 h-16 w-32) */}
+        <div className="relative z-50 flex items-center justify-between overflow-visible gap-1.5 px-2.5 sm:gap-2 sm:px-4" style={{ minHeight: 'calc(5rem + env(safe-area-inset-top))', paddingTop: 'calc(1rem + env(safe-area-inset-top))' }}>
+          <Link href={variant === "black" ? "/black" : "/"} className="block h-16 w-32 min-w-0 shrink-0 sm:h-[72px] sm:w-[225px]">
             <Image
               src={logoSrc}
               alt="Krunch Logo"
@@ -483,20 +483,22 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
               className="fixed inset-0 bg-black/50 z-30"
               onClick={() => setShowAuctionCard(false)}
             />
-            {/* Input Form Sheet */}
+            {/* Input Form Sheet — 불투명 배경 + 여백으로 글자 겹침 방지 */}
             <div 
-              className="fixed bottom-0 left-0 right-0 z-40 bg-black/30 rounded-t-2xl border-t border-l border-r border-border/50 overflow-hidden animate-slide-up-bottom-sheet"
+              className="fixed bottom-0 left-0 right-0 z-40 rounded-t-2xl border-t border-l border-r border-border/50 overflow-hidden animate-slide-up-bottom-sheet"
               style={{ 
                 marginLeft: 'max(0, env(safe-area-inset-left))', 
                 marginRight: 'max(0, env(safe-area-inset-right))',
-                paddingBottom: 'calc(100px + env(safe-area-inset-bottom))'
+                paddingBottom: 'calc(100px + env(safe-area-inset-bottom))',
+                background: variant === "black" ? "rgba(10,10,10,0.98)" : "rgba(0,0,0,0.98)",
+                backdropFilter: "blur(12px)",
               }}
             >
               {/* Close Button */}
-              <div className="flex justify-end p-4 pb-2">
+              <div className="flex justify-end p-4 pb-0">
                 <button
                   onClick={() => setShowAuctionCard(false)}
-                  className="w-8 h-8 flex items-center justify-center rounded-full bg-black/50 hover:bg-black/70 transition-colors"
+                  className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/15 transition-colors"
                 >
                   <svg className="w-5 h-5 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -504,10 +506,10 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
                 </button>
               </div>
 
-              <div className="p-4 pt-0">
-                <p className="text-sm font-medium text-foreground mb-2 font-sans drop-shadow-md">{isKo ? "입찰 금액" : "Your Offer"}</p>
+              <div className="px-4 pb-4 pt-2 space-y-4">
+                <p className="text-sm font-medium text-foreground font-sans">{isKo ? "입찰 금액" : "Your Offer"}</p>
 
-                <div className="flex items-end gap-2 mb-4">
+                <div className="flex items-end gap-2">
                   <span className="text-xs text-muted-foreground pb-1 font-sans">KRW</span>
                   <input
                     type="text"
@@ -533,49 +535,51 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
                         e.preventDefault()
                       }
                     }}
-                    className={`flex-1 bg-transparent border-b text-right text-2xl sm:text-4xl font-bold text-foreground focus:outline-none pb-1 font-sans drop-shadow-md ${theme.accentBorderFocus}`}
+                    className={`flex-1 bg-transparent border-b text-right text-2xl sm:text-4xl font-bold text-foreground focus:outline-none pb-1 font-sans ${theme.accentBorderFocus}`}
                   />
                 </div>
 
-                <div className="mb-4 space-y-1">
-                  <p className="text-xs text-muted-foreground font-sans">
-                    {isKo ? `현재 입찰가 ${currentBid.toLocaleString()}원` : `Current Bid ${currentBid.toLocaleString()} KRW`}
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground font-sans leading-relaxed">
+                    {isKo ? `최소 입찰가 ₩${currentBid.toLocaleString()} (현재 입찰가)` : `Minimum bid ₩${currentBid.toLocaleString()} (current bid)`}
                   </p>
                   {(() => {
                     const numericOffer = parseInt(offerAmount.replace(/,/g, ""), 10) || 0
                     const isValid = numericOffer > currentBid
                     return isValid ? (
-                      <p className="text-xs text-muted-foreground font-sans">
-                        {isKo ? "현재 입찰가보다 더 높은 가격으로 참여할 수 있습니다" : "You can participate with a price higher than the current bid price"}
+                      <p className="text-xs text-emerald-500/90 font-sans">
+                        {isKo ? "입찰 가능한 금액입니다." : "You can place a bid at this price."}
                       </p>
                     ) : numericOffer > 0 ? (
-                      <p className="text-xs text-red-500 font-sans">
-                        {isKo ? "현재가 이상으로 입찰해주세요." : "Please bid above the current price."}
+                      <p className="text-xs text-[#FF8FAB] font-sans">
+                        {isKo ? `₩${currentBid.toLocaleString()} 이상 입력해주세요.` : `Please enter at least ₩${currentBid.toLocaleString()}.`}
                       </p>
                     ) : null
                   })()}
                 </div>
 
+                <div className="pt-1">
                 <button
                   onClick={handleSetOffer}
                   disabled={(() => {
                     const numericOffer = parseInt(offerAmount.replace(/,/g, ""), 10) || 0
                     return numericOffer <= currentBid
                   })()}
-                  className={`w-full py-4 font-display font-medium text-lg uppercase tracking-wide transition-all active:scale-[0.98] ${
+                  className={`w-full py-4 place-bid-btn text-lg uppercase transition-all active:scale-[0.98] ${
                     (() => {
                       const numericOffer = parseInt(offerAmount.replace(/,/g, ""), 10) || 0
                       const isDisabled = numericOffer <= currentBid
                       return isDisabled
-                        ? "bg-gray-600 text-gray-400 cursor-not-allowed opacity-50"
+                        ? "bg-white/10 text-white/50 border border-white/10 cursor-not-allowed"
                         : variant === "black"
                         ? "black-mode-place-bid"
                         : `${theme.accentBg} ${theme.accentForeground} hover:brightness-110`
                     })()
                   }`}
                 >
-                  {isKo ? "입찰 하기" : "SET OFFER"}
+                  {isKo ? <span className="place-bid-kr">입찰 하기</span> : "SET OFFER"}
                 </button>
+                </div>
               </div>
             </div>
           </>
@@ -600,7 +604,7 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
                 setTimeout(() => setRipple(null), 600)
                 setShowAuctionCard(true)
               }}
-              className={`relative w-full h-full flex items-center justify-center font-display font-bold text-xl uppercase tracking-wide overflow-hidden transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] ${variant === "black" ? "black-mode-place-bid" : "bg-[#FF6B9D] text-black hover:brightness-110"}`}
+              className={`relative w-full h-full flex items-center justify-center place-bid-btn text-xl uppercase overflow-hidden transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] ${variant === "black" ? "black-mode-place-bid" : "bg-[#FF6B9D] text-black hover:brightness-110"}`}
               style={{
                 boxShadow: variant === "black"
                   ? "0 4px 20px rgba(255, 0, 110, 0.4)"
@@ -620,7 +624,7 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
                   }}
                 />
               )}
-              {isKo ? "입찰하기" : "PLACE BID"}
+              {isKo ? <span className="place-bid-kr">입찰하기</span> : "PLACE BID"}
             </button>
           </div>
         )}

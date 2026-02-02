@@ -216,12 +216,24 @@ body svg {
   border-color: rgba(255, 255, 255, 0.2);
 }
 
-/* Black mode — PLACE BID: 핑크모드와 동일 (#FF6B9D + 호버 brightness-110) */
+/* PLACE BID / SET OFFER — Anton (영어), Black Han Sans (한글, Anton 느낌) */
+.place-bid-btn {
+  font-family: var(--font-display), "Anton", sans-serif !important;
+}
+.place-bid-btn .place-bid-kr {
+  font-family: var(--font-black-han-sans), "Black Han Sans", sans-serif !important;
+  display: inline-block;
+  transform: scaleY(1.15);
+  transform-origin: center 0.55em;
+}
+
+/* Black mode — 버튼 색/그림자만 다름 */
 .black-mode-place-bid {
   background-color: #FF6B9D !important;
   color: #ffffff !important;
   border: none !important;
   transition: filter 0.2s ease;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
 }
 .black-mode-place-bid:hover {
   filter: brightness(1.1);

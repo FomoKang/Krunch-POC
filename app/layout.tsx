@@ -1,6 +1,6 @@
 import type React from "react"
 import type { Metadata, Viewport } from "next"
-import { Geist, Geist_Mono, Inter, Anton, Syne, Noto_Sans_KR } from "next/font/google"
+import { Geist, Geist_Mono, Inter, Anton, Syne, Noto_Sans_KR, Black_Han_Sans } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { ThemeProvider } from "@/components/theme-provider"
 import { LocaleProvider } from "@/components/locale-provider"
@@ -34,6 +34,13 @@ const notoSansKR = Noto_Sans_KR({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-noto-kr",
+})
+
+const blackHanSans = Black_Han_Sans({
+  weight: "400",
+  subsets: ["latin", "korean"],
+  display: "swap",
+  variable: "--font-black-han-sans",
 })
 
 export const metadata: Metadata = {
@@ -94,7 +101,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="ko" className={`dark ${inter.variable} ${anton.variable} ${syne.variable} ${notoSansKR.variable}`}>
+    <html lang="ko" className={`dark ${inter.variable} ${anton.variable} ${syne.variable} ${notoSansKR.variable} ${blackHanSans.variable}`}>
       <body className={`font-sans antialiased bg-black text-white [font-family:var(--font-noto-kr),var(--font-inter),sans-serif]`}>
         <ThemeProvider>
           <LocaleProvider>

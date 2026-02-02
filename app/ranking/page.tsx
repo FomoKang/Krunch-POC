@@ -97,8 +97,8 @@ export default function RankingPage() {
 
       {/* Header — 모바일: 로고·우측 한 줄·테마 안 짤리게 */}
       <header className="sticky top-0 z-50 bg-black/80 backdrop-blur-md border-b border-[#FF6B9D]/20 overflow-visible">
-        <div className="flex items-center justify-between gap-2 px-3 py-3 min-h-[3.5rem] sm:min-h-[6rem] sm:px-4">
-          <div className="h-12 w-24 min-w-0 flex-shrink-0 sm:h-[72px] sm:w-[225px]">
+        <div className="flex items-center justify-between gap-1.5 px-2.5 py-3 min-h-[3.5rem] sm:min-h-[6rem] sm:gap-2 sm:px-4">
+          <div className="h-16 w-32 min-w-0 flex-shrink-0 sm:h-[72px] sm:w-[225px]">
             <Link href={basePath || "/"} className="block h-full w-full">
               <Image
                 src={logoSrc}
@@ -112,7 +112,7 @@ export default function RankingPage() {
           <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0 overflow-visible">
             <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
               <Sparkles className={`w-4 h-4 shrink-0 sm:w-5 sm:h-5 ${theme === "black" ? "text-white" : "text-[#FF6B9D]"}`} />
-              <span className={isKo ? "font-sans font-bold tracking-tight text-sm sm:text-base text-white/95 uppercase whitespace-nowrap" : "font-display text-sm sm:text-lg tracking-wide text-white uppercase whitespace-nowrap"}>{isKo ? "랭킹" : "Ranking"}</span>
+              <span className={isKo ? "font-sans font-bold tracking-tight text-xs sm:text-base text-white/95 uppercase whitespace-nowrap" : "font-display text-xs sm:text-lg tracking-wide text-white uppercase whitespace-nowrap"}>{isKo ? "랭킹" : "Ranking"}</span>
             </div>
             <Link href={`${basePath}/search`} className="p-1.5 sm:p-2 hover:bg-white/10 rounded-full transition-colors shrink-0">
               <Search className="w-4 h-4 sm:w-5 sm:h-5 text-white/80" />
