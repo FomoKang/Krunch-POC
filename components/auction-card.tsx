@@ -284,6 +284,11 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
       return
     }
 
+    // Validate that offer is higher than current bid
+    if (numericAmount <= currentBid) {
+      return
+    }
+
     // Update current bid
     setCurrentBid(numericAmount)
     setBidPulse(true)
