@@ -166,13 +166,14 @@ export default function ProfilePage() {
           {/* Holographic ID Card — 블랙 모드: 카드 블랙 + 글씨 흰색 */}
           <div className="relative">
             <div 
-              className="relative rounded-2xl p-4 overflow-hidden"
+              className="relative rounded-2xl p-4 overflow-hidden border"
               style={theme === "black" ? {
                 background: "#0a0a0a",
-                border: "1px solid rgba(255,105,180,0.28)",
+                borderColor: "rgba(255,105,180,0.28)",
                 boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
               } : {
                 background: "linear-gradient(135deg, rgba(139,92,246,0.3) 0%, rgba(236,72,153,0.3) 50%, rgba(59,130,246,0.3) 100%)",
+                borderColor: "transparent",
                 boxShadow: "0 0 40px rgba(139,92,246,0.3), inset 0 0 60px rgba(255,255,255,0.05)",
               }}
             >
