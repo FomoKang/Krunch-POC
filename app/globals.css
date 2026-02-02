@@ -136,12 +136,17 @@ body svg {
     @apply border-border outline-ring/50;
   }
   html {
-    overflow-y: scroll; /* 스크롤바 항상 표시 → 페이지 전환 시 뷰포트 너비 고정 */
+    overflow-y: auto;
     scrollbar-gutter: stable;
+    height: 100%;
   }
   body {
     @apply bg-black text-white;
     overflow-x: hidden;
+    overflow-y: auto;
+    min-height: 100vh;
+    height: 100%;
+    position: relative;
   }
 }
 
@@ -154,8 +159,10 @@ body svg {
   width: 100%;
   max-width: 100vw;
   box-sizing: border-box;
-  z-index: 50;
+  z-index: 9999;
   padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(8px);
 }
 /* 하단 바 높이만큼 본문 여백 (safe-area 포함) */
 .pb-for-nav {

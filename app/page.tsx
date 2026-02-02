@@ -74,7 +74,7 @@ function CountdownTimer({ accentText }: { accentText: string }) {
   const formatTime = (n: number) => n.toString().padStart(2, "0")
 
   return (
-    <div className={`font-mono text-3xl md:text-4xl font-bold ${accentText} tracking-wider`}>
+    <div className={`font-mono text-3xl md:text-4xl font-bold ${accentText} tracking-wider tabular-nums`}>
       {formatTime(time.hours)}:{formatTime(time.minutes)}:{formatTime(time.seconds)}
     </div>
   )
@@ -167,7 +167,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white pb-for-nav">
+    <div className="min-h-screen bg-black text-white pb-for-nav overflow-x-hidden">
       {/* 상단 네비게이션 — 모바일: 로고·아이콘 축소, 테마 안 짤리게 */}
       <header className="sticky top-0 z-50 bg-black/90 backdrop-blur-sm border-b border-white/5 overflow-visible">
         <div className="flex items-center justify-between gap-2 px-3 py-3 min-h-[3.5rem] sm:min-h-[6rem] sm:px-4">
@@ -241,7 +241,7 @@ export default function HomePage() {
                     <p className={`text-sm md:text-base mt-1 min-h-[1.5rem] ${theme === "black" ? "text-[#b0b0b0]" : "text-white/60"}`}>{isKo ? "Übermensch 2025 월드 투어 스페셜 머치" : "Übermensch 2025 World Tour Special Merch"}</p>
                     <p className={`text-xs mt-0.5 min-h-[1.25rem] ${theme === "black" ? "text-[#808080]" : "text-white/40"}`}>{isKo ? "Übermensch 캡 (버건디) 커스텀" : "Übermensch Cap (Burgundy) customized"}</p>
 
-                    <div className={`mt-5 min-h-[2.5rem] flex items-center justify-center ${theme === "black" ? "font-mono text-3xl md:text-4xl font-bold text-white tracking-wider" : ""}`} style={theme === "black" ? { textShadow: "0 0 20px rgba(255,255,255,0.3)", letterSpacing: "2px" } : undefined}>
+                    <div className={`mt-5 min-h-[2.5rem] flex items-center justify-center ${theme === "black" ? "font-mono text-3xl md:text-4xl font-bold text-white tracking-wider tabular-nums" : ""}`} style={theme === "black" ? { textShadow: "0 0 20px rgba(255,255,255,0.3)", letterSpacing: "2px" } : undefined}>
                       <CountdownTimer accentText={accentText} />
                     </div>
                   </div>
@@ -249,7 +249,7 @@ export default function HomePage() {
 
                 <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between min-h-[3rem]">
                   <span className={`text-sm uppercase tracking-wide ${theme === "black" ? "text-[#808080]" : "text-white/60"}`} style={theme === "black" ? { letterSpacing: "1px" } : undefined}>{isKo ? "현재 입찰가" : "Current Bid"}</span>
-                  <span className={`font-bold ${theme === "black" ? "text-white text-2xl md:text-3xl" : `${accentText} text-2xl md:text-3xl`}`} style={theme === "black" ? { textShadow: "0 2px 8px rgba(255,255,255,0.2)" } : undefined}>₩\u20096,733,184</span>
+                  <span className={`font-bold tabular-nums ${theme === "black" ? "text-white text-2xl md:text-3xl" : `${accentText} text-2xl md:text-3xl`}`} style={theme === "black" ? { textShadow: "0 2px 8px rgba(255,255,255,0.2)" } : undefined}>₩\u20096,733,184</span>
                 </div>
               </div>
             </div>
