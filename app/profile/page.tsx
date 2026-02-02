@@ -172,9 +172,9 @@ export default function ProfilePage() {
                 borderColor: "rgba(255,105,180,0.28)",
                 boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
               } : {
-                background: "linear-gradient(135deg, rgba(139,92,246,0.3) 0%, rgba(236,72,153,0.3) 50%, rgba(59,130,246,0.3) 100%)",
+                background: "rgba(26,26,26,0.8)",
                 borderColor: "transparent",
-                boxShadow: "0 0 40px rgba(139,92,246,0.3), inset 0 0 60px rgba(255,255,255,0.05)",
+                boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
               }}
             >
               {/* Holographic overlay — 블랙 모드에서는 숨김 */}
@@ -348,7 +348,7 @@ export default function ProfilePage() {
           <section className="mt-6">
             <div className="flex items-center justify-between mb-4 px-0">
               <h2 className="text-lg font-display tracking-wide flex items-center gap-2">
-                <span className={theme === "black" ? "text-white uppercase" : "text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 uppercase"}>{isKo ? "마이 갤러리" : "MY GALLERY"}</span>
+                <span className="text-white uppercase">{isKo ? "마이 갤러리" : "MY GALLERY"}</span>
               </h2>
               <button type="button" onClick={() => setShowAddItem(true)} className={`text-xs transition-colors ${theme === "black" ? "text-white/80 hover:text-white" : "text-pink-400 hover:text-pink-300"}`}>
                 {isKo ? "아이템 추가" : "Add Item"}
