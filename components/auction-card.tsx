@@ -550,7 +550,7 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
                       </p>
                     ) : numericOffer > 0 ? (
                       <p className="text-xs text-red-500 font-sans">
-                        {isKo ? "더 높은 가격을 입력해주세요." : "Please enter a higher price."}
+                        {isKo ? "현재가 이상으로 입찰해주세요." : "Please bid above the current price."}
                       </p>
                     ) : null
                   })()}
