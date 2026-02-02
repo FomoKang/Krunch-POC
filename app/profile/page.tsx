@@ -230,13 +230,13 @@ export default function ProfilePage() {
                             <Image src="/Krunch-QR.jpg" alt="QR" width={160} height={160} className="rounded-lg" />
                           </div>
                           <div className="flex items-center justify-center gap-2">
-                            <a href="#" className="p-2.5 rounded-full bg-white/10 hover:bg-gradient-to-br hover:from-[#FEE500] hover:via-[#FBC02D] hover:to-[#F9A825] hover:text-black transition-colors" title="카카오톡" aria-label="카카오톡">
+                            <a href="#" className={`p-2.5 rounded-full bg-white/10 transition-colors ${theme === "black" ? "hover:bg-gradient-to-br hover:from-white hover:via-gray-400 hover:to-black hover:text-white" : "hover:bg-gradient-to-br hover:from-[#FEE500] hover:via-[#FBC02D] hover:to-[#F9A825] hover:text-black"}`} title="카카오톡" aria-label="카카오톡">
                               <IconKakao className="w-5 h-5" />
                             </a>
-                            <a href="#" className="p-2.5 rounded-full bg-white/10 hover:bg-gradient-to-br hover:from-[#833AB4] hover:via-[#E1306C] hover:to-[#FCAF45] hover:text-white transition-colors" title="인스타그램" aria-label="인스타그램">
+                            <a href="#" className={`p-2.5 rounded-full bg-white/10 transition-colors ${theme === "black" ? "hover:bg-gradient-to-br hover:from-white hover:via-gray-400 hover:to-black hover:text-white" : "hover:bg-gradient-to-br hover:from-[#833AB4] hover:via-[#E1306C] hover:to-[#FCAF45] hover:text-white"}`} title="인스타그램" aria-label="인스타그램">
                               <IconInstagram className="w-5 h-5" />
                             </a>
-                            <a href="#" className="p-2.5 rounded-full bg-white/10 hover:bg-gradient-to-br hover:from-white hover:via-gray-400 hover:to-black hover:text-white transition-colors" title="X (트위터)" aria-label="X">
+                            <a href="#" className={`p-2.5 rounded-full bg-white/10 transition-colors ${theme === "black" ? "hover:bg-gradient-to-br hover:from-white hover:via-gray-400 hover:to-black hover:text-white" : "hover:bg-gradient-to-br hover:from-white hover:via-gray-400 hover:to-black hover:text-white"}`} title="X (트위터)" aria-label="X">
                               <IconX className="w-5 h-5" />
                             </a>
                           </div>
