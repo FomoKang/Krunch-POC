@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useSiteTheme } from "./theme-provider"
+import { useLocale } from "./locale-provider"
 
 interface SuccessPopupProps {
   show: boolean
@@ -11,7 +12,9 @@ interface SuccessPopupProps {
 
 export function SuccessPopup({ show, onClose, amount }: SuccessPopupProps) {
   const { theme } = useSiteTheme()
+  const { locale } = useLocale()
   const isBlack = theme === "black"
+  const isKo = locale === "ko"
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
@@ -92,11 +95,11 @@ export function SuccessPopup({ show, onClose, amount }: SuccessPopupProps) {
                 isBlack ? "text-white" : "text-white drop-shadow-[0_0_12px_rgba(255,107,157,0.5)]"
               }`}
             >
-              BID PLACED
+              {isKo ? "입찰 완료" : "BID PLACED"}
             </h3>
 
             <p className={`text-center mb-6 text-sm font-medium tracking-wide ${isBlack ? "text-[#999999]" : "text-white/70"}`}>
-              Your offer has been successfully placed
+              {isKo ? "입찰이 성공적으로 이뤄졌습니다" : "Your offer has been successfully placed"}
             </p>
 
             {/* Amount — 블랙 모드: 흰 숫자 + 숫자에 핑크 외곽선 굵게 / 기본: 핑크 */}
@@ -137,7 +140,7 @@ export function SuccessPopup({ show, onClose, amount }: SuccessPopupProps) {
                   <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
                 </>
               )}
-              <span className="relative z-10 drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">DONE</span>
+              <span className="relative z-10 drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">{isKo ? "확인" : "DONE"}</span>
             </button>
           </div>
         </div>

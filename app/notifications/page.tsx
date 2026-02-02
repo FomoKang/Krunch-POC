@@ -4,6 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { ArrowLeft, Bell, Gavel, Trophy, Heart, MessageCircle, TrendingUp, Check, Trash2 } from "lucide-react"
+import { useLocale } from "@/components/locale-provider"
 
 // 알림 데이터
 const notificationsData = [
@@ -117,6 +118,8 @@ function getNotificationBgColor(type: string, read: boolean) {
 }
 
 export default function NotificationsPage() {
+  const { locale } = useLocale()
+  const isKo = locale === "ko"
   const [notifications, setNotifications] = useState(notificationsData)
   const unreadCount = notifications.filter((n) => !n.read).length
 
@@ -144,7 +147,7 @@ export default function NotificationsPage() {
               <ArrowLeft className="w-5 h-5 text-white" />
             </Link>
             <div className="flex items-center gap-2">
-              <h1 className="text-lg font-bold">Notifications</h1>
+              <h1 className="text-lg font-bold">{isKo ? "알림" : "Notifications"}</h1>
               {unreadCount > 0 && (
                 <span className="bg-[#FF6B9D] text-black text-xs font-bold px-2 py-0.5 rounded-full">
                   {unreadCount}
@@ -168,8 +171,8 @@ export default function NotificationsPage() {
         {notifications.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <Bell className="w-16 h-16 text-white/20 mb-4" />
-            <h3 className="text-white/60 font-medium">No notifications yet</h3>
-            <p className="text-white/40 text-sm mt-1">We&apos;ll notify you when something happens</p>
+            <h3 className="text-white/60 font-medium">{isKo ? "아직 알림이 없어요" : "No notifications yet"}</h3>
+            <p className="text-white/40 text-sm mt-1">{isKo ? "새 소식이 있으면 알려드릴게요" : "We'll notify you when something happens"}</p>
           </div>
         ) : (
           <div className="space-y-2">

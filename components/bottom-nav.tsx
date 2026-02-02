@@ -4,21 +4,28 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Home, Trophy, Users, Store, User } from "lucide-react"
 import { useSiteTheme } from "@/components/theme-provider"
+import { useSplash } from "@/components/splash-context"
+import { useLocale } from "@/components/locale-provider"
 
 export function BottomNav() {
   const pathname = usePathname()
   const { theme } = useSiteTheme()
+  const { isSplashVisible } = useSplash()
+  const { locale } = useLocale()
   const basePath = theme === "black" ? "/black" : ""
+  const isKo = locale === "ko"
 
+  /* 로딩(스플래시) 창에서는 하단 네비 숨김 */
+  if (isSplashVisible) return null
   /* 옥션 페이지에서는 하단 네비 숨김 → PLACE BID 버튼이 가려지지 않도록 */
   if (pathname?.includes("/auction")) return null
 
   const tabs = [
-    { href: basePath || "/", label: "Home", icon: Home },
-    { href: `${basePath}/ranking`, label: "Ranking", icon: Trophy },
-    { href: `${basePath}/community`, label: "Community", icon: Users },
-    { href: `${basePath}/market`, label: "2nd Market", icon: Store },
-    { href: `${basePath}/profile`, label: "My Profile", icon: User },
+    { href: basePath || "/", label: isKo ? "홈" : "Home", icon: Home },
+    { href: `${basePath}/ranking`, label: isKo ? "랭킹" : "Ranking", icon: Trophy },
+    { href: `${basePath}/community`, label: isKo ? "커뮤니티" : "Community", icon: Users },
+    { href: `${basePath}/market`, label: isKo ? "2차 마켓" : "2nd Market", icon: Store },
+    { href: `${basePath}/profile`, label: isKo ? "마이 프로필" : "My Profile", icon: User },
   ]
 
   /* 모드 바꿔도 활성 탭 유지: pathname을 basePath 제거한 경로로 비교 */

@@ -4,6 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { ArrowLeft, Search, X, TrendingUp, Clock, Flame } from "lucide-react"
+import { useLocale } from "@/components/locale-provider"
 
 // 트렌딩 검색어
 const trendingSearches = [
@@ -50,6 +51,8 @@ const recommendedItems = [
 ]
 
 export default function SearchPage() {
+  const { locale } = useLocale()
+  const isKo = locale === "ko"
   const [searchQuery, setSearchQuery] = useState("")
   const [recentList, setRecentList] = useState(recentSearches)
 
@@ -75,7 +78,7 @@ export default function SearchPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search artists, items, collections..."
+              placeholder={isKo ? "아티스트, 아이템, 컬렉션 검색..." : "Search artists, items, collections..."}
               className="w-full bg-white/10 border border-white/10 rounded-full py-2.5 pl-10 pr-10 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-[#FF6B9D]/50 focus:ring-1 focus:ring-[#FF6B9D]/50 transition-all"
               autoFocus
             />
@@ -98,13 +101,13 @@ export default function SearchPage() {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-white/40" />
-                <h2 className="text-sm font-medium text-white/60">Recent Searches</h2>
+                <h2 className="text-sm font-medium text-white/60">{isKo ? "최근 검색어" : "Recent Searches"}</h2>
               </div>
               <button
                 onClick={clearAllRecent}
                 className="text-xs text-[#FF6B9D] hover:text-[#FF6B9D]/80 transition-colors"
               >
-                Clear All
+                {isKo ? "전체 삭제" : "Clear All"}
               </button>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -130,7 +133,7 @@ export default function SearchPage() {
         <section>
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp className="w-4 h-4 text-[#FF6B9D]" />
-            <h2 className="text-sm font-medium text-white/60">Trending Now</h2>
+            <h2 className="text-sm font-medium text-white/60">{isKo ? "트렌딩 검색어" : "Trending Now"}</h2>
           </div>
           <div className="space-y-1">
             {trendingSearches.map((item, index) => (
@@ -160,7 +163,7 @@ export default function SearchPage() {
 
         {/* 추천 아이템 */}
         <section>
-          <h2 className="text-sm font-medium text-white/60 mb-4">Recommended For You</h2>
+          <h2 className="text-sm font-medium text-white/60 mb-4">{isKo ? "추천 아이템" : "Recommended For You"}</h2>
           <div className="space-y-3">
             {recommendedItems.map((item) => (
               <Link

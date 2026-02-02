@@ -5,18 +5,21 @@ import Link from "next/link"
 import Image from "next/image"
 import { Search, Bell, Home, Trophy, Users, User, MessageCircle, Flame, Zap, Store, Heart, Check } from "lucide-react"
 import { useSiteTheme } from "@/components/theme-provider"
+import { useLocale } from "@/components/locale-provider"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { LanguageToggle } from "@/components/language-toggle"
 
 // 댓글 타입 (프로필 사진 추가)
 type CommentItem = { user: string; text: string; avatar?: string }
 
-// Fashion Battle 데이터 (endsIn: 마감까지 시간, 참여자 수는 totalVotes)
+// Fashion Battle 데이터 (titleKo / outfitEn: locale별 표시)
 const fashionBattles = [
   {
     id: 1,
     title: "Luxury Bag Battle",
-    leftCeleb: { name: "JENNIE", outfit: "샤넬 실버백", image: "/jennie-bag.jpg", votes: 65 },
-    rightCeleb: { name: "가원", outfit: "백 공항패션", image: "/gawon-bag.jpg", votes: 35 },
+    titleKo: "명품 백 배틀",
+    leftCeleb: { name: "JENNIE", nameKo: "제니", nameEn: "JENNIE", outfit: "샤넬 실버백", outfitEn: "Chanel Silver Bag", image: "/jennie-bag.jpg", votes: 65 },
+    rightCeleb: { name: "가원", nameKo: "가원", nameEn: "Gawon", outfit: "백 공항패션", outfitEn: "Bag Airport Fashion", image: "/gawon-bag.jpg", votes: 35 },
     totalVotes: 15234,
     comments: [
       { user: "ChanelLover", text: "JENNIE's Chanel bag is iconic!", avatar: "/images/jennie-avatar.jpg" },
@@ -28,8 +31,9 @@ const fashionBattles = [
   {
     id: 2,
     title: "Airport Fashion Showdown",
-    leftCeleb: { name: "FELIX", outfit: "카멜 코트 공항룩", image: "/felix-airport.jpg", votes: 58 },
-    rightCeleb: { name: "민규", outfit: "공항 패션", image: "/mingyu-airport.jpg", votes: 42 },
+    titleKo: "공항 패션 배틀",
+    leftCeleb: { name: "FELIX", nameKo: "펠릭스", nameEn: "FELIX", outfit: "카멜 코트 공항룩", outfitEn: "Camel Coat Airport Look", image: "/felix-airport.jpg", votes: 58 },
+    rightCeleb: { name: "민규", nameKo: "민규", nameEn: "Mingyu", outfit: "공항 패션", outfitEn: "Airport Fashion", image: "/mingyu-airport.jpg", votes: 42 },
     totalVotes: 18765,
     comments: [
       { user: "StayForever", text: "Felix's camel coat is perfection!", avatar: "/images/felix-avatar.jpg" },
@@ -41,8 +45,9 @@ const fashionBattles = [
   {
     id: 3,
     title: "Airport Style Battle",
-    leftCeleb: { name: "카리나", outfit: "공항 패션", image: "/karina-airport.jpg", votes: 62 },
-    rightCeleb: { name: "이나경", outfit: "공항 패션", image: "/nagyeong-airport.jpg", votes: 38 },
+    titleKo: "공항 스타일 배틀",
+    leftCeleb: { name: "카리나", nameKo: "카리나", nameEn: "Karina", outfit: "공항 패션", outfitEn: "Airport Fashion", image: "/karina-airport.jpg", votes: 62 },
+    rightCeleb: { name: "이나경", nameKo: "이나경", nameEn: "Na Gyeong", outfit: "공항 패션", outfitEn: "Airport Fashion", image: "/nagyeong-airport.jpg", votes: 38 },
     totalVotes: 14256,
     comments: [
       { user: "MYDay", text: "Karina's airport style is so chic!", avatar: "/images/karina-avatar.jpg" },
@@ -54,8 +59,9 @@ const fashionBattles = [
   {
     id: 4,
     title: "High Fashion Battle",
-    leftCeleb: { name: "정해인", outfit: "돌체앤가바나", image: "/jhi-dgas.jpg", votes: 52 },
-    rightCeleb: { name: "시온", outfit: "발렌티노", image: "/xion-valentino.jpg", votes: 48 },
+    titleKo: "하이엔드 배틀",
+    leftCeleb: { name: "정해인", nameKo: "정해인", nameEn: "Jung Hae In", outfit: "돌체앤가바나", outfitEn: "Dolce & Gabbana", image: "/jhi-dgas.jpg", votes: 52 },
+    rightCeleb: { name: "시온", nameKo: "시온", nameEn: "Sion", outfit: "발렌티노", outfitEn: "Valentino", image: "/xion-valentino.jpg", votes: 48 },
     totalVotes: 12456,
     comments: [
       { user: "DGFan", text: "Jung Hae In's Dolce look is stunning!", avatar: "/user7-profile.jpg" },
@@ -121,7 +127,7 @@ function formatParticipants(n: number) {
 type BattleItem = (typeof fashionBattles)[0]
 
 // Fashion Battle 카드: 투표 애니메이션, 토스트, HOT 개선, 댓글 프로필/이모지, 이미지 호버·하트
-function BattleCard({ battle, isBlack }: { battle: BattleItem; isBlack?: boolean }) {
+function BattleCard({ battle, isBlack, isKo }: { battle: BattleItem; isBlack?: boolean; isKo?: boolean }) {
   const [voted, setVoted] = useState<"left" | "right" | null>(null)
   const [leftVotes, setLeftVotes] = useState(battle.leftCeleb.votes)
   const [rightVotes, setRightVotes] = useState(battle.rightCeleb.votes)
@@ -173,12 +179,12 @@ function BattleCard({ battle, isBlack }: { battle: BattleItem; isBlack?: boolean
       {showToast && (
         <div className="absolute top-14 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 px-4 py-2 rounded-full bg-black/90 border border-white/20 shadow-lg animate-in fade-in slide-in-from-top-2 duration-300">
           <Check className="w-4 h-4 text-emerald-400" />
-          <span className="text-sm font-medium text-white">투표 완료!</span>
+          <span className="text-sm font-medium text-white">{isKo ? "투표 완료!" : "Vote submitted!"}</span>
         </div>
       )}
 
       <div className="px-4 pt-4 pb-2 flex items-start justify-between gap-3">
-        <h3 className="text-white/80 text-sm font-medium flex-1 min-w-0">{battle.title}</h3>
+        <h3 className="text-white/80 text-sm font-medium flex-1 min-w-0">{isKo && "titleKo" in battle ? battle.titleKo : battle.title}</h3>
         {/* HOT 뱃지: 고정 높이로 모드 바꿔도 세로 위치 동일 */}
         {battle.isHot && (
           <div className={`rounded-xl px-2.5 py-1.5 min-h-[3.25rem] min-w-[4rem] flex flex-col items-end justify-center text-right flex-shrink-0 ${isBlack ? "bg-transparent" : "hot-badge shadow-lg"}`}>
@@ -187,8 +193,9 @@ function BattleCard({ battle, isBlack }: { battle: BattleItem; isBlack?: boolean
               <span className="text-white text-xs font-bold tracking-tight">HOT</span>
             </div>
             <div className={`text-[10px] font-semibold mt-0.5 leading-tight ${isBlack ? "text-white/80" : "text-white/95"}`}>
-              {formatParticipants(displayTotal)}명
-              {endsInHours != null && endsInHours <= 24 && ` · ${endsInHours}시간 남음`}
+              {isKo
+                ? `${formatParticipants(displayTotal)}명 참여${endsInHours != null && endsInHours <= 24 ? ` · ${endsInHours}시간 뒤 종료` : ""}`
+                : `${formatParticipants(displayTotal)} participants${endsInHours != null && endsInHours <= 24 ? ` · ${endsInHours}h left` : ""}`}
             </div>
           </div>
         )}
@@ -221,8 +228,8 @@ function BattleCard({ battle, isBlack }: { battle: BattleItem; isBlack?: boolean
                 )}
               </div>
               <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 to-transparent">
-                <p className={isBlack ? "text-white font-bold text-sm" : "text-white font-bold text-sm"}>{battle.leftCeleb.name}</p>
-                <p className={isBlack ? "text-[#A0A0A0] text-xs" : "text-white/60 text-xs"}>{battle.leftCeleb.outfit}</p>
+                <p className={isBlack ? "text-white font-bold text-sm" : "text-white font-bold text-sm"}>{isKo ? ("nameKo" in battle.leftCeleb ? battle.leftCeleb.nameKo : battle.leftCeleb.name) : ("nameEn" in battle.leftCeleb ? battle.leftCeleb.nameEn : battle.leftCeleb.name)}</p>
+                <p className={isBlack ? "text-[#A0A0A0] text-xs" : "text-white/60 text-xs"}>{isKo ? battle.leftCeleb.outfit : "outfitEn" in battle.leftCeleb ? battle.leftCeleb.outfitEn : battle.leftCeleb.outfit}</p>
               </div>
             </div>
             <div className={`absolute top-2 left-2 ${leftBadge} text-white text-xs font-bold px-2 py-1 rounded-full ${voted ? "opacity-100" : "opacity-0"} transition-opacity`}>
@@ -253,8 +260,8 @@ function BattleCard({ battle, isBlack }: { battle: BattleItem; isBlack?: boolean
                 )}
               </div>
               <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 to-transparent">
-                <p className="text-white font-bold text-sm">{battle.rightCeleb.name}</p>
-                <p className={isBlack ? "text-[#A0A0A0] text-xs" : "text-white/60 text-xs"}>{battle.rightCeleb.outfit}</p>
+                <p className="text-white font-bold text-sm">{isKo ? ("nameKo" in battle.rightCeleb ? battle.rightCeleb.nameKo : battle.rightCeleb.name) : ("nameEn" in battle.rightCeleb ? battle.rightCeleb.nameEn : battle.rightCeleb.name)}</p>
+                <p className={isBlack ? "text-[#A0A0A0] text-xs" : "text-white/60 text-xs"}>{isKo ? battle.rightCeleb.outfit : "outfitEn" in battle.rightCeleb ? battle.rightCeleb.outfitEn : battle.rightCeleb.outfit}</p>
               </div>
             </div>
             <div className={`absolute top-2 right-2 ${rightBadge} text-white text-xs font-bold px-2 py-1 rounded-full ${voted ? "opacity-100" : "opacity-0"} transition-opacity`}>
@@ -263,7 +270,7 @@ function BattleCard({ battle, isBlack }: { battle: BattleItem; isBlack?: boolean
           </button>
         </div>
         {voted && (
-          <p className="text-[10px] text-center text-white/40 mt-1.5">이미 투표했어요</p>
+          <p className="text-[10px] text-center text-white/40 mt-1.5">{isKo ? "이미 투표했어요" : "You already voted"}</p>
         )}
       </div>
 
@@ -271,7 +278,7 @@ function BattleCard({ battle, isBlack }: { battle: BattleItem; isBlack?: boolean
       <div className="px-4 pt-4">
         <VoteBar leftPercent={leftPercent} rightPercent={rightPercent} pulseSide={voted} isBlack={isBlack} />
         <p className={`text-xs mt-2 text-center ${isBlack ? "vote-count" : "text-white/40"}`}>
-          {displayTotal.toLocaleString()} votes
+          {isKo ? `${displayTotal.toLocaleString()}표` : `${displayTotal.toLocaleString()} votes`}
         </p>
       </div>
 
@@ -297,16 +304,16 @@ function BattleCard({ battle, isBlack }: { battle: BattleItem; isBlack?: boolean
           ))}
         </div>
         <div className="flex items-center gap-2 mt-2">
-          <span className="text-[10px] text-white/40">반응</span>
+          <span className="text-[10px] text-white/40">{isKo ? "반응" : "Reactions"}</span>
           {["👍", "😍", "🔥", "👏"].map((emoji, i) => (
-            <button key={i} type="button" className="text-base hover:scale-125 transition-transform" aria-label={`반응 ${emoji}`}>
+            <button key={i} type="button" className="text-base hover:scale-125 transition-transform" aria-label={isKo ? `반응 ${emoji}` : `Reaction ${emoji}`}>
               {emoji}
             </button>
           ))}
         </div>
         <button className={`flex items-center gap-1 text-xs mt-3 transition-colors ${isBlack ? "view-all-comments" : "text-white/40 hover:text-white/60"}`}>
           <MessageCircle className="w-4 h-4" />
-          View all comments
+          {isKo ? "댓글 모두 보기" : "View all comments"}
         </button>
       </div>
     </div>
@@ -315,6 +322,8 @@ function BattleCard({ battle, isBlack }: { battle: BattleItem; isBlack?: boolean
 
 export default function CommunityPage() {
   const { theme } = useSiteTheme()
+  const { locale } = useLocale()
+  const isKo = locale === "ko"
   const basePath = theme === "black" ? "/black" : ""
   const logoSrc = theme === "black" ? "/logo-white.png" : "/logo-pink.png"
   return (
@@ -334,9 +343,9 @@ export default function CommunityPage() {
             </Link>
           </div>
           <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0 overflow-visible">
-            <div className="flex items-center gap-1 sm:gap-2 min-w-0">
+            <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
               <Users className={`w-4 h-4 shrink-0 sm:w-5 sm:h-5 ${theme === "black" ? "text-white" : "text-[#FF6B9D]"}`} />
-              <span className="font-display text-sm sm:text-lg tracking-wide text-white uppercase whitespace-nowrap">Community</span>
+              <span className={isKo ? "font-sans font-bold tracking-tight text-sm sm:text-base text-white/95 uppercase whitespace-nowrap" : "font-display text-sm sm:text-lg tracking-wide text-white uppercase whitespace-nowrap"}>{isKo ? "커뮤니티" : "Community"}</span>
             </div>
             <Link href={`${basePath}/search`} className="p-1.5 sm:p-2 hover:bg-white/10 rounded-full transition-colors shrink-0">
               <Search className="w-4 h-4 sm:w-5 sm:h-5 text-white/80" />
@@ -346,6 +355,7 @@ export default function CommunityPage() {
               <span className={`absolute top-0.5 right-0.5 sm:top-1 sm:right-1 w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${theme === "black" ? "bg-white" : "bg-[#FF6B9D]"}`} />
             </Link>
             <ThemeToggle inline />
+            <LanguageToggle inline />
           </div>
         </div>
       </header>
@@ -357,13 +367,13 @@ export default function CommunityPage() {
             FASHION ARENA
             <Zap className={`w-6 h-6 ${theme === "black" ? "arena-icon" : "text-yellow-400"}`} />
           </h1>
-          <p className={`text-sm mt-1 ${theme === "black" ? "arena-subtitle" : "text-white/50"}`}>Vote for your favorite celebrity style</p>
+          <p className={`text-sm mt-1 ${theme === "black" ? "arena-subtitle" : "text-white/50"}`}>{isKo ? "좋아하는 셀럽 스타일에 투표하세요" : "Vote for your favorite celebrity style"}</p>
         </div>
 
         {/* 배틀 피드 */}
         <div className="space-y-6">
           {fashionBattles.map((battle) => (
-            <BattleCard key={battle.id} battle={battle} isBlack={theme === "black"} />
+            <BattleCard key={battle.id} battle={battle} isBlack={theme === "black"} isKo={isKo} />
           ))}
         </div>
       </main>

@@ -4,14 +4,17 @@ import Link from "next/link"
 import Image from "next/image"
 import { User, Sparkles, ArrowLeft, Music2 } from "lucide-react"
 import { useSiteTheme } from "@/components/theme-provider"
+import { useLocale } from "@/components/locale-provider"
 import { ThemeToggle } from "@/components/theme-toggle"
 
-type ArtistInfo = { name: string; avatar: string }
+type ArtistInfo = { name: string; nameKo?: string; avatar: string }
 
 type Props = { artistId: string; artist?: ArtistInfo | null; basePath?: string }
 
 export function ArtistComingSoonPage({ artistId, artist, basePath = "" }: Props) {
   const { theme } = useSiteTheme()
+  const { locale } = useLocale()
+  const isKo = locale === "ko"
   const isBlack = theme === "black"
   const logoSrc = isBlack ? "/logo-white.png" : "/logo-pink.png"
 
@@ -25,10 +28,10 @@ export function ArtistComingSoonPage({ artistId, artist, basePath = "" }: Props)
         <div className="flex items-center justify-between px-4 py-3 min-h-[4.5rem]">
           <Link href={basePath || "/"} className="flex items-center gap-2 text-white/80 hover:text-white transition-colors shrink-0">
             <ArrowLeft className="w-5 h-5 shrink-0" />
-            <span className="text-sm font-medium">뒤로</span>
+            <span className="text-sm font-medium">{isKo ? "뒤로" : "Back"}</span>
           </Link>
           <Link href={basePath || "/"} className="absolute left-1/2 -translate-x-1/2 block shrink-0">
-            <Image src={logoSrc} alt="Krunch" width={140} height={45} className={`h-[45px] w-[140px] object-contain ${!isBlack ? "scale-[1.02] origin-center" : ""}`} />
+            <Image src={logoSrc} alt="Krunch" width={225} height={72} className={`h-[72px] w-[225px] object-contain ${!isBlack ? "scale-[1.02] origin-center" : ""}`} />
           </Link>
           <div className="w-14 flex justify-end">
             <ThemeToggle inline />
@@ -53,7 +56,7 @@ export function ArtistComingSoonPage({ artistId, artist, basePath = "" }: Props)
               {artist?.avatar ? (
                 <Image
                   src={artist.avatar}
-                  alt={artist.name}
+                  alt={isKo && artist.nameKo ? artist.nameKo : artist.name}
                   width={112}
                   height={112}
                   className="w-full h-full object-cover"
@@ -64,22 +67,32 @@ export function ArtistComingSoonPage({ artistId, artist, basePath = "" }: Props)
             </div>
             {artist?.name && (
               <p className={`font-display text-xl tracking-wide uppercase mb-2 ${isBlack ? "text-white" : "text-white"}`}>
-                {artist.name}
+                {isKo && "nameKo" in artist && artist.nameKo ? artist.nameKo : artist.name}
               </p>
             )}
             <div className="flex items-center justify-center gap-2 mb-3">
               <Music2 className={isBlack ? "w-5 h-5 text-white/60" : "w-5 h-5 text-[#FF6B9D]/80"} />
               <span className={`text-xs font-bold uppercase tracking-widest ${isBlack ? "text-white/50" : "text-[#FF6B9D]/80"}`}>
-                Artist Profile
+                {isKo ? "아티스트 프로필" : "Artist Profile"}
               </span>
             </div>
             <h1 className={`font-display text-2xl tracking-wide uppercase mb-2 ${isBlack ? "text-white" : "text-white"}`}>
-              만들고 있어요
+              {isKo ? "준비 중" : "Coming Soon"}
             </h1>
             <p className={`text-sm ${isBlack ? "text-white/50" : "text-white/60"}`}>
-              아티스트 프로필 화면을 열심히 만들고 있어요.
-              <br />
-              조금만 기다려 주세요!
+              {isKo ? (
+                <>
+                  아티스트 프로필 화면을 열심히 만들고 있어요.
+                  <br />
+                  조금만 기다려 주세요!
+                </>
+              ) : (
+                <>
+                  We&apos;re building the artist profile page.
+                  <br />
+                  Stay tuned!
+                </>
+              )}
             </p>
           </div>
 
@@ -95,7 +108,7 @@ export function ArtistComingSoonPage({ artistId, artist, basePath = "" }: Props)
               }`}
             >
               <Sparkles className="w-4 h-4" />
-              랭킹 보러 가기
+              {isKo ? "랭킹 보기" : "View Ranking"}
             </Link>
           </div>
         </div>

@@ -5,7 +5,9 @@ import Image from "next/image"
 import Link from "next/link"
 import { Home, Trophy, Users, User, ChevronRight, Sparkles, Flame, Zap, Store, Search, Bell, Star, Crown } from "lucide-react"
 import { useSiteTheme } from "@/components/theme-provider"
+import { useLocale } from "@/components/locale-provider"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { LanguageToggle } from "@/components/language-toggle"
 import { artistRankDataFull } from "@/lib/artist-rank-data"
 
 // 일반인 프로필 풀 (user1~10 + collector 혼합)
@@ -25,13 +27,13 @@ const topCollectorsData = [
 ]
 
 function formatKRW(num: number) {
-  if (num >= 100000000) {
-    return `${(num / 100000000).toFixed(1)}억`
+  if (num >= 1_000_000_000) {
+    return `₩\u2009${(num / 1_000_000_000).toFixed(1)}B`
   }
-  if (num >= 10000000) {
-    return `${(num / 10000000).toFixed(0)}천만`
+  if (num >= 1_000_000) {
+    return `₩\u2009${(num / 1_000_000).toFixed(1)}M`
   }
-  return num.toLocaleString()
+  return `₩\u2009${num.toLocaleString()}`
 }
 
 function getBadgeStyle(badge: string, isBlack?: boolean) {
@@ -66,12 +68,16 @@ const STATS = {
   newArtists: 23,
 }
 
+const CAT_LABELS: Record<string, string> = { All: "전체", "K-POP": "K-POP", Actor: "배우", Athlete: "운동선수", Influencer: "인플루언서" }
+
 export default function RankingPage() {
   const { theme } = useSiteTheme()
+  const { locale } = useLocale()
+  const isKo = locale === "ko"
   const basePath = theme === "black" ? "/black" : ""
   const [activeTab, setActiveTab] = useState<"artist" | "collector">("artist")
   const [showMore, setShowMore] = useState(false)
-  const [categoryFilter, setCategoryFilter] = useState("전체")
+  const [categoryFilter, setCategoryFilter] = useState("All")
   const [sortBy, setSortBy] = useState<"sales" | "volume" | "new">("sales")
   const logoSrc = theme === "black" ? "/logo-white.png" : "/logo-pink.png"
 
@@ -104,9 +110,9 @@ export default function RankingPage() {
             </Link>
           </div>
           <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0 overflow-visible">
-            <div className="flex items-center gap-1 sm:gap-2 min-w-0">
+            <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
               <Sparkles className={`w-4 h-4 shrink-0 sm:w-5 sm:h-5 ${theme === "black" ? "text-white" : "text-[#FF6B9D]"}`} />
-              <span className="font-display text-sm sm:text-lg tracking-wide text-white uppercase whitespace-nowrap">Ranking</span>
+              <span className={isKo ? "font-sans font-bold tracking-tight text-sm sm:text-base text-white/95 uppercase whitespace-nowrap" : "font-display text-sm sm:text-lg tracking-wide text-white uppercase whitespace-nowrap"}>{isKo ? "랭킹" : "Ranking"}</span>
             </div>
             <Link href={`${basePath}/search`} className="p-1.5 sm:p-2 hover:bg-white/10 rounded-full transition-colors shrink-0">
               <Search className="w-4 h-4 sm:w-5 sm:h-5 text-white/80" />
@@ -116,6 +122,7 @@ export default function RankingPage() {
               <span className={`absolute top-0.5 right-0.5 sm:top-1 sm:right-1 w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${theme === "black" ? "bg-white" : "bg-[#FF6B9D]"}`} />
             </Link>
             <ThemeToggle inline />
+            <LanguageToggle inline />
           </div>
         </div>
       </header>
@@ -141,7 +148,7 @@ export default function RankingPage() {
             {activeTab === "artist" && theme !== "black" && (
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
             )}
-            <span className="relative z-10">Artist Rank</span>
+            <span className="relative z-10">{isKo ? "아티스트 랭킹" : "Artist Rank"}</span>
           </button>
           <button
             onClick={() => setActiveTab("collector")}
@@ -158,31 +165,31 @@ export default function RankingPage() {
             {activeTab === "collector" && theme !== "black" && (
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
             )}
-            <span className="relative z-10">Top Collectors</span>
+            <span className="relative z-10">{isKo ? "최고 컬렉터" : "Top Collectors"}</span>
           </button>
         </div>
       </div>
 
       {activeTab === "artist" ? (
         <div className="px-4 pt-6 relative z-10 space-y-4">
-          {/* 이번 주 통계 카드 — 세로 압축 */}
+          {/* This week stats card */}
           <div className="rounded-xl p-3 border border-white/10 bg-white/5">
             <div className="flex items-center gap-2 mb-2">
               <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/10 text-sm shrink-0" aria-hidden>📊</span>
               <p className="text-xs font-bold text-white/90 uppercase tracking-wider">
-                이번 주 통계
+                {isKo ? "이번 주 통계" : "This Week's Stats"}
               </p>
             </div>
             <div className="grid grid-cols-1 gap-1.5 text-sm">
-              <p className="text-white/90"><span className="text-white/50 text-xs">총 거래액:</span> <span className="font-bold text-white">₩{(STATS.totalVolume / 1000000000).toFixed(1)}B</span></p>
-              <p className="text-white/90"><span className="text-white/50 text-xs">활성 컬렉터:</span> <span className="font-bold text-white">{STATS.activeCollectors.toLocaleString()}명</span></p>
-              <p className="text-white/90"><span className="text-white/50 text-xs">신규 아티스트:</span> <span className="font-bold text-white">{STATS.newArtists}명</span></p>
+              <p className="text-white/90"><span className="text-white/50 text-xs">{isKo ? "총 거래액:" : "Total Volume:"}</span> <span className="font-bold text-white">₩ {(STATS.totalVolume / 1_000_000_000).toFixed(1)}B</span></p>
+              <p className="text-white/90"><span className="text-white/50 text-xs">{isKo ? "활성 컬렉터:" : "Active Collectors:"}</span> <span className="font-bold text-white">{STATS.activeCollectors.toLocaleString()}</span></p>
+              <p className="text-white/90"><span className="text-white/50 text-xs">{isKo ? "신규 아티스트:" : "New Artists:"}</span> <span className="font-bold text-white">{STATS.newArtists}</span></p>
             </div>
           </div>
 
           {/* 필터 & 정렬 — 핑크/다크 공통 */}
           <div className="flex flex-wrap items-center gap-2">
-            {["전체", "K-POP", "배우", "운동선수", "인플루언서"].map((cat) => (
+            {["All", "K-POP", "Actor", "Athlete", "Influencer"].map((cat) => (
               <button
                 key={cat}
                 type="button"
@@ -195,19 +202,19 @@ export default function RankingPage() {
                     : "bg-white/5 text-white/60 border border-white/10 hover:bg-white/10 hover:text-white/80"
                 }`}
               >
-                {cat}
+                {isKo ? CAT_LABELS[cat] ?? cat : cat}
               </button>
             ))}
             <div className="ml-auto flex items-center gap-2">
-              <span className="text-xs font-semibold text-white/80 uppercase tracking-wider">정렬</span>
+              <span className="text-xs font-semibold text-white/80 uppercase tracking-wider">{isKo ? "정렬" : "Sort"}</span>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as "sales" | "volume" | "new")}
                 className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs font-semibold text-white focus:outline-none focus:ring-1 focus:ring-[#FF6B9D]/50"
               >
-                <option value="sales">판매량 순</option>
-                <option value="volume">거래액 순</option>
-                <option value="new">신규 등록 순</option>
+                <option value="sales">{isKo ? "판매량순" : "By Sales"}</option>
+                <option value="volume">{isKo ? "거래액순" : "By Volume"}</option>
+                <option value="new">{isKo ? "신규순" : "By New"}</option>
               </select>
             </div>
           </div>
@@ -223,13 +230,13 @@ export default function RankingPage() {
                   className={`relative w-18 h-18 rounded-full overflow-hidden ring-2 ring-offset-2 ring-offset-black bg-black ${theme === "black" ? "rank-2-ring-dark" : ""}`}
                   style={theme !== "black" ? { boxShadow: "0 0 0 2px #C0C0C0" } : undefined}
                 >
-                  <Image src={topThree[1].avatar || "/placeholder.svg"} alt={topThree[1].name} width={72} height={72} className="object-cover w-full h-full" />
+                  <Image src={topThree[1].avatar || "/placeholder.svg"} alt={isKo && topThree[1].nameKo ? topThree[1].nameKo : topThree[1].name} width={72} height={72} className="object-cover w-full h-full" />
                 </div>
                 <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full flex items-center justify-center text-xs font-black border-2 border-black rank-2-badge ${theme === "black" ? "" : "bg-[#C0C0C0] text-black shadow-lg shadow-[#C0C0C0]/50"}`}>
                   2
                 </div>
               </div>
-              <p className="rank-2-name text-sm text-center truncate w-full mb-1">{topThree[1].name}</p>
+              <p className="rank-2-name text-sm text-center truncate w-full mb-1">{isKo && topThree[1].nameKo ? topThree[1].nameKo : topThree[1].name}</p>
               <p className="rank-2-score text-xs font-semibold mb-3">{formatKRW(topThree[1].totalSales)}</p>
               <div className="rank-2-bar w-full h-20 rounded-t-xl border-t" />
               </Link>
@@ -243,12 +250,12 @@ export default function RankingPage() {
                 {theme === "black" ? (
                   <div className="relative rank-1-avatar-ring-dark w-24 h-24 rounded-full">
                     <div className="w-full h-full rounded-full overflow-hidden bg-black">
-                      <Image src={topThree[0].avatar || "/placeholder.svg"} alt={topThree[0].name} width={96} height={96} className="object-cover w-full h-full" />
+                      <Image src={topThree[0].avatar || "/placeholder.svg"} alt={isKo && topThree[0].nameKo ? topThree[0].nameKo : topThree[0].name} width={96} height={96} className="object-cover w-full h-full" />
                     </div>
                   </div>
                 ) : (
                   <div className="relative rank-1-gold-ring w-24 h-24 rounded-full overflow-hidden ring-4 ring-offset-4 ring-offset-black shadow-2xl">
-                    <Image src={topThree[0].avatar || "/placeholder.svg"} alt={topThree[0].name} width={96} height={96} className="object-cover w-full h-full" />
+                    <Image src={topThree[0].avatar || "/placeholder.svg"} alt={isKo && topThree[0].nameKo ? topThree[0].nameKo : topThree[0].name} width={96} height={96} className="object-cover w-full h-full" />
                   </div>
                 )}
                 <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-9 h-9 rounded-full flex items-center justify-center text-base font-black rank-1-badge shadow-xl shadow-amber-500/40">
@@ -260,8 +267,8 @@ export default function RankingPage() {
                   </div>
                 )}
               </div>
-              <p className={`text-[10px] font-bold uppercase tracking-wider mb-0.5 ${theme === "black" ? "rank-1-label-dark text-white/90" : "text-amber-400/90"}`}>1st PLACE</p>
-              <p className={`rank-1-name text-lg text-center mb-1 ${theme === "black" ? "rank-1-name-dark" : ""}`}>{topThree[0].name}</p>
+              <p className={`text-[10px] font-bold uppercase tracking-wider mb-0.5 ${theme === "black" ? "rank-1-label-dark text-white/90" : "text-amber-400/90"}`}>{isKo ? "1위" : "1st PLACE"}</p>
+              <p className={`rank-1-name text-lg text-center mb-1 ${theme === "black" ? "rank-1-name-dark" : ""}`}>{isKo && topThree[0].nameKo ? topThree[0].nameKo : topThree[0].name}</p>
               <p className={`rank-1-score mb-3 ${theme === "black" ? "rank-1-score-dark text-base font-bold" : "text-base font-bold scale-[1.3] origin-center"}`}>{formatKRW(topThree[0].totalSales)}</p>
               <div className="rank-1-bar w-full h-32 rounded-t-xl border-t-2" />
               </Link>
@@ -276,13 +283,13 @@ export default function RankingPage() {
                   className={`relative w-16 h-16 rounded-full overflow-hidden ring-2 ring-offset-2 ring-offset-black bg-black ${theme === "black" ? "rank-3-ring-dark" : ""}`}
                   style={theme !== "black" ? { boxShadow: "0 0 0 2px #CD7F32" } : undefined}
                 >
-                  <Image src={topThree[2].avatar || "/placeholder.svg"} alt={topThree[2].name} width={64} height={64} className="object-cover w-full h-full" />
+                  <Image src={topThree[2].avatar || "/placeholder.svg"} alt={isKo && topThree[2].nameKo ? topThree[2].nameKo : topThree[2].name} width={64} height={64} className="object-cover w-full h-full" />
                 </div>
                 <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black border-2 border-black rank-3-badge ${theme === "black" ? "" : "bg-[#CD7F32] text-black shadow-lg shadow-[#CD7F32]/50"}`}>
                   3
                 </div>
               </div>
-              <p className="rank-3-name text-sm font-bold text-center truncate w-full mb-1">{topThree[2].name}</p>
+              <p className="rank-3-name text-sm font-bold text-center truncate w-full mb-1">{isKo && topThree[2].nameKo ? topThree[2].nameKo : topThree[2].name}</p>
               <p className="rank-3-score text-xs font-semibold mb-3">{formatKRW(topThree[2].totalSales)}</p>
               <div className="rank-3-bar w-full h-16 rounded-t-xl border-t" />
               </Link>
@@ -310,16 +317,16 @@ export default function RankingPage() {
                 <div className={`relative w-12 h-12 rounded-full overflow-hidden ring-2 transition-all ${theme === "black" ? "ring-white/20 group-hover:ring-[rgba(255,105,180,0.4)]" : "ring-white/20 group-hover:ring-[#FF6B9D]/50"}`}>
                   <Image
                     src={artist.avatar || "/placeholder.svg"}
-                    alt={artist.name}
+                    alt={isKo && artist.nameKo ? artist.nameKo : artist.name}
                     width={48}
                     height={48}
                     className="object-cover w-full h-full"
                   />
                 </div>
                 <div className="flex-1 min-w-0 relative z-10">
-                  <p className="rank-list-name text-white text-base font-bold truncate">{artist.name}</p>
+                  <p className="rank-list-name text-white text-base font-bold truncate">{isKo && artist.nameKo ? artist.nameKo : artist.name}</p>
                   <p className={`text-xs font-medium ${theme === "black" ? "text-[#808080]" : "text-white/50"}`}>
-                    {artist.itemsSold} items sold
+                    {isKo ? `${artist.itemsSold}건 낙찰` : `${artist.itemsSold} items sold`}
                     {artist.rankChange !== undefined && artist.rankChange !== 0 && (
                       <span className={`ml-1.5 font-semibold ${artist.rankChange > 0 ? "text-[#10B981]" : "text-[#EF4444]"}`}>
                         {artist.rankChange > 0 ? `↑${artist.rankChange}` : `↓${Math.abs(artist.rankChange)}`}
@@ -328,7 +335,7 @@ export default function RankingPage() {
                     {artist.rankChange === 0 && <span className="ml-1.5 text-[#6B7280]">-</span>}
                   </p>
                   <p className={`text-[10px] mt-0.5 ${theme === "black" ? "text-[#606060]" : "text-white/40"}`}>
-                    ₩{formatKRW(artist.totalSales)} ({artist.totalSales.toLocaleString()}원)
+                    {formatKRW(artist.totalSales)} (₩\u2009{artist.totalSales.toLocaleString()})
                   </p>
                 </div>
                 <div className="text-right relative z-10">
@@ -345,7 +352,7 @@ export default function RankingPage() {
               onClick={() => setShowMore((v) => !v)}
               className={`w-full py-3 rounded-xl text-sm font-bold transition-colors ${theme === "black" ? "bg-white/10 text-white border border-white/10 hover:bg-white/15" : "bg-white/5 text-white/80 border border-white/10 hover:bg-white/10"}`}
             >
-              {showMore ? "접기" : "더보기 (8~20위)"}
+              {showMore ? (isKo ? "접기" : "Collapse") : (isKo ? "더보기 (8~20위)" : "See more (8–20)")}
             </button>
           )}
         </div>
@@ -353,7 +360,7 @@ export default function RankingPage() {
         <div className="px-4 pt-8 space-y-4 relative z-10">
           <div className="flex items-center gap-3 mb-6">
             <Crown className={`w-5 h-5 ${theme === "black" ? "text-white" : "text-[#FF6B9D]"}`} />
-            <p className="text-white font-display text-lg tracking-wide font-medium">Top Fans by Artist</p>
+            <p className={isKo ? "text-white font-sans font-bold text-lg tracking-tight" : "text-white font-display text-lg tracking-wide font-medium"}>{isKo ? "아티스트별 최고 팬" : "Top Fans by Artist"}</p>
           </div>
           {topCollectorsData.map((collector) => (
             <div
@@ -418,20 +425,20 @@ export default function RankingPage() {
                   </div>
                   <div>
                     <p className={`text-white font-bold text-base transition-colors ${theme === "black" ? "group-hover:text-[#FF8FAB]" : "group-hover:text-[#FF6B9D]"}`}>{collector.userId}</p>
-                    <p className={`text-xs font-medium ${theme === "black" ? "text-[#808080]" : "text-white/50"}`}>{collector.artistFan}&apos;s No.1 Fan</p>
+                    <p className={`text-xs font-medium ${theme === "black" ? "text-[#808080]" : "text-white/50"}`}>{isKo ? `${collector.artistFan}의 최고 열성 팬` : `${collector.artistFan}'s No.1 Fan`}</p>
                   </div>
                 </div>
-                <span className={`px-3 py-1.5 rounded-full text-xs font-black tracking-wider ${getBadgeStyle(collector.badge, theme === "black")}`}>
-                  {collector.badge}
+                <span className={`px-3 py-1.5 rounded-xl text-xs font-black tracking-wider whitespace-pre-line text-center leading-tight ${getBadgeStyle(collector.badge, theme === "black")}`}>
+                  {collector.badge.replace(/(\d+\s+(?:LEGEND|UNIQUE))\s+(?=\d+)/g, "$1\n")}
                 </span>
               </div>
               <div className="flex items-center justify-between pt-4 border-t border-white/10 relative z-10">
                 <div>
-                  <p className={`text-[10px] uppercase tracking-wider font-bold mb-1 ${theme === "black" ? "text-[#808080]" : "text-white/40"}`}>Total Spent</p>
-                  <p className={`text-white font-bold transition-colors ${theme === "black" ? "text-lg group-hover:text-[#FF8FAB]" : "text-base group-hover:text-[#FF6B9D]"}`}>₩{formatKRW(collector.totalSpent)}</p>
+                  <p className={`text-[10px] uppercase tracking-wider font-bold mb-1 ${theme === "black" ? "text-[#808080]" : "text-white/40"}`}>{isKo ? "총 사용액" : "Total Spent"}</p>
+                  <p className={`text-white font-bold transition-colors ${theme === "black" ? "text-lg group-hover:text-[#FF8FAB]" : "text-base group-hover:text-[#FF6B9D]"}`}>{formatKRW(collector.totalSpent)}</p>
                 </div>
                 <div className="text-right">
-                  <p className={`text-[10px] uppercase tracking-wider font-bold mb-1 ${theme === "black" ? "text-[#808080]" : "text-white/40"}`}>Items Owned</p>
+                  <p className={`text-[10px] uppercase tracking-wider font-bold mb-1 ${theme === "black" ? "text-[#808080]" : "text-white/40"}`}>{isKo ? "보유 아이템" : "Items Owned"}</p>
                   <p className={`text-white font-bold ${theme === "black" ? "text-lg" : "text-base"}`}>{collector.itemsOwned}</p>
                 </div>
               </div>

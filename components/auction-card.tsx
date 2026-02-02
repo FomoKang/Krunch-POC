@@ -7,6 +7,9 @@ import { Clock, ArrowUp } from "lucide-react"
 import { Confetti } from "./confetti"
 import { SuccessPopup } from "./success-popup"
 import { useSiteTheme } from "./theme-provider"
+import { useLocale } from "./locale-provider"
+import { ThemeToggle } from "./theme-toggle"
+import { LanguageToggle } from "./language-toggle"
 
 const ONE_HOUR = 60 * 60
 const TEN_MINUTES = 10 * 60
@@ -161,8 +164,10 @@ function PriceFlowChart({ data, chartColor = "#FF6B9D", useWhiteGrayGradient = f
 
 export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant } = {}) {
   const { theme: siteTheme } = useSiteTheme()
+  const { locale } = useLocale()
   const variant: AuctionVariant = variantProp ?? siteTheme
   const theme = AUCTION_THEMES[variant]
+  const isKo = locale === "ko"
   const [offerAmount, setOfferAmount] = useState(formatNumber("1"))
   const [currentBid, setCurrentBid] = useState(2450000)
   const [bidPulse, setBidPulse] = useState(false)
@@ -321,9 +326,9 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
       <SuccessPopup show={showPopup} onClose={handleClosePopup} amount={offerAmount} />
 
       <div className="relative flex flex-col min-h-[100dvh] bg-transparent" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'calc(100px + env(safe-area-inset-bottom))' }}>
-        {/* Header — 모바일: 로고 축소 */}
-        <div className="relative z-50 overflow-visible" style={{ minHeight: 'calc(5rem + env(safe-area-inset-top))' }}>
-          <Link href={variant === "black" ? "/black" : "/"} className="absolute block h-10 w-28 sm:h-[72px] sm:w-[225px]" style={{ top: 'calc(1rem + env(safe-area-inset-top))', left: '1rem' }}>
+        {/* Header — 로고 좌측, 테마·언어 우측 */}
+        <div className="relative z-50 flex items-center justify-between overflow-visible px-4" style={{ minHeight: 'calc(5rem + env(safe-area-inset-top))', paddingTop: 'calc(1rem + env(safe-area-inset-top))' }}>
+          <Link href={variant === "black" ? "/black" : "/"} className="block h-10 w-28 sm:h-[72px] sm:w-[225px] shrink-0">
             <Image
               src={logoSrc}
               alt="Krunch Logo"
@@ -332,6 +337,10 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
               className={`h-full w-full object-contain object-left cursor-pointer hover:opacity-80 transition-opacity ${variant !== "black" ? "scale-[1.02] origin-center" : ""}`}
             />
           </Link>
+          <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
+            <ThemeToggle inline />
+            <LanguageToggle inline />
+          </div>
         </div>
 
         {/* 비딩 알림 띠 — 로고 아래, LEGEND AUCTION 위. 최소 높이만 잡아서 화면 안 밀림 */}
@@ -345,9 +354,9 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
             >
               <p className="text-xs sm:text-sm text-white/90 font-sans">
                 <span className={`${theme.accent} font-semibold`}>{bidRibbon.username}</span>
-                <span className="text-white/70">님이 </span>
-                <span className={`${theme.accent} font-semibold`}>₩{bidRibbon.amount.toLocaleString()}</span>
-                <span className="text-white/70">에 비딩했습니다</span>
+                <span className="text-white/70">{isKo ? "님이 " : " placed a bid of "}</span>
+                <span className={`${theme.accent} font-semibold`}>₩\u2009{bidRibbon.amount.toLocaleString()}</span>
+                {isKo && <span className="text-white/70">에 입찰했습니다</span>}
               </p>
             </div>
           )}
@@ -367,7 +376,7 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
             </div>
             <div className="flex-shrink-0 bg-black/50 backdrop-blur-sm pl-3 pr-2 py-2 rounded-xl border border-white/15 flex items-center gap-2">
               <div>
-                <p className="text-[9px] text-white/60 uppercase tracking-widest font-sans mb-0.5">Time Remaining</p>
+                <p className="text-[9px] text-white/60 uppercase tracking-widest font-sans font-bold mb-0.5">{isKo ? "남은 시간" : "Time Remaining"}</p>
                 <span
                   className={`font-mono text-lg sm:text-xl font-semibold tracking-tight transition-colors ${timeRemaining >= ONE_HOUR ? "auction-timer-normal" : timeRemaining < TEN_MINUTES ? "auction-timer-urgent" : showRedTime ? "auction-timer-urgent" : "auction-timer-normal"} ${timeRemaining < TEN_MINUTES && timeRemaining > 0 ? "animate-pulse" : ""}`}
                 >
@@ -399,7 +408,7 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
             </div>
             {/* CURRENT BID + 금액 + 상승률 — 모자 오른쪽, 위치·정렬 다듬기 */}
             <div className="flex-1 flex flex-col justify-center items-end min-w-0 pl-2">
-              <p className="text-[10px] text-white/60 uppercase tracking-widest font-sans mb-1">Current Bid</p>
+              <p className="text-[10px] text-white/60 uppercase tracking-widest font-sans font-bold mb-1">{isKo ? "현재 입찰가" : "Current Bid"}</p>
               <p
                 className={`text-2xl sm:text-3xl font-bold font-sans tabular-nums leading-tight ${bidPulse ? "animate-bid-pulse" : ""} ${variant === "black" ? "black-mode-text-primary" : theme.accent}`}
               >
@@ -414,8 +423,12 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
 
           <div className="px-4 pb-3">
             <p className={`text-xs font-semibold tracking-wide font-sans drop-shadow-md ${variant === "black" ? "black-mode-text-primary" : "text-foreground"}`}>PEACEMINUSONE</p>
-            <p className={`text-xs mt-0.5 font-sans ${variant === "black" ? "black-mode-text-secondary" : "text-muted-foreground"}`}>Übermensch 2025 World Tour Special Merch</p>
-            <p className={`text-xs font-sans ${variant === "black" ? "black-mode-text-secondary" : "text-muted-foreground"}`}>Übermensch Cap (Burgundy) customized</p>
+            <p className={`text-xs mt-0.5 font-sans ${variant === "black" ? "black-mode-text-secondary" : "text-muted-foreground"}`}>
+              {isKo ? "Übermensch 2025 월드 투어 스페셜 머치" : "Übermensch 2025 World Tour Special Merch"}
+            </p>
+            <p className={`text-xs font-sans ${variant === "black" ? "black-mode-text-secondary" : "text-muted-foreground"}`}>
+              {isKo ? "Übermensch 캡 (버건디) 커스텀" : "Übermensch Cap (Burgundy) customized"}
+            </p>
           </div>
 
           {/* 시간별 가격 흐름 차트 — 간략한 선 + 가로 시간 라벨 + 밑에 Historical Data */}
@@ -424,27 +437,27 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
               <PriceFlowChart data={priceHistory} chartColor={theme.chartColor} useDarkGrayGraph={variant === "black"} />
             </div>
             <div className={`flex justify-between px-2 py-1.5 rounded-b-lg text-[10px] font-sans border border-t-0 ${variant === "black" ? "bg-[#0a0a0a] border-[#1f1f1f] black-mode-text-secondary" : "bg-black/30 border-white/10 text-white/50"}`}>
-              <span>3D ago</span>
-              <span>24h ago</span>
-              <span>12h ago</span>
-              <span>6h ago</span>
-              <span>Now</span>
+              <span>{isKo ? "3일 전" : "3D ago"}</span>
+              <span>{isKo ? "24시간 전" : "24h ago"}</span>
+              <span>{isKo ? "12시간 전" : "12h ago"}</span>
+              <span>{isKo ? "6시간 전" : "6h ago"}</span>
+              <span>{isKo ? "현재" : "Now"}</span>
             </div>
             <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
               <div className={`rounded-lg px-3 py-2.5 ${variant === "black" ? "bg-[#0a0a0a] border border-[#1f1f1f]" : "bg-white/5 border border-white/10"}`}>
-                <p className={`text-[10px] uppercase tracking-wider font-sans ${variant === "black" ? "black-mode-text-secondary" : "text-white/50"}`}>Price Range · 12M</p>
-                <p className={`text-sm font-semibold mt-0.5 tabular-nums ${variant === "black" ? "black-mode-text-primary" : "text-white/90"}`}>₩2.0M – ₩4.6M</p>
+                <p className={`text-[10px] uppercase tracking-wider font-sans ${variant === "black" ? "black-mode-text-secondary" : "text-white/50"}`}>{isKo ? "가격대 · 12M" : "Price Range · 12M"}</p>
+                <p className={`text-sm font-semibold mt-0.5 tabular-nums ${variant === "black" ? "black-mode-text-primary" : "text-white/90"}`}>₩\u20092.0M – ₩\u20094.6M</p>
               </div>
               <div className={`rounded-lg px-3 py-2.5 ${variant === "black" ? "bg-[#0a0a0a] border border-[#1f1f1f]" : "bg-white/5 border border-white/10"}`}>
-                <p className={`text-[10px] uppercase tracking-wider font-sans ${variant === "black" ? "black-mode-text-secondary" : "text-white/50"}`}>Volatility</p>
+                <p className={`text-[10px] uppercase tracking-wider font-sans ${variant === "black" ? "black-mode-text-secondary" : "text-white/50"}`}>{isKo ? "변동성" : "Volatility"}</p>
                 <p className={`text-sm font-semibold mt-0.5 tabular-nums ${variant === "black" ? "black-mode-text-primary" : "text-white/90"}`}>8%</p>
               </div>
               <div className={`rounded-lg px-3 py-2.5 ${variant === "black" ? "bg-[#0a0a0a] border border-[#1f1f1f]" : "bg-white/5 border border-white/10"}`}>
-                <p className={`text-[10px] uppercase tracking-wider font-sans ${variant === "black" ? "black-mode-text-secondary" : "text-white/50"}`}>Avg. Sale · 3M</p>
-                <p className={`text-sm font-semibold mt-0.5 tabular-nums ${variant === "black" ? "black-mode-text-primary" : "text-white/90"}`}>₩3.2M</p>
+                <p className={`text-[10px] uppercase tracking-wider font-sans ${variant === "black" ? "black-mode-text-secondary" : "text-white/50"}`}>{isKo ? "평균 낙찰가 · 3M" : "Avg. Sale · 3M"}</p>
+                <p className={`text-sm font-semibold mt-0.5 tabular-nums ${variant === "black" ? "black-mode-text-primary" : "text-white/90"}`}>₩\u20093.2M</p>
               </div>
               <div className={`rounded-lg px-3 py-2.5 ${variant === "black" ? "bg-[#0a0a0a] border border-[#1f1f1f]" : "bg-white/5 border border-white/10"}`}>
-                <p className={`text-[10px] uppercase tracking-wider font-sans ${variant === "black" ? "black-mode-text-secondary" : "text-white/50"}`}>Premium · Last</p>
+                <p className={`text-[10px] uppercase tracking-wider font-sans ${variant === "black" ? "black-mode-text-secondary" : "text-white/50"}`}>{isKo ? "프리미엄 · 최근" : "Premium · Last"}</p>
                 <p className={`text-sm font-semibold mt-0.5 tabular-nums flex items-center gap-1 ${variant === "black" ? "text-[#FF69B4]" : "text-white/90"}`}>
                   +{risePercent}%
                   <ArrowUp className="w-3.5 h-3.5 shrink-0" />
@@ -487,7 +500,7 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
               </div>
 
               <div className="p-4 pt-0">
-                <p className="text-sm font-medium text-foreground mb-2 font-sans drop-shadow-md">Your Offer</p>
+                <p className="text-sm font-medium text-foreground mb-2 font-sans drop-shadow-md">{isKo ? "입찰 금액" : "Your Offer"}</p>
 
                 <div className="flex items-end gap-2 mb-4">
                   <span className="text-xs text-muted-foreground pb-1 font-sans">KRW</span>
@@ -523,7 +536,7 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
                   onClick={handleSetOffer}
                   className={`w-full py-4 font-display font-medium text-lg uppercase tracking-wide transition-all active:scale-[0.98] ${variant === "black" ? "black-mode-place-bid" : `${theme.accentBg} ${theme.accentForeground} hover:brightness-110`}`}
                 >
-                  SET OFFER
+                  {isKo ? "입찰 하기" : "SET OFFER"}
                 </button>
               </div>
             </div>
@@ -549,7 +562,7 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
                 setTimeout(() => setRipple(null), 600)
                 setShowAuctionCard(true)
               }}
-              className={`relative w-full h-full flex items-center justify-center font-display font-medium text-xl uppercase tracking-wide overflow-hidden transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] ${variant === "black" ? "black-mode-place-bid" : "bg-[#FF6B9D] text-black hover:brightness-110"}`}
+              className={`relative w-full h-full flex items-center justify-center font-display font-bold text-xl uppercase tracking-wide overflow-hidden transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] ${variant === "black" ? "black-mode-place-bid" : "bg-[#FF6B9D] text-black hover:brightness-110"}`}
               style={{
                 boxShadow: variant === "black"
                   ? "0 4px 20px rgba(255, 0, 110, 0.4)"
@@ -569,7 +582,7 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
                   }}
                 />
               )}
-              PLACE BID
+              {isKo ? "입찰하기" : "PLACE BID"}
             </button>
           </div>
         )}

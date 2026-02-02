@@ -5,7 +5,10 @@ import Link from "next/link"
 import Image from "next/image"
 import { Search, Bell, Home, Users, User, Trophy, Store } from "lucide-react"
 import { useSiteTheme } from "@/components/theme-provider"
+import { useLocale } from "@/components/locale-provider"
+import { useSplash } from "@/components/splash-context"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { LanguageToggle } from "@/components/language-toggle"
 
 // 로고 크기 통일 (logo-white, logo-pink, logo-black 동일 높이, 150% 크기)
 const LOGO_WIDTH = 225
@@ -15,14 +18,18 @@ const SPLASH_LOGO_WIDTH = 338
 const SPLASH_LOGO_HEIGHT = 108
 
 // Splash Screen (테마 악센트 + 로딩 시간별 메시지)
-function SplashScreen({ accentBg, logoSrc }: { accentBg: string; logoSrc: string }) {
+function SplashScreen({ accentBg, logoSrc, isKo }: { accentBg: string; logoSrc: string; isKo: boolean }) {
   const [elapsed, setElapsed] = useState(0)
   useEffect(() => {
     const start = Date.now()
     const t = setInterval(() => setElapsed(Math.floor((Date.now() - start) / 1000)), 500)
     return () => clearInterval(t)
   }, [])
-  const loadingMessage = elapsed >= 10 ? "조금만 더 기다려주세요..." : elapsed >= 3 ? "잠시만 기다려주세요..." : null
+  const loadingMessage = elapsed >= 10
+    ? (isKo ? "조금만 더 기다려 주세요..." : "Please wait a moment...")
+    : elapsed >= 3
+      ? (isKo ? "로딩 중..." : "Loading...")
+      : null
   return (
     <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
       <div className="flex flex-col items-center">
@@ -73,20 +80,34 @@ function CountdownTimer({ accentText }: { accentText: string }) {
   )
 }
 
-// Unique Drop 상품 데이터
+// 날짜 포맷 + 문맥 (한글: 2026년 1월 28일 개시, 영어: Opens Jan 28, 2026)
+function formatDropDate(isoDate: string, isKo: boolean) {
+  const d = new Date(isoDate)
+  if (isKo) {
+    return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 개시`
+  }
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+  return `Opens ${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`
+}
+
+// Unique Drop 상품 데이터 (nameKo, subtitleKo: KR일 때 표시)
 const uniqueDrops = [
   {
     id: 1,
     name: "Burberry Trench Jacket",
     subtitle: "worn by SON HEUNG MIN",
+    nameKo: "버버리 트렌치 자켓",
+    subtitleKo: "손흥민 착용",
     image: "/son-burberry.png",
     status: "date",
-    date: "Jan 28, 2026",
+    dateIso: "2026-01-28",
   },
   {
     id: 2,
     name: "Squid Game 2 Guard Mask",
     subtitle: "worn by PARK GYU YOUNG",
+    nameKo: "오징어 게임2 병정 가면",
+    subtitleKo: "박규영 착용",
     image: "/squid-mask.png",
     status: "Coming Soon",
     date: null,
@@ -95,6 +116,8 @@ const uniqueDrops = [
     id: 3,
     name: "The Recruiter Suit",
     subtitle: "worn by GONG YOO",
+    nameKo: "더 리크루터 수트",
+    subtitleKo: "공유 착용",
     image: "/gongyoo-suit.png",
     status: "Live Now",
     date: null,
@@ -103,6 +126,8 @@ const uniqueDrops = [
     id: 4,
     name: "Human Made Heart Tee",
     subtitle: "worn by FELIX",
+    nameKo: "휴먼메이드 하트 티",
+    subtitleKo: "펠릭스 착용",
     image: "/felix-human.png",
     status: "Sold Out",
     date: null,
@@ -111,6 +136,9 @@ const uniqueDrops = [
 
 export default function HomePage() {
   const { theme } = useSiteTheme()
+  const { locale } = useLocale()
+  const { setSplashVisible } = useSplash()
+  const isKo = locale === "ko"
   const basePath = theme === "black" ? "/black" : ""
   const accentText = theme === "black" ? "text-white" : "text-primary"
   const accentBg = theme === "black" ? "bg-white" : "bg-primary"
@@ -121,16 +149,21 @@ export default function HomePage() {
 
   useEffect(() => {
     setMounted(true)
+    setSplashVisible(true)
     // 스플래시 화면을 3초 후에 사라지게 함
     const timer = setTimeout(() => {
       setShowSplash(false)
+      setSplashVisible(false)
     }, 3000)
 
-    return () => clearTimeout(timer)
-  }, [])
+    return () => {
+      clearTimeout(timer)
+      setSplashVisible(false)
+    }
+  }, [setSplashVisible])
 
   if (!mounted || showSplash) {
-    return <SplashScreen accentBg={accentBg} logoSrc={logoSrc} />
+    return <SplashScreen accentBg={accentBg} logoSrc={logoSrc} isKo={isKo} />
   }
 
   return (
@@ -158,6 +191,7 @@ export default function HomePage() {
               <span className={`absolute top-0.5 right-0.5 sm:top-1 sm:right-1 w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${theme === "black" ? "bg-white" : "bg-[#FF6B9D]"}`} />
             </Link>
             <ThemeToggle inline />
+            <LanguageToggle inline />
           </div>
         </div>
       </header>
@@ -204,8 +238,8 @@ export default function HomePage() {
 
                   <div className="w-full text-center">
                     <h3 className="font-bold text-white text-lg md:text-xl min-h-[2rem]">PEACEMINUSONE</h3>
-                    <p className={`text-sm md:text-base mt-1 min-h-[1.5rem] ${theme === "black" ? "text-[#b0b0b0]" : "text-white/60"}`}>Übermensch 2025 World Tour Special Merch</p>
-                    <p className={`text-xs mt-0.5 min-h-[1.25rem] ${theme === "black" ? "text-[#808080]" : "text-white/40"}`}>Übermensch Cap (Burgundy) customized</p>
+                    <p className={`text-sm md:text-base mt-1 min-h-[1.5rem] ${theme === "black" ? "text-[#b0b0b0]" : "text-white/60"}`}>{isKo ? "Übermensch 2025 월드 투어 스페셜 머치" : "Übermensch 2025 World Tour Special Merch"}</p>
+                    <p className={`text-xs mt-0.5 min-h-[1.25rem] ${theme === "black" ? "text-[#808080]" : "text-white/40"}`}>{isKo ? "Übermensch 캡 (버건디) 커스텀" : "Übermensch Cap (Burgundy) customized"}</p>
 
                     <div className={`mt-5 min-h-[2.5rem] flex items-center justify-center ${theme === "black" ? "font-mono text-3xl md:text-4xl font-bold text-white tracking-wider" : ""}`} style={theme === "black" ? { textShadow: "0 0 20px rgba(255,255,255,0.3)", letterSpacing: "2px" } : undefined}>
                       <CountdownTimer accentText={accentText} />
@@ -214,8 +248,8 @@ export default function HomePage() {
                 </div>
 
                 <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between min-h-[3rem]">
-                  <span className={`text-sm uppercase tracking-wide ${theme === "black" ? "text-[#808080]" : "text-white/60"}`} style={theme === "black" ? { letterSpacing: "1px" } : undefined}>Current Bid</span>
-                  <span className={`font-bold ${theme === "black" ? "text-white text-2xl md:text-3xl" : `${accentText} text-2xl md:text-3xl`}`} style={theme === "black" ? { textShadow: "0 2px 8px rgba(255,255,255,0.2)" } : undefined}>₩6,733,184</span>
+                  <span className={`text-sm uppercase tracking-wide ${theme === "black" ? "text-[#808080]" : "text-white/60"}`} style={theme === "black" ? { letterSpacing: "1px" } : undefined}>{isKo ? "현재 입찰가" : "Current Bid"}</span>
+                  <span className={`font-bold ${theme === "black" ? "text-white text-2xl md:text-3xl" : `${accentText} text-2xl md:text-3xl`}`} style={theme === "black" ? { textShadow: "0 2px 8px rgba(255,255,255,0.2)" } : undefined}>₩\u20096,733,184</span>
                 </div>
               </div>
             </div>
@@ -250,19 +284,21 @@ export default function HomePage() {
                     />
                   </div>
                   <div className="p-3">
-                    <h3 className="text-white text-sm font-medium line-clamp-1">{item.name}</h3>
-                    <p className={`text-xs mt-0.5 italic ${theme === "black" ? "text-[#b0b0b0]" : "text-white/40"}`}>{item.subtitle}</p>
+                    <h3 className="text-white text-sm font-medium line-clamp-1">{isKo && "nameKo" in item && item.nameKo ? item.nameKo : item.name}</h3>
+                    <p className={`text-xs mt-0.5 italic ${theme === "black" ? "text-[#b0b0b0]" : "text-white/40"}`}>{isKo && "subtitleKo" in item && item.subtitleKo ? item.subtitleKo : item.subtitle}</p>
                     <p
                       className={statusClass}
                       style={theme === "black" ? { WebkitTextStroke: "1px rgba(255,105,180,0.4)" } : undefined}
                     >
                       {item.status === "Coming Soon"
-                        ? "Coming Soon"
+                        ? (isKo ? "준비 중" : "Coming Soon")
                         : item.status === "Live Now"
-                          ? "Live Now"
+                          ? (isKo ? "라이브" : "LIVE NOW")
                           : item.status === "Sold Out"
-                            ? "Sold Out"
-                            : item.date}
+                            ? (isKo ? "품절" : "Sold Out")
+                            : "dateIso" in item && item.dateIso
+                              ? formatDropDate(item.dateIso, isKo)
+                              : null}
                     </p>
                   </div>
                 </div>

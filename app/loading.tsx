@@ -1,15 +1,22 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useLocale } from "@/components/locale-provider"
 
 export default function Loading() {
   const [elapsed, setElapsed] = useState(0)
+  const { locale } = useLocale()
+  const isKo = locale === "ko"
   useEffect(() => {
     const start = Date.now()
     const t = setInterval(() => setElapsed(Math.floor((Date.now() - start) / 1000)), 500)
     return () => clearInterval(t)
   }, [])
-  const message = elapsed >= 10 ? "조금만 더 기다려주세요..." : elapsed >= 3 ? "잠시만 기다려주세요..." : null
+  const message = elapsed >= 10
+    ? (isKo ? "조금만 더 기다려 주세요..." : "Please wait a moment...")
+    : elapsed >= 3
+      ? (isKo ? "로딩 중..." : "Loading...")
+      : null
 
   return (
     <div className="min-h-screen bg-black text-white pb-for-nav">

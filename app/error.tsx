@@ -1,8 +1,7 @@
 "use client"
 
-import { useEffect } from "react"
-import Link from "next/link"
 import { AlertCircle, WifiOff, ServerCrash, Home, RotateCw } from "lucide-react"
+import { useLocale } from "@/components/locale-provider"
 
 function getErrorType(error: Error & { digest?: string }) {
   const message = (error?.message || "").toLowerCase()
@@ -22,25 +21,29 @@ export default function Error({
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  const { locale } = useLocale()
+  const isKo = locale === "ko"
   const type = getErrorType(error)
   const isNetwork = type === "network"
   const isServer = type === "server"
 
   const config = isNetwork
     ? {
-        title: "인터넷 연결을 확인해주세요",
-        description: "네트워크가 불안정할 수 있어요. 연결을 확인한 뒤 다시 시도해주세요.",
+        title: isKo ? "인터넷 연결을 확인해주세요" : "Check your connection",
+        description: isKo
+          ? "네트워크가 불안정할 수 있어요. 연결을 확인한 뒤 다시 시도해주세요."
+          : "Network may be unstable. Please check your connection and try again.",
         icon: WifiOff,
       }
     : isServer
       ? {
-          title: "서비스 점검 중입니다",
-          description: "잠시 후 다시 시도해주세요.",
+          title: isKo ? "서비스 점검 중입니다" : "Service under maintenance",
+          description: isKo ? "잠시 후 다시 시도해주세요." : "Please try again in a moment.",
           icon: ServerCrash,
         }
       : {
-          title: "문제가 발생했어요",
-          description: "잠시 후 다시 시도해주세요.",
+          title: isKo ? "문제가 발생했어요" : "Something went wrong",
+          description: isKo ? "잠시 후 다시 시도해주세요." : "Please try again in a moment.",
           icon: AlertCircle,
         }
 
@@ -49,7 +52,6 @@ export default function Error({
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
       <div className="text-center max-w-sm w-full">
-        {/* 친근한 일러스트 영역 (아이콘으로 대체) */}
         <div className="flex justify-center mb-6">
           <div className="w-24 h-24 rounded-full bg-white/10 flex items-center justify-center">
             <Icon className="w-12 h-12 text-white/80" />
@@ -63,15 +65,19 @@ export default function Error({
             className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#FF6B9D] text-white font-medium hover:bg-[#FF6B9D]/90 transition-colors"
           >
             <RotateCw className="w-4 h-4" />
-            다시 시도
+            {isKo ? "다시 시도" : "Try again"}
           </button>
-          <Link
+          <a
             href="/"
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-white/10 text-white font-medium hover:bg-white/20 transition-colors border border-white/10"
+            onClick={(e) => {
+              e.preventDefault()
+              window.location.replace("/")
+            }}
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-white/10 text-white font-medium hover:bg-white/20 transition-colors border border-white/10 no-underline"
           >
             <Home className="w-4 h-4" />
-            홈으로 돌아가기
-          </Link>
+            {isKo ? "홈으로 돌아가기" : "Back to Home"}
+          </a>
         </div>
       </div>
     </div>

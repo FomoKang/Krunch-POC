@@ -4,10 +4,14 @@ import Link from "next/link"
 import Image from "next/image"
 import { Home, Trophy, Users, User, Store, Search, Bell } from "lucide-react"
 import { useSiteTheme } from "@/components/theme-provider"
+import { useLocale } from "@/components/locale-provider"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { LanguageToggle } from "@/components/language-toggle"
 
 export default function SecondMarketPage() {
   const { theme } = useSiteTheme()
+  const { locale } = useLocale()
+  const isKo = locale === "ko"
   const basePath = theme === "black" ? "/black" : ""
   const logoSrc = theme === "black" ? "/logo-white.png" : "/logo-pink.png"
   return (
@@ -27,9 +31,9 @@ export default function SecondMarketPage() {
             </Link>
           </div>
           <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0 overflow-visible">
-            <div className="flex items-center gap-1 sm:gap-2 min-w-0">
+            <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
               <Store className={`w-4 h-4 shrink-0 sm:w-5 sm:h-5 ${theme === "black" ? "text-white store-icon-pink-outline" : "text-[#FF6B9D]"}`} />
-              <span className="font-display text-sm sm:text-lg tracking-wide text-white uppercase whitespace-nowrap">2nd Market</span>
+              <span className={isKo ? "font-sans font-bold text-sm sm:text-lg tracking-wide text-white uppercase whitespace-nowrap" : "font-display text-sm sm:text-lg tracking-wide text-white uppercase whitespace-nowrap"}>{isKo ? "2차 마켓" : "2nd Market"}</span>
             </div>
             <Link href={`${basePath}/search`} className="p-1.5 sm:p-2 hover:bg-white/10 rounded-full transition-colors shrink-0">
               <Search className="w-4 h-4 sm:w-5 sm:h-5 text-white/80" />
@@ -39,6 +43,7 @@ export default function SecondMarketPage() {
               <span className={`absolute top-0.5 right-0.5 sm:top-1 sm:right-1 w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${theme === "black" ? "bg-white" : "bg-[#FF6B9D]"}`} />
             </Link>
             <ThemeToggle inline />
+            <LanguageToggle inline />
           </div>
         </div>
       </header>
@@ -47,15 +52,27 @@ export default function SecondMarketPage() {
         <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${theme === "black" ? "bg-[#0a0a0a] border border-[rgba(255,105,180,0.3)]" : "bg-[#1a1a1a] border border-[#FF6B9D]/40 shadow-lg shadow-[#FF6B9D]/20"}`}>
           <Store className={`w-8 h-8 ${theme === "black" ? "text-white store-icon-pink-outline" : "text-[#FF6B9D]"}`} />
         </div>
-        <h1 className="font-display text-3xl tracking-wide text-white uppercase italic">
-          2nd Market
+        <h1 className={isKo ? "font-sans font-bold italic text-3xl tracking-wide text-white uppercase" : "font-display text-3xl tracking-wide text-white uppercase italic"}>
+          {isKo ? "2차 마켓" : "2nd Market"}
         </h1>
         <p className="text-white/60 text-sm max-w-xs">
-          Peer-to-peer trading is{" "}
-          <span className={theme === "black" ? "text-white font-semibold" : "text-[#FF6B9D] font-semibold"} style={theme === "black" ? { WebkitTextStroke: "1px rgba(255,105,180,0.4)" } : undefined}>
-            coming soon
-          </span>
-          . Soon you&apos;ll be able to resell and discover rare collections directly from other Krunch users.
+          {isKo ? (
+            <>
+              P2P 거래가{" "}
+              <span className={theme === "black" ? "text-white font-semibold" : "text-[#FF6B9D] font-semibold"} style={theme === "black" ? { WebkitTextStroke: "1px rgba(255,105,180,0.4)" } : undefined}>
+                준비 중
+              </span>
+              {" "}이에요. 곧 다른 크런치 유저에게서 레전드·유니크 등의 아이템을 직접 거래할 수 있어요.
+            </>
+          ) : (
+            <>
+              Peer-to-peer trading is{" "}
+              <span className={theme === "black" ? "text-white font-semibold" : "text-[#FF6B9D] font-semibold"} style={theme === "black" ? { WebkitTextStroke: "1px rgba(255,105,180,0.4)" } : undefined}>
+                coming soon
+              </span>
+              . Soon you&apos;ll be able to trade LEGEND·UNIQUE and other rare items directly with other Krunch users.
+            </>
+          )}
         </p>
       </main>
 

@@ -3,9 +3,11 @@
 import { useState, useRef, useCallback } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { Home, Trophy, Users, User, Settings, QrCode, Wallet, Store, Search, Bell, X, Share2, Plus } from "lucide-react"
+import { Home, Trophy, Users, User, Settings, QrCode, Wallet, Store, Search, Bell, X, Share2, Plus, Pencil } from "lucide-react"
 import { useSiteTheme } from "@/components/theme-provider"
+import { useLocale } from "@/components/locale-provider"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { LanguageToggle } from "@/components/language-toggle"
 
 // 등급 시스템: Bronze → Silver → Gold → Platinum → Diamond (VIP)
 const TIER_NAMES: Record<number, string> = {
@@ -66,6 +68,8 @@ function IconX({ className }: { className?: string }) {
 
 export default function ProfilePage() {
   const { theme } = useSiteTheme()
+  const { locale } = useLocale()
+  const isKo = locale === "ko"
   const basePath = theme === "black" ? "/black" : ""
   const [showQR, setShowQR] = useState(false)
   const [showLevelModal, setShowLevelModal] = useState(false)
@@ -103,9 +107,9 @@ export default function ProfilePage() {
   }, [])
 
   const userStats = [
-    { label: "Total Bids", value: "127", change: "+12", icon: "🔨", tooltipLines: ["이번 달 입찰 42회", "가장 많이 입찰한 카테고리: 스니커즈"] },
-    { label: "Won Items", value: "4", change: "+1", icon: "🏆", tooltipLines: ["이번 달 낙찰 1건", "LEGEND 1, UNIQUE 3"] },
-    { label: "Win Rate", value: "18%", change: "+2%", icon: "📈", tooltipLines: ["전월 16% → 이번 달 18%"] },
+    { label: isKo ? "총 입찰" : "Total Bids", value: "127", change: "+12", icon: "🔨", tooltipLines: isKo ? ["이번 달 입찰 42회", "가장 많이 입찰한 카테고리: 스니커즈"] : ["42 bids this month", "Top category: Sneakers"] },
+    { label: isKo ? "낙찰 수" : "Won Items", value: "4", change: "+1", icon: "🏆", tooltipLines: isKo ? ["이번 달 낙찰 1건", "LEGEND 1, UNIQUE 3"] : ["1 win this month", "LEGEND 1, UNIQUE 3"] },
+    { label: isKo ? "낙찰률" : "Win Rate", value: "18%", change: "+2%", icon: "📈", tooltipLines: isKo ? ["전월 16% → 이번 달 18%"] : ["16% last month → 18% this month"] },
   ]
 
   return (
@@ -141,9 +145,9 @@ export default function ProfilePage() {
               </Link>
             </div>
             <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0 overflow-visible">
-              <div className="flex items-center gap-1 sm:gap-2 min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
                 <User className={`w-4 h-4 shrink-0 sm:w-5 sm:h-5 ${theme === "black" ? "text-white" : "text-[#FF6B9D]"}`} />
-                <span className="font-display text-sm sm:text-lg tracking-wide text-white uppercase whitespace-nowrap">My Profile</span>
+                <span className={isKo ? "font-sans font-bold tracking-tight text-sm sm:text-base text-white/95 uppercase whitespace-nowrap" : "font-display text-sm sm:text-lg tracking-wide text-white uppercase whitespace-nowrap"}>{isKo ? "마이 프로필" : "My Profile"}</span>
               </div>
               <Link href={`${basePath}/search`} className="p-1.5 sm:p-2 hover:bg-white/10 rounded-full transition-colors shrink-0">
                 <Search className="w-4 h-4 sm:w-5 sm:h-5 text-white/80" />
@@ -153,9 +157,7 @@ export default function ProfilePage() {
                 <span className={`absolute top-0.5 right-0.5 sm:top-1 sm:right-1 w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${theme === "black" ? "bg-white" : "bg-[#FF6B9D]"}`} />
               </Link>
               <ThemeToggle inline />
-              <button type="button" className="p-1.5 sm:p-2 rounded-full hover:bg-white/10 transition-colors shrink-0">
-                <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-white/70" />
-              </button>
+              <LanguageToggle inline />
             </div>
           </div>
         </header>
@@ -199,7 +201,7 @@ export default function ProfilePage() {
                 <div className="flex items-start justify-between mb-6">
                   <div className="flex items-start gap-6">
                     <div>
-                      <p className="text-xs text-white/50 mb-1 uppercase tracking-wider">MEMBER ID</p>
+                      <p className="text-xs text-white/50 mb-1 uppercase tracking-wider">{isKo ? "회원 ID" : "MEMBER ID"}</p>
                       <p className="text-lg font-mono tracking-wider">KR-2024-00847</p>
                     </div>
                     <div>
@@ -212,7 +214,7 @@ export default function ProfilePage() {
                       type="button"
                       onClick={() => setShowQR((v) => !v)}
                       className={`flex items-center justify-center rounded-lg p-2 cursor-pointer ${theme === "black" ? "bg-white/10 hover:bg-white/15" : "bg-black/30 hover:bg-black/40"} transition-colors`}
-                      aria-label="프로필 공유"
+                      aria-label="Share profile"
                     >
                       <QrCode className="w-8 h-8 text-white/80" />
                     </button>
@@ -221,7 +223,7 @@ export default function ProfilePage() {
                         <div className="fixed inset-0 z-40 bg-black/20 cursor-default" onClick={() => setShowQR(false)} aria-hidden />
                         <div className="fixed top-24 right-4 z-50 p-4 bg-black/95 border border-white/10 rounded-xl shadow-2xl w-[220px]" onClick={(e) => e.stopPropagation()}>
                           <p className="text-xs font-semibold text-white/90 mb-3 flex items-center gap-1.5">
-                            <Share2 className="w-3.5 h-3.5" /> 프로필 공유하기
+                            <Share2 className="w-3.5 h-3.5" /> {isKo ? "프로필 공유" : "Share profile"}
                           </p>
                           <div className="flex justify-center mb-3">
                             <Image src="/Krunch-QR.jpg" alt="QR" width={160} height={160} className="rounded-lg" />
@@ -264,7 +266,16 @@ export default function ProfilePage() {
                     </div>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-display text-lg tracking-wide uppercase">Fomo_KR</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-display text-lg tracking-wide uppercase">Fomo_KR</p>
+                      <button
+                        type="button"
+                        className={`p-1 rounded-full border border-white/20 transition-colors ${theme === "black" ? "hover:bg-white/10 hover:border-white/30" : "hover:bg-black/30 hover:border-white/30"}`}
+                        aria-label={isKo ? "프로필 수정" : "Edit profile"}
+                      >
+                        <Pencil className="w-3 h-3 text-white/60 hover:text-white/90" />
+                      </button>
+                    </div>
                     <button
                       type="button"
                       onClick={() => setShowLevelModal(true)}
@@ -311,17 +322,17 @@ export default function ProfilePage() {
           {/* Quick Actions — 블랙 모드: 배경/테두리/호버 밝아짐 */}
           <section className="grid grid-cols-3 gap-3">
             {[
-              { icon: Wallet, label: "Charge", iconColor: "text-white/80" },
-              { icon: Trophy, label: "Badges", iconColor: "text-white/80" },
-              { icon: Settings, label: "Settings", iconColor: "text-white/80" },
+              { icon: Wallet, label: isKo ? "충전" : "Charge", iconColor: "text-white/80" },
+              { icon: Trophy, label: isKo ? "배지" : "Badges", iconColor: "text-white/80" },
+              { icon: Settings, label: isKo ? "설정" : "Settings", iconColor: "text-white/80" },
             ].map((action, index) => (
               <button
                 key={index}
                 type="button"
-                className={`profile-quick-action flex flex-col items-center gap-1.5 rounded-xl transition-colors ${theme === "black" ? "p-4 border border-white/10 hover:bg-white/10" : "p-3"}`}
+                className={`profile-quick-action flex flex-col items-center justify-center gap-1.5 rounded-xl transition-colors h-[88px] box-border ${theme === "black" ? "p-3 border border-white/10 hover:bg-white/10" : "p-3 border border-white/10"}`}
                 style={theme === "black"
                   ? { background: "rgba(255,255,255,0.05)" }
-                  : { background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }
+                  : { background: "rgba(255,255,255,0.05)" }
                 }
               >
                 <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
@@ -336,10 +347,10 @@ export default function ProfilePage() {
           <section className="mt-6">
             <div className="flex items-center justify-between mb-4 px-0">
               <h2 className="text-lg font-display tracking-wide flex items-center gap-2">
-                <span className={theme === "black" ? "text-white uppercase" : "text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 uppercase"}>MY GALLERY</span>
+                <span className={theme === "black" ? "text-white uppercase" : "text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 uppercase"}>{isKo ? "마이 갤러리" : "MY GALLERY"}</span>
               </h2>
               <button type="button" onClick={() => setShowAddItem(true)} className={`text-xs transition-colors ${theme === "black" ? "text-white/80 hover:text-white" : "text-pink-400 hover:text-pink-300"}`}>
-                Add Item
+                {isKo ? "아이템 추가" : "Add Item"}
               </button>
             </div>
 
@@ -457,7 +468,7 @@ export default function ProfilePage() {
                                   ) : (
                                     <span className={`flex flex-col items-center justify-center gap-0.5 ${theme === "black" ? "text-[#9CA3AF]" : "text-white/50"}`}>
                                       <Plus className={`w-5 h-5 ${theme === "black" ? "text-[#9CA3AF]" : "text-white/50"}`} />
-                                      <span className="text-[10px] font-medium">추가</span>
+                                      <span className="text-[10px] font-medium">{isKo ? "추가" : "Add Item"}</span>
                                     </span>
                                   )}
                                 </button>
@@ -489,25 +500,25 @@ export default function ProfilePage() {
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setShowLevelModal(false)}>
             <div className="bg-[#0d0d0d] border border-white/20 rounded-2xl p-5 max-w-sm w-full shadow-xl" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-display text-lg uppercase tracking-wide text-white">등급</h3>
+                <h3 className="font-display text-lg uppercase tracking-wide text-white">{isKo ? "등급" : "Tier"}</h3>
                 <button type="button" onClick={() => setShowLevelModal(false)} className="p-1 rounded-full hover:bg-white/10">
                   <X className="w-5 h-5 text-white/70" />
                 </button>
               </div>
               <p className="text-xs text-white/70 leading-relaxed mb-4">
-                입찰·낙찰·커뮤니티 활동으로 XP를 쌓아 등급이 올라갑니다. 등급이 높을수록 LEGEND 드롭 참여 기회와 보상이 늘어납니다.
+                {isKo ? "입찰·낙찰·커뮤니티 활동으로 XP를 쌓아 등급이 올라갑니다. 등급이 높을수록 LEGEND 드롭 참여 기회와 보상이 늘어납니다." : "Earn XP through bids, wins, and community activity to level up. Higher tiers unlock more LEGEND drop access and rewards."}
               </p>
               <div className="text-[10px] text-white/50 space-y-2">
                 <p>Bronze → Silver → Gold → Platinum → Diamond (VIP)</p>
-                <p className="text-white/60 font-medium mt-2">달성 조건</p>
+                <p className="text-white/60 font-medium mt-2">{isKo ? "달성 조건" : "Tier requirements"}</p>
                 <ul className="space-y-0.5 list-none pl-0">
-                  <li>Diamond (VIP) — 1억 원 이상</li>
-                  <li>Platinum — 5,000만 원 이상</li>
-                  <li>Gold — 1,000만 원 이상</li>
-                  <li>Silver — 300만 원 이상</li>
-                  <li>Bronze — 가입 즉시</li>
+                  <li>{isKo ? "Diamond (VIP) — 1억 원 이상" : "Diamond (VIP) — ₩\u2009100M+"}</li>
+                  <li>{isKo ? "Platinum — 5,000만 원 이상" : "Platinum — ₩\u200950M+"}</li>
+                  <li>{isKo ? "Gold — 1,000만 원 이상" : "Gold — ₩\u200910M+"}</li>
+                  <li>{isKo ? "Silver — 300만 원 이상" : "Silver — ₩\u20093M+"}</li>
+                  <li>{isKo ? "Bronze — 가입 즉시" : "Bronze — On sign-up"}</li>
                 </ul>
-                <p className="mt-2 pt-2 border-t border-white/10">현재: {getTierName(LEVEL_CURRENT)} · {XP_CURRENT} / {XP_NEEDED} XP (다음 등급까지 {XP_NEEDED - XP_CURRENT} XP)</p>
+                <p className="mt-2 pt-2 border-t border-white/10">{isKo ? "현재" : "Current"}: {getTierName(LEVEL_CURRENT)} · {XP_CURRENT} / {XP_NEEDED} XP ({isKo ? "다음 등급까지 " : ""}{XP_NEEDED - XP_CURRENT} XP)</p>
               </div>
             </div>
           </div>
@@ -518,12 +529,12 @@ export default function ProfilePage() {
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setShowAddItem(false)}>
             <div className="bg-[#0d0d0d] border border-white/20 rounded-2xl p-5 max-w-sm w-full shadow-xl" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-display text-lg uppercase tracking-wide text-white">아이템 추가</h3>
+                <h3 className="font-display text-lg uppercase tracking-wide text-white">{isKo ? "아이템 추가" : "Add Item"}</h3>
                 <button type="button" onClick={() => setShowAddItem(false)} className="p-1 rounded-full hover:bg-white/10">
                   <X className="w-5 h-5 text-white/70" />
                 </button>
               </div>
-              <p className="text-sm text-white/60">2nd Market에서 구매한 아이템을 갤러리에 걸 수 있습니다. (준비 중)</p>
+              <p className="text-sm text-white/60">{isKo ? "2차 마켓에서 구매한 아이템을 갤러리에 걸 수 있습니다. (준비 중)" : "Items purchased on 2nd Market can be displayed in your gallery. (Coming soon)"}</p>
             </div>
           </div>
         )}
