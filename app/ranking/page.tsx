@@ -365,14 +365,14 @@ export default function RankingPage() {
           {topCollectorsData.map((collector) => (
             <div
               key={collector.rank}
-              className={`group p-5 rounded-2xl border transition-all duration-300 relative overflow-hidden cursor-pointer ${
+              className={`group p-5 rounded-2xl border-2 transition-all duration-300 relative overflow-hidden cursor-pointer ${
                 theme === "black"
                   ? collector.rank === 1
-                    ? "bg-[#1a1a1a] border-2 border-[rgba(255,105,180,0.3)] shadow-[0_8px_32px_rgba(255,105,180,0.2)] hover:bg-[#222] hover:border-[rgba(255,105,180,0.45)] hover:shadow-[0_8px_32px_rgba(255,105,180,0.28)]"
-                    : "bg-[#1a1a1a] border border-white/10 hover:bg-[#222] hover:border-[rgba(255,105,180,0.35)] hover:shadow-[0_4px_20px_rgba(255,105,180,0.18)]"
+                    ? "bg-[#1a1a1a] border-[rgba(255,105,180,0.3)] shadow-[0_8px_32px_rgba(255,105,180,0.2)] hover:bg-[#222] hover:border-[rgba(255,105,180,0.45)] hover:shadow-[0_8px_32px_rgba(255,105,180,0.28)]"
+                    : "bg-[#1a1a1a] border-white/10 hover:bg-[#222] hover:border-[rgba(255,105,180,0.35)] hover:shadow-[0_4px_20px_rgba(255,105,180,0.18)]"
                   : collector.rank === 1
                     ? "bg-gradient-to-br from-amber-500/20 via-amber-500/10 to-transparent border-amber-500/40 shadow-2xl shadow-amber-500/20"
-                    : "bg-gradient-to-r from-white/5 via-white/5 to-transparent border-white/10 hover:border-[#FF6B9D]/50 hover:shadow-lg hover:shadow-[#FF6B9D]/20"
+                    : "bg-gradient-to-r from-white/5 via-white/5 to-transparent border-transparent hover:border-[#FF6B9D]/50 hover:shadow-lg hover:shadow-[#FF6B9D]/20"
               }`}
             >
               {/* 블랙 모드: 카드 안 아주 살짝 핑크 그라데이션 */}
