@@ -77,7 +77,7 @@
 
 @theme inline {
   --font-sans: var(--font-noto-kr), var(--font-inter), "Noto Sans KR", "Inter", system-ui, sans-serif;
-  --font-mono: "Geist Mono", "Geist Mono Fallback";
+  --font-mono: "Geist Mono", "Geist Mono Fallback", "Courier New", monospace;
   --font-serif: "Playfair Display", "Georgia", serif;
   --font-display: var(--font-anton), "Anton", "Impact", "Arial Narrow", sans-serif;
   --font-hype: var(--font-syne), "Syne", system-ui, sans-serif;

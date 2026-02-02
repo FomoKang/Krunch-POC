@@ -181,9 +181,9 @@ export default function RankingPage() {
               </p>
             </div>
             <div className="grid grid-cols-1 gap-1.5 text-sm">
-              <p className="text-white/90"><span className="text-white/50 text-xs">{isKo ? "총 거래액:" : "Total Volume:"}</span> <span className="font-bold text-white">₩ {(STATS.totalVolume / 1_000_000_000).toFixed(1)}B</span></p>
-              <p className="text-white/90"><span className="text-white/50 text-xs">{isKo ? "활성 컬렉터:" : "Active Collectors:"}</span> <span className="font-bold text-white">{STATS.activeCollectors.toLocaleString()}</span></p>
-              <p className="text-white/90"><span className="text-white/50 text-xs">{isKo ? "신규 아티스트:" : "New Artists:"}</span> <span className="font-bold text-white">{STATS.newArtists}</span></p>
+              <p className="text-white/90"><span className="text-white/50 text-xs">{isKo ? "총 거래액:" : "Total Volume:"}</span> <span className="font-bold text-white tabular-nums">₩\u2009{(STATS.totalVolume / 1_000_000_000).toFixed(1)}B</span></p>
+              <p className="text-white/90"><span className="text-white/50 text-xs">{isKo ? "활성 컬렉터:" : "Active Collectors:"}</span> <span className="font-bold text-white tabular-nums">{STATS.activeCollectors.toLocaleString()}</span></p>
+              <p className="text-white/90"><span className="text-white/50 text-xs">{isKo ? "신규 아티스트:" : "New Artists:"}</span> <span className="font-bold text-white tabular-nums">{STATS.newArtists}</span></p>
             </div>
           </div>
 
@@ -237,7 +237,7 @@ export default function RankingPage() {
                 </div>
               </div>
               <p className="rank-2-name text-sm text-center truncate w-full mb-1">{isKo && topThree[1].nameKo ? topThree[1].nameKo : topThree[1].name}</p>
-              <p className="rank-2-score text-xs font-semibold mb-3">{formatKRW(topThree[1].totalSales)}</p>
+              <p className="rank-2-score text-xs font-semibold mb-3 tabular-nums">{formatKRW(topThree[1].totalSales)}</p>
               <div className="rank-2-bar w-full h-20 rounded-t-xl border-t" />
               </Link>
             </div>
@@ -269,7 +269,7 @@ export default function RankingPage() {
               </div>
               <p className={`text-[10px] font-bold uppercase tracking-wider mb-0.5 ${theme === "black" ? "rank-1-label-dark text-white/90" : "text-amber-400/90"}`}>{isKo ? "1위" : "1st PLACE"}</p>
               <p className={`rank-1-name text-lg text-center mb-1 ${theme === "black" ? "rank-1-name-dark" : ""}`}>{isKo && topThree[0].nameKo ? topThree[0].nameKo : topThree[0].name}</p>
-              <p className={`rank-1-score mb-3 ${theme === "black" ? "rank-1-score-dark text-base font-bold" : "text-base font-bold scale-[1.3] origin-center"}`}>{formatKRW(topThree[0].totalSales)}</p>
+              <p className={`rank-1-score mb-3 tabular-nums ${theme === "black" ? "rank-1-score-dark text-base font-bold" : "text-base font-bold scale-[1.3] origin-center"}`}>{formatKRW(topThree[0].totalSales)}</p>
               <div className="rank-1-bar w-full h-32 rounded-t-xl border-t-2" />
               </Link>
             </div>
@@ -290,7 +290,7 @@ export default function RankingPage() {
                 </div>
               </div>
               <p className="rank-3-name text-sm font-bold text-center truncate w-full mb-1">{isKo && topThree[2].nameKo ? topThree[2].nameKo : topThree[2].name}</p>
-              <p className="rank-3-score text-xs font-semibold mb-3">{formatKRW(topThree[2].totalSales)}</p>
+              <p className="rank-3-score text-xs font-semibold mb-3 tabular-nums">{formatKRW(topThree[2].totalSales)}</p>
               <div className="rank-3-bar w-full h-16 rounded-t-xl border-t" />
               </Link>
             </div>
@@ -326,7 +326,7 @@ export default function RankingPage() {
                 <div className="flex-1 min-w-0 relative z-10">
                   <p className="rank-list-name text-white text-base font-bold truncate">{isKo && artist.nameKo ? artist.nameKo : artist.name}</p>
                   <p className={`text-xs font-medium ${theme === "black" ? "text-[#808080]" : "text-white/50"}`}>
-                    {isKo ? `${artist.itemsSold}건 낙찰` : `${artist.itemsSold} items sold`}
+                    <span className="tabular-nums">{isKo ? `${artist.itemsSold}건 낙찰` : `${artist.itemsSold} items sold`}</span>
                     {artist.rankChange !== undefined && artist.rankChange !== 0 && (
                       <span className={`ml-1.5 font-semibold ${artist.rankChange > 0 ? "text-[#10B981]" : "text-[#EF4444]"}`}>
                         {artist.rankChange > 0 ? `↑${artist.rankChange}` : `↓${Math.abs(artist.rankChange)}`}
@@ -334,12 +334,12 @@ export default function RankingPage() {
                     )}
                     {artist.rankChange === 0 && <span className="ml-1.5 text-[#6B7280]">-</span>}
                   </p>
-                  <p className={`text-[10px] mt-0.5 ${theme === "black" ? "text-[#606060]" : "text-white/40"}`}>
+                  <p className={`text-[10px] mt-0.5 tabular-nums ${theme === "black" ? "text-[#606060]" : "text-white/40"}`}>
                     {formatKRW(artist.totalSales)} (₩\u2009{artist.totalSales.toLocaleString()})
                   </p>
                 </div>
                 <div className="text-right relative z-10">
-                  <p className="rank-list-score text-white font-bold relative z-10 text-base">{formatKRW(artist.totalSales)}</p>
+                  <p className="rank-list-score text-white font-bold relative z-10 text-base tabular-nums">{formatKRW(artist.totalSales)}</p>
                 </div>
                 <ChevronRight className={`rank-list-arrow w-5 h-5 shrink-0 ${theme === "black" ? "" : "text-white/20 transition-all group-hover:text-[#FF6B9D] group-hover:translate-x-1"}`} />
               </Link>
@@ -437,7 +437,7 @@ export default function RankingPage() {
               <div className="flex items-center justify-between pt-4 border-t border-white/10 relative z-10">
                 <div>
                   <p className={`text-[10px] uppercase tracking-wider font-bold mb-1 ${theme === "black" ? "text-[#808080]" : "text-white/40"}`}>{isKo ? "총 사용액" : "Total Spent"}</p>
-                  <p className={`text-white font-bold transition-colors ${theme === "black" ? "text-lg group-hover:text-[#FF8FAB]" : "text-base group-hover:text-[#FF6B9D]"}`}>{formatKRW(collector.totalSpent)}</p>
+                  <p className={`text-white font-bold transition-colors tabular-nums ${theme === "black" ? "text-lg group-hover:text-[#FF8FAB]" : "text-base group-hover:text-[#FF6B9D]"}`}>{formatKRW(collector.totalSpent)}</p>
                 </div>
                 <div className="text-right">
                   <p className={`text-[10px] uppercase tracking-wider font-bold mb-1 ${theme === "black" ? "text-[#808080]" : "text-white/40"}`}>{isKo ? "보유 아이템" : "Items Owned"}</p>

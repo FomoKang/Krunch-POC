@@ -192,7 +192,7 @@ function BattleCard({ battle, isBlack, isKo }: { battle: BattleItem; isBlack?: b
               {isBlack ? <span className="text-white text-sm leading-none">🔥</span> : <Flame className="w-3.5 h-3.5 shrink-0 text-white" />}
               <span className="text-white text-xs font-bold tracking-tight">HOT</span>
             </div>
-            <div className={`text-[10px] font-semibold mt-0.5 leading-tight ${isBlack ? "text-white/80" : "text-white/95"}`}>
+            <div className={`text-[10px] font-semibold mt-0.5 leading-tight tabular-nums ${isBlack ? "text-white/80" : "text-white/95"}`}>
               {isKo
                 ? `${formatParticipants(displayTotal)}명 참여${endsInHours != null && endsInHours <= 24 ? ` · ${endsInHours}시간 뒤 종료` : ""}`
                 : `${formatParticipants(displayTotal)} participants${endsInHours != null && endsInHours <= 24 ? ` · ${endsInHours}h left` : ""}`}
@@ -232,7 +232,7 @@ function BattleCard({ battle, isBlack, isKo }: { battle: BattleItem; isBlack?: b
                 <p className={isBlack ? "text-[#A0A0A0] text-xs" : "text-white/60 text-xs"}>{isKo ? battle.leftCeleb.outfit : "outfitEn" in battle.leftCeleb ? battle.leftCeleb.outfitEn : battle.leftCeleb.outfit}</p>
               </div>
             </div>
-            <div className={`absolute top-2 left-2 ${leftBadge} text-white text-xs font-bold px-2 py-1 rounded-full ${voted ? "opacity-100" : "opacity-0"} transition-opacity`}>
+            <div className={`absolute top-2 left-2 ${leftBadge} text-white text-xs font-bold px-2 py-1 rounded-full tabular-nums ${voted ? "opacity-100" : "opacity-0"} transition-opacity`}>
               {leftPercent}%
             </div>
           </button>
@@ -264,7 +264,7 @@ function BattleCard({ battle, isBlack, isKo }: { battle: BattleItem; isBlack?: b
                 <p className={isBlack ? "text-[#A0A0A0] text-xs" : "text-white/60 text-xs"}>{isKo ? battle.rightCeleb.outfit : "outfitEn" in battle.rightCeleb ? battle.rightCeleb.outfitEn : battle.rightCeleb.outfit}</p>
               </div>
             </div>
-            <div className={`absolute top-2 right-2 ${rightBadge} text-white text-xs font-bold px-2 py-1 rounded-full ${voted ? "opacity-100" : "opacity-0"} transition-opacity`}>
+            <div className={`absolute top-2 right-2 ${rightBadge} text-white text-xs font-bold px-2 py-1 rounded-full tabular-nums ${voted ? "opacity-100" : "opacity-0"} transition-opacity`}>
               {rightPercent}%
             </div>
           </button>
@@ -277,7 +277,7 @@ function BattleCard({ battle, isBlack, isKo }: { battle: BattleItem; isBlack?: b
       {/* 투표 바: 0.5초 카운트업 반영, 선택 쪽 펄스 */}
       <div className="px-4 pt-4">
         <VoteBar leftPercent={leftPercent} rightPercent={rightPercent} pulseSide={voted} isBlack={isBlack} />
-        <p className={`text-xs mt-2 text-center ${isBlack ? "vote-count" : "text-white/40"}`}>
+        <p className={`text-xs mt-2 text-center tabular-nums ${isBlack ? "vote-count" : "text-white/40"}`}>
           {isKo ? `${displayTotal.toLocaleString()}표` : `${displayTotal.toLocaleString()} votes`}
         </p>
       </div>

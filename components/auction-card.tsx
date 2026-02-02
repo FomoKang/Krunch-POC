@@ -355,7 +355,7 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
               <p className="text-xs sm:text-sm text-white/90 font-sans">
                 <span className={`${theme.accent} font-semibold`}>{bidRibbon.username}</span>
                 <span className="text-white/70">{isKo ? "님이 " : " placed a bid of "}</span>
-                <span className={`${theme.accent} font-semibold`}>₩\u2009{bidRibbon.amount.toLocaleString()}</span>
+                <span className={`${theme.accent} font-semibold tabular-nums`}>₩\u2009{bidRibbon.amount.toLocaleString()}</span>
                 {isKo && <span className="text-white/70">에 입찰했습니다</span>}
               </p>
             </div>
@@ -378,7 +378,7 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
               <div>
                 <p className="text-[9px] text-white/60 uppercase tracking-widest font-sans font-bold mb-0.5">{isKo ? "남은 시간" : "Time Remaining"}</p>
                 <span
-                  className={`font-mono text-lg sm:text-xl font-semibold tracking-tight transition-colors ${timeRemaining >= ONE_HOUR ? "auction-timer-normal" : timeRemaining < TEN_MINUTES ? "auction-timer-urgent" : showRedTime ? "auction-timer-urgent" : "auction-timer-normal"} ${timeRemaining < TEN_MINUTES && timeRemaining > 0 ? "animate-pulse" : ""}`}
+                  className={`font-mono text-lg sm:text-xl font-semibold tracking-tight tabular-nums transition-colors ${timeRemaining >= ONE_HOUR ? "auction-timer-normal" : timeRemaining < TEN_MINUTES ? "auction-timer-urgent" : showRedTime ? "auction-timer-urgent" : "auction-timer-normal"} ${timeRemaining < TEN_MINUTES && timeRemaining > 0 ? "animate-pulse" : ""}`}
                 >
                   {formatTime(timeRemaining)}
                 </span>
