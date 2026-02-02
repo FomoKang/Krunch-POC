@@ -209,7 +209,7 @@ export default function HomePage() {
                 {/* Live Now 뱃지 — 높이 고정해서 핑크/다크 전환 시 카드 시작 구간 동일 */}
                 <div className="min-h-[2.5rem] flex items-center gap-2 mb-4">
                   <span
-                    className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full ${
+                    className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide ${
                       theme === "black"
                         ? "bg-transparent text-white border border-[rgba(255,105,180,0.5)]"
                         : "bg-[#FF6B9D] text-black live-now-badge"
@@ -263,8 +263,8 @@ export default function HomePage() {
             {uniqueDrops.map((item) => {
               const isFelix = item.id === 4
               const statusClass = theme === "black"
-                ? "text-white text-xs mt-2 font-medium"
-                : `${accentText} text-xs mt-2 font-medium`
+                ? "text-white text-xs mt-2 font-medium uppercase tracking-wide"
+                : `${accentText} text-xs mt-2 font-medium uppercase tracking-wide`
 
               return (
                 <div
