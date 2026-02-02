@@ -8,6 +8,7 @@ import { useSiteTheme } from "@/components/theme-provider"
 import { useLocale } from "@/components/locale-provider"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { LanguageToggle } from "@/components/language-toggle"
+import { useToast } from "@/hooks/use-toast"
 
 // 등급 시스템: Bronze → Silver → Gold → Platinum → Diamond (VIP)
 const TIER_NAMES: Record<number, string> = {
@@ -71,6 +72,7 @@ export default function ProfilePage() {
   const { locale } = useLocale()
   const isKo = locale === "ko"
   const basePath = theme === "black" ? "/black" : ""
+  const { toast } = useToast()
   const [showQR, setShowQR] = useState(false)
   const [showLevelModal, setShowLevelModal] = useState(false)
   const [showAddItem, setShowAddItem] = useState(false)
@@ -213,7 +215,23 @@ export default function ProfilePage() {
                   <div className="relative">
                     <button
                       type="button"
-                      onClick={() => setShowQR((v) => !v)}
+                      onClick={async () => {
+                        try {
+                          const profileUrl = `${window.location.origin}${basePath}/profile`
+                          await navigator.clipboard.writeText(profileUrl)
+                          toast({
+                            title: isKo ? "클립보드에 복사되었습니다" : "Copied to clipboard",
+                            description: profileUrl,
+                          })
+                        } catch (err) {
+                          toast({
+                            title: isKo ? "복사 실패" : "Copy failed",
+                            description: isKo ? "URL을 수동으로 복사해주세요" : "Please copy the URL manually",
+                            variant: "destructive",
+                          })
+                        }
+                        setShowQR((v) => !v)
+                      }}
                       className={`flex items-center justify-center rounded-lg p-2 cursor-pointer ${theme === "black" ? "bg-white/10 hover:bg-white/15" : "bg-black/30 hover:bg-black/40"} transition-colors`}
                       aria-label="Share profile"
                     >

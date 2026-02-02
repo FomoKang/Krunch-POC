@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { LocaleProvider } from "@/components/locale-provider"
 import { SplashProvider } from "@/components/splash-context"
 import { BottomNav } from "@/components/bottom-nav"
+import { Toaster } from "@/components/ui/toaster"
 import "./globals.css"
 
 const _geist = Geist({ subsets: ["latin"] })
@@ -102,6 +103,7 @@ export default function RootLayout({
               <BottomNav />
             </SplashProvider>
           </LocaleProvider>
+          <Toaster />
           <Analytics />
         </ThemeProvider>
       </body>
