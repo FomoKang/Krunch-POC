@@ -235,8 +235,8 @@ export default function ProfilePage() {
                                 toast({
                                   title: (
                                     <div className="flex items-center gap-2">
-                                      <CheckCircle className="w-5 h-5 text-white shrink-0" />
-                                      <span>{isKo ? "클립보드에 복사되었습니다" : "Copied to clipboard"}</span>
+                                      <CheckCircle className="w-4 h-4 text-white shrink-0" />
+                                      <span className="whitespace-nowrap">{isKo ? "클립보드에 복사되었습니다" : "Copied to clipboard"}</span>
                                     </div>
                                   ),
                                   description: profileUrl,
