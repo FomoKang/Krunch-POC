@@ -209,10 +209,10 @@ export default function HomePage() {
                 {/* Live Now 뱃지 — 높이 고정해서 핑크/다크 전환 시 카드 시작 구간 동일 */}
                 <div className="min-h-[2.5rem] flex items-center gap-2 mb-4">
                   <span
-                    className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide ${
+                    className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide border ${
                       theme === "black"
-                        ? "bg-transparent text-white border border-[rgba(255,105,180,0.5)]"
-                        : "bg-[#FF6B9D] text-black live-now-badge"
+                        ? "bg-transparent text-white border-[rgba(255,105,180,0.5)]"
+                        : "bg-[#FF6B9D] text-black border-transparent live-now-badge"
                     }`}
                   >
                     <span className="relative flex h-2 w-2">
