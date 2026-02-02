@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { Home, Trophy, Users, User, Settings, QrCode, Wallet, Store, Search, Bell, X, Share2, Plus, Pencil } from "lucide-react"
+import { Home, Trophy, Users, User, Settings, QrCode, Wallet, Store, Search, Bell, X, Share2, Plus, Pencil, CheckCircle } from "lucide-react"
 import { useSiteTheme } from "@/components/theme-provider"
 import { useLocale } from "@/components/locale-provider"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -233,7 +233,12 @@ export default function ProfilePage() {
                                 const profileUrl = `${window.location.origin}${basePath}/profile`
                                 await navigator.clipboard.writeText(profileUrl)
                                 toast({
-                                  title: isKo ? "클립보드에 복사되었습니다" : "Copied to clipboard",
+                                  title: (
+                                    <div className="flex items-center gap-2">
+                                      <CheckCircle className="w-5 h-5 text-green-500 shrink-0" />
+                                      <span>{isKo ? "클립보드에 복사되었습니다" : "Copied to clipboard"}</span>
+                                    </div>
+                                  ),
                                   description: profileUrl,
                                 })
                               } catch (err) {
