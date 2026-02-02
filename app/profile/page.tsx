@@ -215,23 +215,7 @@ export default function ProfilePage() {
                   <div className="relative">
                     <button
                       type="button"
-                      onClick={async () => {
-                        try {
-                          const profileUrl = `${window.location.origin}${basePath}/profile`
-                          await navigator.clipboard.writeText(profileUrl)
-                          toast({
-                            title: isKo ? "클립보드에 복사되었습니다" : "Copied to clipboard",
-                            description: profileUrl,
-                          })
-                        } catch (err) {
-                          toast({
-                            title: isKo ? "복사 실패" : "Copy failed",
-                            description: isKo ? "URL을 수동으로 복사해주세요" : "Please copy the URL manually",
-                            variant: "destructive",
-                          })
-                        }
-                        setShowQR((v) => !v)
-                      }}
+                      onClick={() => setShowQR((v) => !v)}
                       className={`flex items-center justify-center rounded-lg p-2 cursor-pointer ${theme === "black" ? "bg-white/10 hover:bg-white/15" : "bg-black/30 hover:bg-black/40"} transition-colors`}
                       aria-label="Share profile"
                     >
@@ -241,9 +225,28 @@ export default function ProfilePage() {
                       <>
                         <div className="fixed inset-0 z-40 bg-black/20 cursor-default" onClick={() => setShowQR(false)} aria-hidden />
                         <div className="fixed top-24 right-4 z-50 p-4 bg-black/95 border border-white/10 rounded-xl shadow-2xl w-[220px]" onClick={(e) => e.stopPropagation()}>
-                          <p className="text-xs font-semibold text-white/90 mb-3 flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              try {
+                                const profileUrl = `${window.location.origin}${basePath}/profile`
+                                await navigator.clipboard.writeText(profileUrl)
+                                toast({
+                                  title: isKo ? "클립보드에 복사되었습니다" : "Copied to clipboard",
+                                  description: profileUrl,
+                                })
+                              } catch (err) {
+                                toast({
+                                  title: isKo ? "복사 실패" : "Copy failed",
+                                  description: isKo ? "URL을 수동으로 복사해주세요" : "Please copy the URL manually",
+                                  variant: "destructive",
+                                })
+                              }
+                            }}
+                            className="text-xs font-semibold text-white/90 mb-3 flex items-center gap-1.5 hover:text-white transition-colors cursor-pointer"
+                          >
                             <Share2 className="w-3.5 h-3.5" /> {isKo ? "프로필 공유" : "Share profile"}
-                          </p>
+                          </button>
                           <div className="flex justify-center mb-3">
                             <Image src="/Krunch-QR.jpg" alt="QR" width={160} height={160} className="rounded-lg" />
                           </div>
