@@ -532,9 +532,42 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
                   />
                 </div>
 
+                <div className="mb-4 space-y-1">
+                  <p className="text-xs text-muted-foreground font-sans">
+                    {isKo ? `현재 입찰가 ${currentBid.toLocaleString()}원` : `Current Bid ${currentBid.toLocaleString()} KRW`}
+                  </p>
+                  {(() => {
+                    const numericOffer = parseInt(offerAmount.replace(/,/g, ""), 10) || 0
+                    const isValid = numericOffer > currentBid
+                    return isValid ? (
+                      <p className="text-xs text-muted-foreground font-sans">
+                        {isKo ? "현재 입찰가보다 더 높은 가격으로 참여할 수 있습니다" : "You can participate with a price higher than the current bid price"}
+                      </p>
+                    ) : numericOffer > 0 ? (
+                      <p className="text-xs text-red-500 font-sans">
+                        {isKo ? "더 높은 가격을 입력해주세요." : "Please enter a higher price."}
+                      </p>
+                    ) : null
+                  })()}
+                </div>
+
                 <button
                   onClick={handleSetOffer}
-                  className={`w-full py-4 font-display font-medium text-lg uppercase tracking-wide transition-all active:scale-[0.98] ${variant === "black" ? "black-mode-place-bid" : `${theme.accentBg} ${theme.accentForeground} hover:brightness-110`}`}
+                  disabled={(() => {
+                    const numericOffer = parseInt(offerAmount.replace(/,/g, ""), 10) || 0
+                    return numericOffer <= currentBid
+                  })()}
+                  className={`w-full py-4 font-display font-medium text-lg uppercase tracking-wide transition-all active:scale-[0.98] ${
+                    (() => {
+                      const numericOffer = parseInt(offerAmount.replace(/,/g, ""), 10) || 0
+                      const isDisabled = numericOffer <= currentBid
+                      return isDisabled
+                        ? "bg-gray-600 text-gray-400 cursor-not-allowed opacity-50"
+                        : variant === "black"
+                        ? "black-mode-place-bid"
+                        : `${theme.accentBg} ${theme.accentForeground} hover:brightness-110`
+                    })()
+                  }`}
                 >
                   {isKo ? "입찰 하기" : "SET OFFER"}
                 </button>
