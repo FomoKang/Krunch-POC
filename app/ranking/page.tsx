@@ -437,11 +437,11 @@ export default function RankingPage() {
               <div className="flex items-center justify-between pt-4 border-t border-white/10 relative z-10">
                 <div>
                   <p className={`text-[10px] uppercase tracking-wider font-bold mb-1 ${theme === "black" ? "text-[#808080]" : "text-white/40"}`}>{isKo ? "총 사용액" : "Total Spent"}</p>
-                  <p className={`text-white font-bold transition-colors tabular-nums ${theme === "black" ? "text-lg group-hover:text-[#FF8FAB]" : "text-base group-hover:text-[#FF6B9D]"}`}>{formatKRW(collector.totalSpent)}</p>
+                  <p className={`text-white font-bold transition-colors tabular-nums ${theme === "black" ? "text-base group-hover:text-[#FF8FAB]" : "text-base group-hover:text-[#FF6B9D]"}`}>{formatKRW(collector.totalSpent)}</p>
                 </div>
                 <div className="text-right">
                   <p className={`text-[10px] uppercase tracking-wider font-bold mb-1 ${theme === "black" ? "text-[#808080]" : "text-white/40"}`}>{isKo ? "보유 아이템" : "Items Owned"}</p>
-                  <p className={`text-white font-bold ${theme === "black" ? "text-lg" : "text-base"}`}>{collector.itemsOwned}</p>
+                  <p className={`text-white font-bold tabular-nums ${theme === "black" ? "text-base" : "text-base"}`}>{collector.itemsOwned}</p>
                 </div>
               </div>
             </div>
