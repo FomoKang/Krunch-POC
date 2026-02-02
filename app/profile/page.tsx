@@ -512,10 +512,10 @@ export default function ProfilePage() {
                 <p>Bronze → Silver → Gold → Platinum → Diamond (VIP)</p>
                 <p className="text-white/60 font-medium mt-2">{isKo ? "달성 조건" : "Tier requirements"}</p>
                 <ul className="space-y-0.5 list-none pl-0">
-                  <li>{isKo ? "Diamond (VIP) — 1억 원 이상" : "Diamond (VIP) — ₩\u2009100M+"}</li>
-                  <li>{isKo ? "Platinum — 5,000만 원 이상" : "Platinum — ₩\u200950M+"}</li>
-                  <li>{isKo ? "Gold — 1,000만 원 이상" : "Gold — ₩\u200910M+"}</li>
-                  <li>{isKo ? "Silver — 300만 원 이상" : "Silver — ₩\u20093M+"}</li>
+                  <li>{isKo ? "Diamond (VIP) — 1억 원 이상" : `Diamond (VIP) — ₩${'\u2009'}100M+`}</li>
+                  <li>{isKo ? "Platinum — 5,000만 원 이상" : `Platinum — ₩${'\u2009'}50M+`}</li>
+                  <li>{isKo ? "Gold — 1,000만 원 이상" : `Gold — ₩${'\u2009'}10M+`}</li>
+                  <li>{isKo ? "Silver — 300만 원 이상" : `Silver — ₩${'\u2009'}3M+`}</li>
                   <li>{isKo ? "Bronze — 가입 즉시" : "Bronze — On sign-up"}</li>
                 </ul>
                 <p className="mt-2 pt-2 border-t border-white/10">{isKo ? "현재" : "Current"}: {getTierName(LEVEL_CURRENT)} · {XP_CURRENT} / {XP_NEEDED} XP ({isKo ? "다음 등급까지 " : ""}{XP_NEEDED - XP_CURRENT} XP)</p>

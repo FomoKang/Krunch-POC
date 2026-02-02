@@ -355,7 +355,7 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
               <p className="text-xs sm:text-sm text-white/90 font-sans">
                 <span className={`${theme.accent} font-semibold`}>{bidRibbon.username}</span>
                 <span className="text-white/70">{isKo ? "님이 " : " placed a bid of "}</span>
-                <span className={`${theme.accent} font-semibold tabular-nums`}>₩\u2009{bidRibbon.amount.toLocaleString()}</span>
+                <span className={`${theme.accent} font-semibold tabular-nums`}>₩{'\u2009'}{bidRibbon.amount.toLocaleString()}</span>
                 {isKo && <span className="text-white/70">에 입찰했습니다</span>}
               </p>
             </div>
@@ -446,7 +446,7 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
             <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
               <div className={`rounded-lg px-3 py-2.5 ${variant === "black" ? "bg-[#0a0a0a] border border-[#1f1f1f]" : "bg-white/5 border border-white/10"}`}>
                 <p className={`text-[10px] uppercase tracking-wider font-sans ${variant === "black" ? "black-mode-text-secondary" : "text-white/50"}`}>{isKo ? "가격대 · 12M" : "Price Range · 12M"}</p>
-                <p className={`text-sm font-semibold mt-0.5 tabular-nums ${variant === "black" ? "black-mode-text-primary" : "text-white/90"}`}>₩\u20092.0M – ₩\u20094.6M</p>
+                <p className={`text-sm font-semibold mt-0.5 tabular-nums ${variant === "black" ? "black-mode-text-primary" : "text-white/90"}`}>₩{'\u2009'}2.0M – ₩{'\u2009'}4.6M</p>
               </div>
               <div className={`rounded-lg px-3 py-2.5 ${variant === "black" ? "bg-[#0a0a0a] border border-[#1f1f1f]" : "bg-white/5 border border-white/10"}`}>
                 <p className={`text-[10px] uppercase tracking-wider font-sans ${variant === "black" ? "black-mode-text-secondary" : "text-white/50"}`}>{isKo ? "변동성" : "Volatility"}</p>
@@ -454,7 +454,7 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
               </div>
               <div className={`rounded-lg px-3 py-2.5 ${variant === "black" ? "bg-[#0a0a0a] border border-[#1f1f1f]" : "bg-white/5 border border-white/10"}`}>
                 <p className={`text-[10px] uppercase tracking-wider font-sans ${variant === "black" ? "black-mode-text-secondary" : "text-white/50"}`}>{isKo ? "평균 낙찰가 · 3M" : "Avg. Sale · 3M"}</p>
-                <p className={`text-sm font-semibold mt-0.5 tabular-nums ${variant === "black" ? "black-mode-text-primary" : "text-white/90"}`}>₩\u20093.2M</p>
+                <p className={`text-sm font-semibold mt-0.5 tabular-nums ${variant === "black" ? "black-mode-text-primary" : "text-white/90"}`}>₩{'\u2009'}3.2M</p>
               </div>
               <div className={`rounded-lg px-3 py-2.5 ${variant === "black" ? "bg-[#0a0a0a] border border-[#1f1f1f]" : "bg-white/5 border border-white/10"}`}>
                 <p className={`text-[10px] uppercase tracking-wider font-sans ${variant === "black" ? "black-mode-text-secondary" : "text-white/50"}`}>{isKo ? "프리미엄 · 최근" : "Premium · Last"}</p>

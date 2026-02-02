@@ -249,7 +249,7 @@ export default function HomePage() {
 
                 <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between min-h-[3rem]">
                   <span className={`text-sm uppercase tracking-wide ${theme === "black" ? "text-[#808080]" : "text-white/60"}`} style={theme === "black" ? { letterSpacing: "1px" } : undefined}>{isKo ? "현재 입찰가" : "Current Bid"}</span>
-                  <span className={`font-bold tabular-nums ${theme === "black" ? "text-white text-2xl md:text-3xl" : `${accentText} text-2xl md:text-3xl`}`} style={theme === "black" ? { textShadow: "0 2px 8px rgba(255,255,255,0.2)" } : undefined}>₩\u20096,733,184</span>
+                  <span className={`font-bold tabular-nums ${theme === "black" ? "text-white text-2xl md:text-3xl" : `${accentText} text-2xl md:text-3xl`}`} style={theme === "black" ? { textShadow: "0 2px 8px rgba(255,255,255,0.2)" } : undefined}>₩{'\u2009'}6,733,184</span>
                 </div>
               </div>
             </div>

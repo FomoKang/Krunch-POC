@@ -181,7 +181,7 @@ export default function RankingPage() {
               </p>
             </div>
             <div className="grid grid-cols-1 gap-1.5 text-sm">
-              <p className="text-white/90"><span className="text-white/50 text-xs">{isKo ? "총 거래액:" : "Total Volume:"}</span> <span className="font-bold text-white tabular-nums">₩\u2009{(STATS.totalVolume / 1_000_000_000).toFixed(1)}B</span></p>
+              <p className="text-white/90"><span className="text-white/50 text-xs">{isKo ? "총 거래액:" : "Total Volume:"}</span> <span className="font-bold text-white tabular-nums">₩{'\u2009'}{(STATS.totalVolume / 1_000_000_000).toFixed(1)}B</span></p>
               <p className="text-white/90"><span className="text-white/50 text-xs">{isKo ? "활성 컬렉터:" : "Active Collectors:"}</span> <span className="font-bold text-white tabular-nums">{STATS.activeCollectors.toLocaleString()}</span></p>
               <p className="text-white/90"><span className="text-white/50 text-xs">{isKo ? "신규 아티스트:" : "New Artists:"}</span> <span className="font-bold text-white tabular-nums">{STATS.newArtists}</span></p>
             </div>
@@ -335,7 +335,7 @@ export default function RankingPage() {
                     {artist.rankChange === 0 && <span className="ml-1.5 text-[#6B7280]">-</span>}
                   </p>
                   <p className={`text-[10px] mt-0.5 tabular-nums ${theme === "black" ? "text-[#606060]" : "text-white/40"}`}>
-                    {formatKRW(artist.totalSales)} (₩\u2009{artist.totalSales.toLocaleString()})
+                    {formatKRW(artist.totalSales)} (₩{'\u2009'}{artist.totalSales.toLocaleString()})
                   </p>
                 </div>
                 <div className="text-right relative z-10">
