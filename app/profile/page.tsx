@@ -348,7 +348,7 @@ export default function ProfilePage() {
           <section className="mt-6">
             <div className="flex items-center justify-between mb-4 px-0">
               <h2 className="text-lg font-display tracking-wide flex items-center gap-2">
-                <span className={theme === "black" ? "text-white uppercase" : "text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B9D]/70 to-[#FF6B9D]/50 uppercase"}>{isKo ? "마이 갤러리" : "MY GALLERY"}</span>
+                <span className={theme === "black" ? "text-white uppercase" : "text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B9D] to-[#FF6B9D]/80 uppercase"}>{isKo ? "마이 갤러리" : "MY GALLERY"}</span>
               </h2>
               <button type="button" onClick={() => setShowAddItem(true)} className={`text-xs transition-colors ${theme === "black" ? "text-white/80 hover:text-white" : "text-pink-400 hover:text-pink-300"}`}>
                 {isKo ? "아이템 추가" : "Add Item"}
