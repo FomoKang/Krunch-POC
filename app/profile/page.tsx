@@ -236,7 +236,7 @@ export default function ProfilePage() {
                             <a href="#" className="p-2.5 rounded-full bg-white/10 hover:bg-gradient-to-br hover:from-[#833AB4] hover:via-[#E1306C] hover:to-[#FCAF45] hover:text-white transition-colors" title="인스타그램" aria-label="인스타그램">
                               <IconInstagram className="w-5 h-5" />
                             </a>
-                            <a href="#" className="p-2.5 rounded-full bg-white/10 hover:bg-gradient-to-br hover:from-white hover:via-gray-200 hover:to-gray-300 hover:text-black transition-colors" title="X (트위터)" aria-label="X">
+                            <a href="#" className="p-2.5 rounded-full bg-white/10 hover:bg-gradient-to-br hover:from-white hover:via-gray-400 hover:to-black hover:text-white transition-colors" title="X (트위터)" aria-label="X">
                               <IconX className="w-5 h-5" />
                             </a>
                           </div>
