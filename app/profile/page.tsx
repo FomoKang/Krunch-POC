@@ -207,7 +207,7 @@ export default function ProfilePage() {
                     </div>
                     <div>
                       <p className="text-xs text-white/50 mb-1 uppercase tracking-wider">K-Point</p>
-                      <p className={`text-lg font-mono tracking-wider ${theme === "black" ? "text-white" : "text-orange-400"}`}>530,000</p>
+                      <p className={`text-lg font-mono tracking-wider ${theme === "black" ? "text-white" : "text-[#FF6B9D]"}`}>530,000</p>
                     </div>
                   </div>
                   <div className="relative">
