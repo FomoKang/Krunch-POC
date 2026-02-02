@@ -33,7 +33,7 @@ export default function SecondMarketPage() {
           <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0 overflow-visible">
             <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
               <Store className={`w-4 h-4 shrink-0 sm:w-5 sm:h-5 ${theme === "black" ? "text-white store-icon-pink-outline" : "text-[#FF6B9D]"}`} />
-              <span className={isKo ? "font-sans font-bold text-sm sm:text-lg tracking-wide text-white uppercase whitespace-nowrap" : "font-display text-sm sm:text-lg tracking-wide text-white uppercase whitespace-nowrap"}>{isKo ? "2차 마켓" : "2nd Market"}</span>
+              <span className={isKo ? "font-sans font-bold tracking-tight text-sm sm:text-base text-white/95 uppercase whitespace-nowrap" : "font-display text-sm sm:text-lg tracking-wide text-white uppercase whitespace-nowrap"}>{isKo ? "2차 마켓" : "2nd Market"}</span>
             </div>
             <Link href={`${basePath}/search`} className="p-1.5 sm:p-2 hover:bg-white/10 rounded-full transition-colors shrink-0">
               <Search className="w-4 h-4 sm:w-5 sm:h-5 text-white/80" />
