@@ -6,6 +6,7 @@ import { User, Sparkles, ArrowLeft, Music2 } from "lucide-react"
 import { useSiteTheme } from "@/components/theme-provider"
 import { useLocale } from "@/components/locale-provider"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { LanguageToggle } from "@/components/language-toggle"
 
 type ArtistInfo = { name: string; nameKo?: string; avatar: string }
 
@@ -33,8 +34,9 @@ export function ArtistComingSoonPage({ artistId, artist, basePath = "" }: Props)
           <Link href={basePath || "/"} className="absolute left-1/2 -translate-x-1/2 block shrink-0">
             <Image src={logoSrc} alt="Krunch" width={225} height={72} className={`h-[72px] w-[225px] object-contain ${!isBlack ? "scale-[1.02] origin-center" : ""}`} />
           </Link>
-          <div className="w-14 flex justify-end">
+          <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
             <ThemeToggle inline />
+            <LanguageToggle inline />
           </div>
         </div>
       </header>
