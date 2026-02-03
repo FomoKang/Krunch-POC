@@ -99,14 +99,14 @@ export function ArtistComingSoonPage({ artistId, artist, basePath = "" }: Props)
           </div>
 
           {/* 하단 그라디언트 라인 + CTA */}
-          <div className={`px-6 pb-8 pt-2 ${isBlack ? "border-t border-white/10" : ""}`}>
+          <div className={`px-6 pb-8 pt-2 border-t ${isBlack ? "border-white/10" : "border-transparent"}`}>
             <div className={`h-1 rounded-full mx-auto mb-6 max-w-[120px] ${isBlack ? "bg-white/20" : "bg-gradient-to-r from-[#FF6B9D]/50 to-[#FF006E]/50"}`} />
             <Link
               href={basePath ? `${basePath}/ranking` : "/ranking"}
-              className={`inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm transition-all ${
+              className={`inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm transition-all border ${
                 isBlack
-                  ? "bg-white/10 text-white border border-white/20 hover:bg-white/15"
-                  : "bg-gradient-to-r from-[#FF6B9D] to-[#FF006E] text-white shadow-lg shadow-[#FF6B9D]/30 hover:shadow-[#FF6B9D]/50 hover:-translate-y-0.5"
+                  ? "bg-white/10 text-white border-white/20 hover:bg-white/15"
+                  : "bg-gradient-to-r from-[#FF6B9D] to-[#FF006E] text-white shadow-lg shadow-[#FF6B9D]/30 hover:shadow-[#FF6B9D]/50 hover:-translate-y-0.5 border-transparent"
               }`}
             >
               <Sparkles className="w-4 h-4" />
