@@ -277,7 +277,7 @@ function BattleCard({ battle, isBlack, isKo }: { battle: BattleItem; isBlack?: b
       {/* 투표 바: 0.5초 카운트업 반영, 선택 쪽 펄스 */}
       <div className="px-4 pt-4">
         <VoteBar leftPercent={leftPercent} rightPercent={rightPercent} pulseSide={voted} isBlack={isBlack} />
-        <p className={`text-xs mt-2 text-center tabular-nums ${isBlack ? "vote-count" : "text-white/40"}`}>
+        <p className="text-xs mt-2 text-center tabular-nums text-white/40">
           {isKo ? `${displayTotal.toLocaleString()}표` : `${displayTotal.toLocaleString()} votes`}
         </p>
       </div>
