@@ -305,7 +305,7 @@ export default function RankingPage() {
                   className={`rank-list-item group flex items-center gap-4 p-4 rounded-xl border transition-all duration-300 relative overflow-hidden cursor-pointer ${
                     theme === "black"
                       ? "border-white/5 hover:bg-white/[0.08] hover:border-white/20 rank-list-item-dark"
-                      : "bg-white/[0.03] border-white/10 hover:bg-white/[0.08] hover:border-[#FF006E]/30 hover:translate-x-1"
+                      : "bg-white/[0.03] border-white/5 hover:bg-white/[0.08] hover:border-[#FF006E]/30 hover:translate-x-1"
                   } ${artist.rankChange !== undefined && artist.rankChange !== 0 ? "rank-item-just-changed" : ""}`}
                 >
                 {theme !== "black" && <div className="absolute inset-0 bg-gradient-to-r from-[#FF6B9D]/0 via-[#FF6B9D]/5 to-[#FF6B9D]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />}
