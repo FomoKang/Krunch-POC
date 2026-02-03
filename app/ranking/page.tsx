@@ -328,11 +328,11 @@ export default function RankingPage() {
                   <p className={`text-xs font-medium ${theme === "black" ? "text-[#808080]" : "text-white/50"}`}>
                     <span className="tabular-nums">{isKo ? `${artist.itemsSold}건 낙찰` : `${artist.itemsSold} items sold`}</span>
                     {artist.rankChange !== undefined && artist.rankChange !== 0 && (
-                      <span className={`ml-1.5 font-semibold ${artist.rankChange > 0 ? "text-[#10B981]" : "text-[#EF4444]"}`}>
+                      <span className={`ml-1.5 font-semibold tabular-nums ${artist.rankChange > 0 ? "text-[#10B981]" : "text-[#EF4444]"}`}>
                         {artist.rankChange > 0 ? `↑${artist.rankChange}` : `↓${Math.abs(artist.rankChange)}`}
                       </span>
                     )}
-                    {artist.rankChange === 0 && <span className="ml-1.5 text-[#6B7280]">-</span>}
+                    {artist.rankChange === 0 && <span className={`ml-1.5 ${theme === "black" ? "text-[#6B7280]" : "text-[#6B7280]"}`}>-</span>}
                   </p>
                   <p className={`text-[10px] mt-0.5 tabular-nums ${theme === "black" ? "text-[#606060]" : "text-white/40"}`}>
                     {formatKRW(artist.totalSales)} (₩{'\u2009'}{artist.totalSales.toLocaleString()})
