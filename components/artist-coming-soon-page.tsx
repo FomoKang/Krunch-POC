@@ -68,7 +68,7 @@ export function ArtistComingSoonPage({ artistId, artist, basePath = "" }: Props)
               )}
             </div>
             {artist?.name && (
-              <p className={`${isKo ? "font-sans font-bold text-2xl tracking-tight" : "font-display text-xl tracking-wide uppercase"} mb-2 ${isBlack ? "text-white" : "text-white"}`}>
+              <p className={`${isKo ? "font-sans font-bold text-3xl tracking-tight" : "font-display text-2xl tracking-wide uppercase"} mb-2 ${isBlack ? "text-white" : "text-white"}`}>
                 {isKo && "nameKo" in artist && artist.nameKo ? artist.nameKo : artist.name}
               </p>
             )}
