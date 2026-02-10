@@ -699,4 +699,13 @@ body svg {
   background: rgba(255, 0, 110, 0.1) !important;
 }
 
+/* 가로 스크롤 숨김 */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 

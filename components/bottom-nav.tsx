@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, Trophy, Users, Store, User } from "lucide-react"
+import { Home, TrendingUp, Dices, Store, User } from "lucide-react"
 import { useSiteTheme } from "@/components/theme-provider"
 import { useSplash } from "@/components/splash-context"
 import { useLocale } from "@/components/locale-provider"
@@ -22,8 +22,8 @@ export function BottomNav() {
 
   const tabs = [
     { href: basePath || "/", label: isKo ? "홈" : "Home", icon: Home },
-    { href: `${basePath}/ranking`, label: isKo ? "랭킹" : "Ranking", icon: Trophy },
-    { href: `${basePath}/community`, label: isKo ? "커뮤니티" : "Community", icon: Users },
+    { href: `${basePath}/trend`, label: isKo ? "트렌드" : "Trend", icon: TrendingUp },
+    { href: `${basePath}/draw`, label: isKo ? "드로우" : "Draw", icon: Dices },
     { href: `${basePath}/market`, label: isKo ? "2차 마켓" : "2nd Market", icon: Store },
     { href: `${basePath}/profile`, label: isKo ? "마이 프로필" : "My Profile", icon: User },
   ]
@@ -32,6 +32,10 @@ export function BottomNav() {
   const pathSegment = pathname?.replace(/^\/black/, "") || "/"
   const activeIndex = tabs.findIndex((t) => {
     const tSegment = t.href.replace(/^\/black/, "") || "/"
+    // Trend 탭은 /trend, /ranking, /community 모두 활성화
+    if (tSegment === "/trend" && (pathSegment === "/trend" || pathSegment === "/ranking" || pathSegment === "/community")) {
+      return true
+    }
     return tSegment === pathSegment
   })
   const activeIndexResolved = activeIndex >= 0 ? activeIndex : 0
