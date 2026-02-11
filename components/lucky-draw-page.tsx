@@ -552,8 +552,9 @@ function DrawSlideTrigger({ onDrawTrigger, disabled, isKo, isBlack }: { onDrawTr
   const handlePointerDown = useCallback(
     (e: React.PointerEvent) => {
       if (disabled || hasTriggered) return
+      e.preventDefault()
       setIsDragging(true)
-      ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
+      trackRef.current?.setPointerCapture(e.pointerId)
     },
     [disabled, hasTriggered],
   )
@@ -582,6 +583,11 @@ function DrawSlideTrigger({ onDrawTrigger, disabled, isKo, isBlack }: { onDrawTr
     }
   }, [dragX, maxDrag, hasTriggered, disabled, onDrawTrigger])
 
+  const handlePointerCancel = useCallback(() => {
+    setIsDragging(false)
+    if (!hasTriggered) setDragX(0)
+  }, [hasTriggered])
+
   const progress = maxDrag > 0 ? dragX / maxDrag : 0
 
   return (
@@ -609,28 +615,33 @@ function DrawSlideTrigger({ onDrawTrigger, disabled, isKo, isBlack }: { onDrawTr
       )}
       <div
         ref={trackRef}
-        className="relative h-12 rounded-full border overflow-hidden select-none transition-all duration-500"
-        style={isBlack ? {
-          cursor: disabled ? "not-allowed" : hasTriggered ? "default" : "pointer",
-          opacity: disabled ? 0.6 : 1,
-          pointerEvents: disabled ? "none" : "auto",
-          borderColor: hasTriggered ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.2)",
-          background: hasTriggered
-            ? "linear-gradient(90deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.12) 100%)"
-            : `linear-gradient(90deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,${0.08 + progress * 0.15}) ${progress * 100}%, var(--bg-card) ${progress * 100}%, var(--bg-card) 100%)`,
-          boxShadow: hasTriggered ? "0 0 20px rgba(255,255,255,0.15)" : `0 0 ${10 + progress * 10}px rgba(255,255,255,${0.08 + progress * 0.12})`,
-        } : {
-          cursor: disabled ? "not-allowed" : hasTriggered ? "default" : "pointer",
-          opacity: disabled ? 0.6 : 1,
-          pointerEvents: disabled ? "none" : "auto",
-          borderColor: hasTriggered ? "rgba(138,43,226,0.6)" : "rgba(255,0,255,0.4)",
-          background: hasTriggered
-            ? "linear-gradient(90deg, rgba(138,43,226,0.2) 0%, rgba(255,0,255,0.15) 50%, rgba(138,43,226,0.2) 100%)"
-            : `linear-gradient(90deg, rgba(255,0,255,0.08) 0%, rgba(255,0,255,${0.08 + progress * 0.15}) ${progress * 100}%, rgba(26,26,26,0.8) ${progress * 100}%, rgba(26,26,26,0.8) 100%)`,
-          boxShadow: hasTriggered ? "0 0 25px rgba(138,43,226,0.4)" : `0 0 ${15 + progress * 25}px rgba(255,0,255,${0.15 + progress * 0.3})`,
+        className="relative h-12 rounded-full border overflow-hidden select-none touch-none"
+        style={{
+          ...(isBlack ? {
+            cursor: disabled ? "not-allowed" : hasTriggered ? "default" : "pointer",
+            opacity: disabled ? 0.6 : 1,
+            pointerEvents: disabled ? "none" : "auto",
+            borderColor: hasTriggered ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.2)",
+            background: hasTriggered
+              ? "linear-gradient(90deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.12) 100%)"
+              : `linear-gradient(90deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,${0.08 + progress * 0.15}) ${progress * 100}%, var(--bg-card) ${progress * 100}%, var(--bg-card) 100%)`,
+            boxShadow: hasTriggered ? "0 0 20px rgba(255,255,255,0.15)" : `0 0 ${10 + progress * 10}px rgba(255,255,255,${0.08 + progress * 0.12})`,
+          } : {
+            cursor: disabled ? "not-allowed" : hasTriggered ? "default" : "pointer",
+            opacity: disabled ? 0.6 : 1,
+            pointerEvents: disabled ? "none" : "auto",
+            borderColor: hasTriggered ? "rgba(138,43,226,0.6)" : "rgba(255,0,255,0.4)",
+            background: hasTriggered
+              ? "linear-gradient(90deg, rgba(138,43,226,0.2) 0%, rgba(255,0,255,0.15) 50%, rgba(138,43,226,0.2) 100%)"
+              : `linear-gradient(90deg, rgba(255,0,255,0.08) 0%, rgba(255,0,255,${0.08 + progress * 0.15}) ${progress * 100}%, rgba(26,26,26,0.8) ${progress * 100}%, rgba(26,26,26,0.8) 100%)`,
+            boxShadow: hasTriggered ? "0 0 25px rgba(138,43,226,0.4)" : `0 0 ${15 + progress * 25}px rgba(255,0,255,${0.15 + progress * 0.3})`,
+          }),
+          touchAction: "none" as const,
+          transition: isDragging ? "none" : "all 0.3s ease-out",
         }}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerCancel}
       >
         {!hasTriggered && !isDragging && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
