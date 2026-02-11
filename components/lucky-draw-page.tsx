@@ -187,7 +187,7 @@ function LiveFeed() {
         style={isBlack ? { background: "var(--bg-card)", boxShadow: "0 0 0 1px rgba(255,255,255,0.15), 0 4px 12px rgba(0,0,0,0.5)" } : { background: "rgba(26,26,26,0.8)", borderColor: "rgba(255,107,157,0.5)", boxShadow: "0 0 12px rgba(255,107,157,0.3), inset 0 0 8px rgba(255,107,157,0.1)" }}
       >
         <span className={`text-xs font-semibold ${isBlack ? "text-[#F5F5F5]" : "text-white"}`} style={{ fontFamily: "var(--font-inter), Inter, sans-serif" }}>{entry.user}</span>
-        <span className={`text-xs ${isBlack ? "text-[#A0A0A0]" : "text-white/80"}`} style={{ fontFamily: "var(--font-inter), Inter, sans-serif" }}>{entry.action}</span>
+        <span className={`text-xs ${isBlack ? "text-[#A0A0A0]" : "text-white/80"}`} style={{ fontFamily: "var(--font-inter), Inter, sans-serif" }}>{isKo ? "님이 " : " "}{entry.action}</span>
       </div>
     </div>
   )
@@ -337,7 +337,7 @@ function SlotMachineHero({ isSpinning, onDrawTrigger, slideResetKey }: { isSpinn
   const isKo = locale === "ko"
   return (
     <div className="relative w-full">
-      {/* LEGENDARY DROP badge */}
+      {/* LEGEND DROP badge — 메인과 통일 (한국어도 LEGEND DROP 표기) */}
       <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-30">
         <div
           className="relative px-5 py-2.5 rounded-full flex items-center justify-center"
@@ -351,8 +351,8 @@ function SlotMachineHero({ isSpinning, onDrawTrigger, slideResetKey }: { isSpinn
             animation: "glow-pulse 2s ease-in-out infinite",
           }}
         >
-          <span className="text-[11px] uppercase tracking-[0.15em] italic whitespace-nowrap leading-none text-white" style={{ fontFamily: isKo ? "var(--font-noto-kr), Noto Sans KR, sans-serif" : "var(--font-anton), Anton, sans-serif" }}>
-            {isKo ? "레전드 드롭" : "Legendary Drop"}
+          <span className="text-[11px] uppercase tracking-[0.15em] italic whitespace-nowrap leading-none text-white font-display">
+            LEGEND DROP
           </span>
         </div>
       </div>
