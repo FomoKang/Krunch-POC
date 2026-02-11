@@ -164,9 +164,9 @@ body svg {
   background: rgba(0, 0, 0, 0.95);
   backdrop-filter: blur(8px);
 }
-/* 하단 바 높이만큼 본문 여백 (safe-area 포함) */
+/* 하단 바 높이만큼 본문 여백 — 탭 간 동일 비율 (마이프로필 갤러리 짤림 방지) */
 .pb-for-nav {
-  padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0px));
 }
 
 /* Loading animation for splash screen */

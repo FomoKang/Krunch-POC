@@ -90,13 +90,22 @@ export default function RankingPage() {
     <div className="min-h-screen bg-black text-white pb-for-nav relative overflow-hidden">
       {/* Ambient lighting effects */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#FF6B9D]/20 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-1/3 right-0 w-80 h-80 bg-amber-500/20 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: "1s" }} />
-        <div className="absolute top-1/2 left-0 w-64 h-64 bg-purple-600/10 rounded-full blur-[80px] animate-pulse" style={{ animationDelay: "2s" }} />
+        {theme === "black" ? (
+          <>
+            <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#FF69B4]/5 rounded-full blur-[120px]" />
+            <div className="absolute bottom-1/3 right-0 w-80 h-80 bg-white/5 rounded-full blur-[100px]" />
+          </>
+        ) : (
+          <>
+            <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#FF6B9D]/20 rounded-full blur-[120px] animate-pulse" />
+            <div className="absolute bottom-1/3 right-0 w-80 h-80 bg-amber-500/20 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: "1s" }} />
+            <div className="absolute top-1/2 left-0 w-64 h-64 bg-purple-600/10 rounded-full blur-[80px] animate-pulse" style={{ animationDelay: "2s" }} />
+          </>
+        )}
       </div>
 
       {/* Header — 모바일: 로고·우측 한 줄·테마 안 짤리게 */}
-      <header className="sticky top-0 z-50 bg-black/80 backdrop-blur-md border-b border-[#FF6B9D]/20 overflow-visible">
+      <header className={`sticky top-0 z-50 backdrop-blur-md border-b overflow-visible ${theme === "black" ? "bg-black/95 border-white/10" : "bg-black/80 border-[#FF6B9D]/20"}`}>
         <div className="flex items-center justify-between gap-1.5 px-2.5 py-3 min-h-[3.5rem] sm:min-h-[6rem] sm:gap-2 sm:px-4">
           <div className="h-16 w-32 min-w-0 flex-shrink-0 sm:h-[72px] sm:w-[225px]">
             <Link href={basePath || "/"} className="block h-full w-full">

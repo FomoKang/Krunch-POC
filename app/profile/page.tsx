@@ -164,7 +164,7 @@ export default function ProfilePage() {
           </div>
         </header>
 
-        <main className="relative z-10 px-4 py-4 space-y-4">
+        <main className="relative z-10 px-4 py-4 pb-8 space-y-4">
           {/* Holographic ID Card — 블랙 모드: 카드 블랙 + 글씨 흰색 */}
           <div className="relative">
             <div 

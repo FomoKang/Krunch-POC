@@ -38,7 +38,7 @@ const notoSansKR = Noto_Sans_KR({
 
 const blackHanSans = Black_Han_Sans({
   weight: "400",
-  subsets: ["latin", "korean"],
+  subsets: ["latin"],
   display: "swap",
   variable: "--font-black-han-sans",
 })
@@ -101,8 +101,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="ko" className={`dark ${inter.variable} ${anton.variable} ${syne.variable} ${notoSansKR.variable} ${blackHanSans.variable}`}>
-      <body className={`font-sans antialiased bg-black text-white [font-family:var(--font-noto-kr),var(--font-inter),sans-serif]`}>
+    <html lang="ko" className={`dark ${inter.variable} ${anton.variable} ${syne.variable} ${notoSansKR.variable} ${blackHanSans.variable}`} style={{ backgroundColor: '#000' }}>
+      <body className={`font-sans antialiased bg-black text-white [font-family:var(--font-noto-kr),var(--font-inter),sans-serif]`} style={{ backgroundColor: '#000', color: '#fff' }}>
         <ThemeProvider>
           <LocaleProvider>
             <SplashProvider>

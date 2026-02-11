@@ -329,7 +329,7 @@ export default function CommunityPage() {
   return (
     <div className="min-h-screen bg-black text-white pb-for-nav">
       {/* 상단 네비게이션 — 모바일: 로고·우측 한 줄·테마 안 짤리게 */}
-      <header className="sticky top-0 z-50 bg-black/90 backdrop-blur-sm border-b border-white/5 overflow-visible">
+      <header className={`sticky top-0 z-50 backdrop-blur-sm border-b overflow-visible ${theme === "black" ? "bg-black/95 border-white/10" : "bg-black/90 border-white/5"}`}>
         <div className="flex items-center justify-between gap-1.5 px-2.5 py-3 min-h-[3.5rem] sm:min-h-[6rem] sm:gap-2 sm:px-4">
           <div className="h-16 w-32 min-w-0 flex-shrink-0 sm:h-[72px] sm:w-[225px]">
             <Link href={basePath || "/"} className="block h-full w-full">
