@@ -416,7 +416,7 @@ export default function TrendPage() {
                 alt="Krunch"
                 width={225}
                 height={72}
-                className={`h-full w-full object-contain object-left ${theme !== "black" ? "scale-[1.02] origin-center" : ""}`}
+                className={`h-full w-full object-contain object-left`}
               />
             </Link>
           </div>

@@ -10,12 +10,12 @@ import { useSplash } from "@/components/splash-context"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { LanguageToggle } from "@/components/language-toggle"
 
-// 로고 크기 통일 (logo-white, logo-pink, logo-black 동일 높이, 150% 크기)
+// 로고 크기 통일 (logo-white, logo-pink, logo-black 동일 높이)
 const LOGO_WIDTH = 225
 const LOGO_HEIGHT = 72
-// 로딩창 전용: 헤더보다 150% 더 크게
-const SPLASH_LOGO_WIDTH = 338
-const SPLASH_LOGO_HEIGHT = 108
+// 로딩창 전용: 로딩 바와 비슷한 가로 길이로 조정 (w-32 = 128px 기준, 조금 더 크게)
+const SPLASH_LOGO_WIDTH = 160
+const SPLASH_LOGO_HEIGHT = 51
 
 // Splash Screen (테마 악센트 + 로딩 시간별 메시지)
 function SplashScreen({ accentBg, logoSrc, isKo }: { accentBg: string; logoSrc: string; isKo: boolean }) {
@@ -33,8 +33,8 @@ function SplashScreen({ accentBg, logoSrc, isKo }: { accentBg: string; logoSrc: 
   return (
     <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
       <div className="flex flex-col items-center">
-        <Image src={logoSrc} alt="Krunch Logo" width={SPLASH_LOGO_WIDTH} height={SPLASH_LOGO_HEIGHT} className={`h-[108px] w-[338px] object-contain animate-pulse block ${logoSrc.includes("pink") ? "scale-[1.02] origin-center" : ""}`} />
-        <div className="w-32 h-1 bg-white/20 rounded-full overflow-hidden -mt-2">
+        <Image src={logoSrc} alt="Krunch Logo" width={SPLASH_LOGO_WIDTH} height={SPLASH_LOGO_HEIGHT} className={`h-[51px] w-[160px] object-contain animate-pulse block mb-4`} />
+        <div className="w-32 h-1 bg-white/20 rounded-full overflow-hidden">
           <div className={`h-full ${accentBg} animate-[loading_3s_ease-in-out_forwards]`} />
         </div>
         {loadingMessage && <p className="text-white/60 text-sm mt-3 animate-in fade-in duration-300">{loadingMessage}</p>}
@@ -178,7 +178,7 @@ export default function HomePage() {
                 alt="Krunch"
                 width={LOGO_WIDTH}
                 height={LOGO_HEIGHT}
-                className={`h-full w-full object-contain object-left ${theme !== "black" ? "scale-[1.02] origin-center" : ""}`}
+                className={`h-full w-full object-contain object-left`}
               />
             </Link>
           </div>
