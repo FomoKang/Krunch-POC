@@ -376,7 +376,7 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
           {/* LEGEND AUCTION + TIME REMAINING (우측, Current Bid 위) */}
           <div className="p-4 pt-5 sm:p-6 sm:pt-6 flex items-start justify-between gap-4">
             <div>
-              <h2 className={`font-display text-4xl sm:text-5xl uppercase leading-[0.85] tracking-tight ${variant === "black" ? "black-mode-legend-title" : `${theme.accent} drop-shadow-md`}`}>LEGEND</h2>
+              <h2 className={`font-display text-4xl sm:text-5xl uppercase leading-[0.85] tracking-tight ${variant === "black" ? "black-mode-legend-title" : `${theme.accent} drop-shadow-md`}`}>PREMIUM</h2>
               <h2 className={`font-display text-4xl sm:text-5xl uppercase leading-[0.85] tracking-tight ${variant === "black" ? "black-mode-legend-title" : `${theme.accent} drop-shadow-md`}`}>AUCTION</h2>
             </div>
             <div className="flex-shrink-0 bg-black/50 backdrop-blur-sm pl-3 pr-2 py-2 rounded-xl border border-white/15 flex items-center gap-2">

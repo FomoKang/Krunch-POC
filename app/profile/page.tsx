@@ -21,10 +21,12 @@ const TIER_NAMES: Record<number, string> = {
 const LEVEL_CURRENT = 3
 const XP_PERCENT = 87
 
-const GALLERY_ITEMS: Array<{ id: number; image: string | null; name: string }> = [
-  { id: 1, image: "/Cap.png", name: "Cap" },
-  { id: 2, image: "/T-Shirts.png", name: "T-Shirts" },
-  { id: 3, image: null, name: "Empty Slot" },
+type GalleryItem = { id: number; image: string | null; name: string }
+
+const GALLERY_ITEMS: GalleryItem[] = [
+  { id: 1, image: "/gallery-dress-1.png", name: "Black Ribbon Dress" },
+  { id: 2, image: "/gallery-dress-2.png", name: "Navy Sport Dress" },
+  { id: 3, image: "/gallery-dress-3.png", name: "Ice Ribbon Dress" },
   { id: 4, image: null, name: "Empty Slot" },
   { id: 5, image: null, name: "Empty Slot" },
   { id: 6, image: null, name: "Empty Slot" },
@@ -35,11 +37,46 @@ function getTierName(level: number) {
   return TIER_NAMES[level] ?? "Bronze"
 }
 
+function GalleryTile({ item, isKo, onAdd }: { item: GalleryItem; isKo: boolean; onAdd: () => void }) {
+  const [imgError, setImgError] = useState(false)
+  const hasImage = Boolean(item.image) && !imgError
+
+  return (
+    <button
+      type="button"
+      onClick={() => !hasImage && onAdd()}
+      className="aspect-[3/4] rounded-2xl overflow-hidden border border-white/20 bg-black/45 hover:border-white/35 transition-all hover:-translate-y-0.5"
+    >
+      {hasImage ? (
+        <div className="relative w-full h-full">
+          <Image
+            src={item.image as string}
+            alt={item.name}
+            width={180}
+            height={240}
+            className={`w-full h-full object-cover ${item.id === 3 ? "object-[26%_center]" : "object-center"}`}
+            onError={() => setImgError(true)}
+          />
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent p-2">
+            <p className="text-[10px] uppercase tracking-[0.07em] text-white/85 text-left truncate">{item.name}</p>
+          </div>
+        </div>
+      ) : (
+        <span className="w-full h-full flex flex-col items-center justify-center text-white/55 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.25))]">
+          <Plus className="w-5 h-5" />
+          <span className="text-[11px] mt-1">{isKo ? "비어 있음" : "Empty"}</span>
+        </span>
+      )}
+    </button>
+  )
+}
+
 export default function ProfilePage() {
   const { theme } = useSiteTheme()
   const { locale } = useLocale()
   const isKo = locale === "ko"
-  const basePath = theme === "black" ? "/black" : ""
+  const isBlack = theme === "black"
+  const basePath = isBlack ? "/black" : ""
   const { toast } = useToast()
 
   const [showAddItem, setShowAddItem] = useState(false)
@@ -55,10 +92,10 @@ export default function ProfilePage() {
     <>
       <div className="min-h-screen bg-black text-white pb-for-nav">
         <header
-          className="sticky top-0 z-40 backdrop-blur-md overflow-visible"
-          style={theme === "black"
-            ? { background: "rgba(255,255,255,0.03)", borderBottom: "1px solid rgba(255,255,255,0.1)" }
-            : { background: "rgba(0,0,0,0.8)", borderBottom: "1px solid rgba(255,255,255,0.1)" }
+          className="sticky top-0 z-40 backdrop-blur-xl overflow-visible"
+          style={isBlack
+            ? { background: "rgba(0,0,0,0.92)", borderBottom: "1px solid rgba(255,255,255,0.14)" }
+            : { background: "rgba(0,0,0,0.92)", borderBottom: "1px solid rgba(255,255,255,0.12)" }
           }
         >
           <div className="flex items-center justify-between gap-1.5 px-2.5 py-3 min-h-[3.5rem] sm:min-h-[6rem] sm:gap-2 sm:px-4">
@@ -91,23 +128,23 @@ export default function ProfilePage() {
           </div>
         </header>
 
-        <main className="relative z-10 px-4 py-4 pb-8 space-y-4">
+        <main className="relative z-10 px-4 py-5 pb-9 space-y-4">
           <section
-            className="rounded-2xl border p-4"
-            style={theme === "black"
+            className="rounded-3xl border p-4 shadow-[0_16px_52px_rgba(0,0,0,0.42)]"
+            style={isBlack
               ? {
-                background: "#0a0a0a",
-                borderColor: "rgba(255,255,255,0.15)",
+                background: "linear-gradient(165deg, rgba(28,28,28,0.92), rgba(10,10,10,0.98))",
+                borderColor: "rgba(255,255,255,0.2)",
               }
               : {
-                background: "rgba(255,255,255,0.04)",
-                borderColor: "rgba(255,255,255,0.12)",
+                background: "linear-gradient(165deg, rgba(18,18,18,0.95), rgba(10,10,10,0.98))",
+                borderColor: "rgba(255,255,255,0.16)",
               }
             }
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="w-16 h-16 rounded-full overflow-hidden border border-white/20">
+                <div className="w-16 h-16 rounded-full overflow-hidden border border-white/20 shadow-[0_0_0_3px_rgba(255,255,255,0.04)]">
                   <img
                     src="/profile-avatar.jpg"
                     alt="Fomo_KR"
@@ -121,7 +158,7 @@ export default function ProfilePage() {
                   />
                 </div>
                 <div className="min-w-0">
-                  <p className="font-display text-lg tracking-wide uppercase">Fomo_KR</p>
+                  <p className="font-display text-xl tracking-wide uppercase leading-none">Fomo_KR</p>
                   <p className="text-xs text-white/60">{isKo ? "멤버 ID" : "Member ID"}: KR-2024-00847</p>
                   <p className="text-xs text-white/60">K-Point: 530,000</p>
                 </div>
@@ -130,7 +167,7 @@ export default function ProfilePage() {
                 <button
                   type="button"
                   onClick={() => setShowQR((v) => !v)}
-                  className="rounded-lg p-2 border border-white/15 bg-white/[0.04] hover:bg-white/[0.08] transition-colors"
+                  className="rounded-xl p-2.5 border border-white/20 bg-white/[0.05] hover:bg-white/[0.1] transition-colors"
                   aria-label="Show share QR"
                 >
                   <QrCode className="w-5 h-5 text-white/80" />
@@ -168,23 +205,33 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div className="mt-3 rounded-xl bg-white/[0.04] border border-white/10 px-3 py-2">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-white/70">{isKo ? "현재 등급" : "Current Tier"}</span>
-                <span className="font-semibold text-white">{getTierName(LEVEL_CURRENT)}</span>
+            <div className="mt-4 rounded-2xl bg-white/[0.04] border border-white/15 px-3.5 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className={isBlack ? "font-display text-lg tracking-wide text-white" : "font-display text-lg tracking-wide text-[#ffd36a]"}>
+                    {getTierName(LEVEL_CURRENT)}
+                  </p>
+                  <p className="text-[10px] uppercase tracking-[0.08em] text-white/55">{isKo ? "현재 티어" : "Active Tier"}</p>
+                </div>
+                <span className="text-[11px] uppercase tracking-[0.08em] text-white/60">Lv.{LEVEL_CURRENT}</span>
               </div>
-              <div className="mt-1.5 h-1 w-full rounded-full bg-white/10 overflow-hidden">
-                <div className="h-full rounded-full bg-gradient-to-r from-[#ec4899] to-[#f472b6]" style={{ width: `${XP_PERCENT}%` }} />
+              <div className="mt-2 h-1.5 w-full rounded-full bg-white/10 overflow-hidden">
+                <div className="h-full rounded-full bg-gradient-to-r from-[#ff4f9a] via-[#ff7db8] to-[#ffd36a]" style={{ width: `${XP_PERCENT}%` }} />
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-white/10">
-              {userStats.map((stat) => (
-                <div key={stat.label} className="text-center rounded-lg bg-white/[0.03] border border-white/10 py-2">
-                  <p className="text-base font-semibold text-white">{stat.value}</p>
-                  <p className="text-[11px] text-white/60">{stat.label}</p>
-                </div>
-              ))}
+            <div className="mt-4 pt-3 border-t border-white/10">
+              <div className="grid grid-cols-3 rounded-2xl border border-white/15 bg-[#0e0e0e] overflow-hidden">
+                {userStats.map((stat, idx) => (
+                  <div
+                    key={stat.label}
+                    className={`py-3 text-center ${idx < userStats.length - 1 ? "border-r border-white/10" : ""}`}
+                  >
+                    <p className="text-[24px] leading-none font-display tracking-tight text-white">{stat.value}</p>
+                    <p className="text-[10px] uppercase tracking-[0.08em] text-white/55 mt-1.5">{stat.label}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </section>
 
@@ -197,13 +244,12 @@ export default function ProfilePage() {
               <button
                 key={index}
                 type="button"
-                className={`profile-quick-action flex flex-col items-center justify-center gap-1 rounded-xl transition-colors h-[72px] box-border p-2 border border-white/10 ${theme === "black" ? "hover:bg-white/10" : ""}`}
-                style={{ background: "rgba(255,255,255,0.05)" }}
+                className={`profile-quick-action group flex flex-col items-center justify-center gap-1.5 rounded-2xl transition-colors h-[78px] box-border p-2.5 border border-white/15 bg-[#0f0f0f] hover:bg-[#151515] ${isBlack ? "" : ""}`}
               >
-                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-                  <action.icon className={`w-4 h-4 ${action.iconColor}`} />
+                <div className="w-8 h-8 rounded-full border border-white/15 bg-black flex items-center justify-center">
+                  <action.icon className={`w-4 h-4 ${action.iconColor} group-hover:text-white transition-colors`} />
                 </div>
-                <span className="text-[11px] text-white/70">{action.label}</span>
+                <span className="text-[11px] uppercase tracking-[0.08em] text-white/70 group-hover:text-white transition-colors">{action.label}</span>
               </button>
             ))}
           </section>
@@ -216,30 +262,16 @@ export default function ProfilePage() {
               <button
                 type="button"
                 onClick={() => setShowAddItem(true)}
-                className={`text-xs transition-colors ${theme === "black" ? "text-white/80 hover:text-white" : "text-pink-400 hover:text-pink-300"}`}
+                className={`text-xs transition-colors border rounded-full px-3 py-1 ${isBlack ? "text-white/85 hover:text-white border-white/25 hover:border-white/45" : "text-pink-300 hover:text-pink-200 border-pink-300/40 hover:border-pink-300/70"}`}
               >
                 {isKo ? "아이템 추가" : "Add Item"}
               </button>
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-3">
+            <div className="rounded-3xl border border-white/15 bg-white/[0.03] p-3.5 shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {GALLERY_ITEMS.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => !item.image && setShowAddItem(true)}
-                    className="aspect-[3/4] rounded-xl overflow-hidden border border-white/15 bg-black/40 hover:border-white/30 transition-colors"
-                  >
-                    {item.image ? (
-                      <Image src={item.image} alt={item.name} width={180} height={240} className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="w-full h-full flex flex-col items-center justify-center text-white/50">
-                        <Plus className="w-5 h-5" />
-                        <span className="text-[11px] mt-1">{isKo ? "비어 있음" : "Empty"}</span>
-                      </span>
-                    )}
-                  </button>
+                  <GalleryTile key={item.id} item={item} isKo={isKo} onAdd={() => setShowAddItem(true)} />
                 ))}
               </div>
             </div>
