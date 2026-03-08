@@ -199,7 +199,7 @@ export default function HomePage() {
       <main className="px-4 py-6 space-y-8">
         {/* LEGEND DROP 섹션 */}
         <section>
-          <h2 className={`font-display text-3xl tracking-wide uppercase italic mb-4 min-h-10 leading-tight flex items-center ${theme === "black" ? "black-mode-legend-title" : "text-white"}`}>LEGEND DROP</h2>
+          <h2 className={`font-display text-3xl tracking-wide uppercase italic mb-4 min-h-10 leading-tight flex items-center ${theme === "black" ? "black-mode-legend-title" : "text-white"}`}>LEGEND AUCTION</h2>
           <Link href={`${basePath}/auction`} className="block">
             <div className={`relative rounded-2xl overflow-hidden border ${theme === "black" ? "black-home-hero-card bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f]" : "bg-gradient-to-br from-[#2a1a1a] to-[#1a0a0a] border-white/10"}`}>
               {/* 배경 이미지 오버레이 — 블랙 모드: 레이어 분리 */}
@@ -258,7 +258,7 @@ export default function HomePage() {
 
         {/* UNIQUE DROPS 섹션 */}
         <section>
-          <h2 className={`font-display text-3xl tracking-wide uppercase italic mb-4 min-h-10 leading-tight flex items-center ${theme === "black" ? "black-mode-legend-title" : "text-white"}`}>UNIQUE DROPS</h2>
+          <h2 className={`font-display text-3xl tracking-wide uppercase italic mb-4 min-h-10 leading-tight flex items-center ${theme === "black" ? "black-mode-legend-title" : "text-white"}`}>HYBRID AUCTION</h2>
           <div className="grid grid-cols-2 gap-3">
             {uniqueDrops.map((item) => {
               const isFelix = item.id === 4
