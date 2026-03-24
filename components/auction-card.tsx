@@ -485,7 +485,7 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
             />
             {/* Input Form Sheet — 불투명 배경 + 여백으로 글자 겹침 방지 */}
             <div 
-              className="fixed bottom-0 left-0 right-0 z-40 rounded-t-2xl border-t border-l border-r border-border/50 overflow-hidden animate-slide-up-bottom-sheet"
+              className="fixed bottom-0 left-0 right-0 z-40 min-w-0 max-w-full rounded-t-2xl border-t border-l border-r border-border/50 overflow-hidden animate-slide-up-bottom-sheet"
               style={{ 
                 marginLeft: 'max(0, env(safe-area-inset-left))', 
                 marginRight: 'max(0, env(safe-area-inset-right))',
@@ -509,8 +509,8 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
               <div className="px-4 pb-4 pt-2 space-y-4">
                 <p className="text-sm font-medium text-foreground font-sans">{isKo ? "입찰 금액" : "Your Offer"}</p>
 
-                <div className="flex items-end gap-2">
-                  <span className="text-xs text-muted-foreground pb-1 font-sans">KRW</span>
+                <div className="flex min-w-0 max-w-full items-end gap-2 overflow-hidden">
+                  <span className="shrink-0 text-xs text-muted-foreground pb-1 font-sans">KRW</span>
                   <input
                     type="text"
                     inputMode="numeric"
@@ -535,7 +535,7 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
                         e.preventDefault()
                       }
                     }}
-                    className={`flex-1 bg-transparent border-b text-right text-2xl sm:text-4xl font-bold text-foreground focus:outline-none pb-1 font-sans ${theme.accentBorderFocus}`}
+                    className={`block w-0 min-w-0 max-w-full flex-1 overflow-hidden bg-transparent border-b text-right text-2xl sm:text-4xl font-bold text-foreground focus:outline-none pb-1 font-sans ${theme.accentBorderFocus}`}
                   />
                 </div>
 
