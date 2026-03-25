@@ -708,4 +708,24 @@ body svg {
   display: none;
 }
 
+/* 모달·시트: 다크 UI용 얇은 스크롤바 (기본 흰색 막대 완화) */
+.scrollbar-dark {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+  overscroll-behavior-y: contain;
+}
+.scrollbar-dark::-webkit-scrollbar {
+  width: 5px;
+}
+.scrollbar-dark::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-dark::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.22);
+  border-radius: 9999px;
+}
+.scrollbar-dark::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.32);
+}
+
 

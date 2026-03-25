@@ -21,13 +21,95 @@ const TIER_NAMES: Record<number, string> = {
 const LEVEL_CURRENT = 3
 const XP_PERCENT = 87
 
-type GalleryItem = { id: number; image: string | null; name: string }
+type CertificateField = {
+  labelKo: string
+  labelEn: string
+  valueKo: string
+  valueEn: string
+}
+
+type GalleryItem = {
+  id: number
+  image: string | null
+  name: string
+  certificate?: {
+    titleKo: string
+    titleEn: string
+    subtitleKo: string
+    subtitleEn: string
+    serialNumber: string
+    lastPriceKo: string
+    lastPriceEn: string
+    dnaVerified: boolean
+    videoSrc: string
+    fields: CertificateField[]
+  }
+}
 
 const GALLERY_ITEMS: GalleryItem[] = [
-  { id: 1, image: "/gallery-dress-1.png", name: "Black Ribbon Dress" },
-  { id: 2, image: "/gallery-dress-2.png", name: "Navy Sport Dress" },
-  { id: 3, image: "/gallery-dress-3.png", name: "Ice Ribbon Dress" },
-  { id: 4, image: null, name: "Empty Slot" },
+  {
+    id: 1,
+    image: "/cap2.png",
+    name: "PEACEMINUSONE1988-CAP",
+    certificate: {
+      titleKo: "디지털 보증서",
+      titleEn: "Digital Certificate",
+      subtitleKo: "KRUNCH가 검증한 아티스트 실착 아이템",
+      subtitleEn: "Artist-worn item verified by KRUNCH",
+      serialNumber: "KR-GD-UBM-2026-0001",
+      lastPriceKo: "최종 거래가 : 52,000,000 KRW",
+      lastPriceEn: "Last Price : 52,000,000 KRW",
+      dnaVerified: true,
+      videoSrc: "/cap2-spin.mp4",
+      fields: [
+        {
+          labelKo: "아티스트 이름",
+          labelEn: "Artist",
+          valueKo: "G-DRAGON",
+          valueEn: "G-DRAGON",
+        },
+        {
+          labelKo: "착용 일자",
+          labelEn: "Worn On",
+          valueKo: "2026.01.12",
+          valueEn: "Jan 12, 2026",
+        },
+        {
+          labelKo: "무대 이름",
+          labelEn: "Stage",
+          valueKo: "Ubermensch Seoul Opening Stage",
+          valueEn: "Ubermensch Seoul Opening Stage",
+        },
+        {
+          labelKo: "무대 앨범/곡",
+          labelEn: "Album / Track",
+          valueKo: "Ubermensch / TOO BAD",
+          valueEn: "Ubermensch / TOO BAD",
+        },
+        {
+          labelKo: "브랜드",
+          labelEn: "Brand",
+          valueKo: "PEACEMINUSONE",
+          valueEn: "PEACEMINUSONE",
+        },
+        {
+          labelKo: "스타일리스트",
+          labelEn: "Stylist",
+          valueKo: "김마라",
+          valueEn: "Mara Kim",
+        },
+        {
+          labelKo: "DNA 인증 여부",
+          labelEn: "DNA Verification",
+          valueKo: "인증 완료",
+          valueEn: "Verified",
+        },
+      ],
+    },
+  },
+  { id: 2, image: "/gallery-dress-1.png", name: "Black Ribbon Dress" },
+  { id: 3, image: "/gallery-dress-2.png", name: "Navy Sport Dress" },
+  { id: 4, image: "/gallery-dress-3.png", name: "Ice Ribbon Dress" },
   { id: 5, image: null, name: "Empty Slot" },
   { id: 6, image: null, name: "Empty Slot" },
 ]
@@ -37,29 +119,64 @@ function getTierName(level: number) {
   return TIER_NAMES[level] ?? "Bronze"
 }
 
-function GalleryTile({ item, isKo, onAdd }: { item: GalleryItem; isKo: boolean; onAdd: () => void }) {
+/** e.g. PEACEMINUSONE1988-CAP → PEACEMINUSONE 1988 CAP */
+function formatCertificateItemDisplayName(name: string) {
+  const m = name.match(/^([A-Za-z]+)(\d{4})-(.+)$/)
+  if (m) return `${m[1]} ${m[2]} ${m[3].replace(/-/g, " ")}`.toUpperCase()
+  return name.replace(/-/g, " ")
+}
+
+function GalleryTile({
+  item,
+  isKo,
+  onAdd,
+  onSelect,
+}: {
+  item: GalleryItem
+  isKo: boolean
+  onAdd: () => void
+  onSelect: (item: GalleryItem) => void
+}) {
   const [imgError, setImgError] = useState(false)
   const hasImage = Boolean(item.image) && !imgError
 
   return (
     <button
       type="button"
-      onClick={() => !hasImage && onAdd()}
-      className="aspect-[3/4] rounded-2xl overflow-hidden border border-white/20 bg-black/45 hover:border-white/35 transition-all hover:-translate-y-0.5"
+      onClick={() => {
+        if (!hasImage) {
+          onAdd()
+          return
+        }
+
+        if (item.certificate) {
+          onSelect(item)
+        }
+      }}
+      className={`aspect-[3/4] rounded-2xl overflow-hidden border border-white/20 bg-black/45 transition-all hover:-translate-y-0.5 hover:border-white/35 ${
+        item.certificate ? "cursor-pointer" : hasImage ? "cursor-default" : ""
+      }`}
     >
       {hasImage ? (
-        <div className="relative w-full h-full">
+        <div className={`relative w-full h-full ${item.id === 1 ? "bg-white" : ""}`}>
           <Image
             src={item.image as string}
             alt={item.name}
             width={180}
             height={240}
-            className={`w-full h-full object-cover ${item.id === 3 ? "object-[26%_center]" : "object-center"}`}
+            className={`h-full w-full object-cover ${
+              item.id === 1 ? "scale-[1.04] object-contain p-2" : item.id === 4 ? "scale-[1.12] object-[26%_center]" : "object-center"
+            }`}
             onError={() => setImgError(true)}
           />
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent p-2">
             <p className="text-[10px] uppercase tracking-[0.07em] text-white/85 text-left truncate">{item.name}</p>
           </div>
+          {item.certificate && (
+            <div className="absolute left-2 top-2 rounded-full border border-[#ff8fbc]/50 bg-black/70 px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-[#ffd6e7] backdrop-blur-sm">
+              {isKo ? "보증서" : "Certified"}
+            </div>
+          )}
         </div>
       ) : (
         <span className="w-full h-full flex flex-col items-center justify-center text-white/55 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.25))]">
@@ -81,6 +198,7 @@ export default function ProfilePage() {
 
   const [showAddItem, setShowAddItem] = useState(false)
   const [showQR, setShowQR] = useState(false)
+  const [selectedCertificate, setSelectedCertificate] = useState<GalleryItem | null>(null)
 
   const userStats = [
     { label: isKo ? "총 입찰" : "Total Bids", value: "127" },
@@ -271,7 +389,13 @@ export default function ProfilePage() {
             <div className="rounded-3xl border border-white/15 bg-white/[0.03] p-3.5 shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {GALLERY_ITEMS.map((item) => (
-                  <GalleryTile key={item.id} item={item} isKo={isKo} onAdd={() => setShowAddItem(true)} />
+                  <GalleryTile
+                    key={item.id}
+                    item={item}
+                    isKo={isKo}
+                    onAdd={() => setShowAddItem(true)}
+                    onSelect={(selectedItem) => setSelectedCertificate(selectedItem)}
+                  />
                 ))}
               </div>
             </div>
@@ -288,6 +412,92 @@ export default function ProfilePage() {
                 </button>
               </div>
               <p className="text-sm text-white/60">{isKo ? "2차 마켓에서 구매한 아이템을 갤러리에 걸 수 있습니다. (준비 중)" : "Items purchased on 2nd Market can be displayed in your gallery. (Coming soon)"}</p>
+            </div>
+          </div>
+        )}
+
+        {selectedCertificate?.certificate && (
+          <div
+            className="fixed inset-0 z-[10050] flex items-end justify-center overflow-hidden bg-black/80 p-0 backdrop-blur-sm sm:items-center sm:p-6"
+            onClick={() => setSelectedCertificate(null)}
+          >
+            <div
+              className="relative max-h-[calc(100dvh-16px)] w-full max-w-lg overflow-hidden rounded-t-2xl bg-[#070707] sm:max-h-[min(900px,calc(100dvh-48px))] sm:rounded-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div
+                className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_120%_80%_at_50%_-20%,rgba(255,107,157,0.07),transparent_55%)]"
+                aria-hidden
+              />
+
+              <div className="relative max-h-[calc(100dvh-16px)] min-h-0 overflow-y-auto overscroll-y-contain px-5 pb-[max(2.5rem,calc(1.25rem+env(safe-area-inset-bottom)))] pt-[max(0.75rem,env(safe-area-inset-top))] scrollbar-dark sm:max-h-[min(900px,calc(100dvh-48px))] sm:px-8 sm:pb-10 sm:pt-8">
+                <div className="mb-8 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCertificate(null)}
+                    className="rounded-full p-2 text-white/50 transition-colors hover:bg-white/5 hover:text-white/80"
+                    aria-label="Close certificate"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <header className="mb-10">
+                  <h2 className="font-display text-[28px] uppercase leading-none tracking-wide text-white">
+                    {isKo ? selectedCertificate.certificate.titleKo : selectedCertificate.certificate.titleEn}
+                  </h2>
+                  <p className="mt-2 max-w-[16rem] text-xs leading-relaxed text-white/60">
+                    {isKo ? selectedCertificate.certificate.subtitleKo : selectedCertificate.certificate.subtitleEn}
+                  </p>
+                </header>
+
+                <div className="mb-10 w-full">
+                  <div className="relative aspect-[4/3] w-full bg-black">
+                    <div className="absolute inset-0 shadow-[0_0_100px_-30px_rgba(255,107,157,0.12)]" aria-hidden />
+                    <video
+                      className="relative z-[1] h-full w-full bg-black object-contain"
+                      src={selectedCertificate.certificate.videoSrc}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      poster={selectedCertificate.image ?? undefined}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <h3 className="font-display text-2xl font-bold uppercase leading-snug tracking-wide text-white sm:text-[1.75rem]">
+                    {formatCertificateItemDisplayName(selectedCertificate.name)}
+                  </h3>
+                  <p className="text-xs tracking-wide text-white/40">
+                    {isKo ? "DNA 인증 · 블랙 티어" : "DNA Verified · Black Tier"}
+                  </p>
+                </div>
+
+                <p className="mt-8 text-base leading-relaxed text-white/60">
+                  {isKo ? selectedCertificate.certificate.lastPriceKo : selectedCertificate.certificate.lastPriceEn}
+                </p>
+
+                <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.22em] text-white/28">
+                  {selectedCertificate.certificate.serialNumber}
+                </p>
+
+                <div className="my-10 h-px w-full bg-white/[0.08]" />
+
+                <div className="space-y-5 pb-6">
+                  {selectedCertificate.certificate.fields.slice(0, 6).map((field) => (
+                    <div key={field.labelEn} className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-6">
+                      <span className="shrink-0 text-[11px] uppercase tracking-[0.15em] text-white/38">
+                        {isKo ? field.labelKo : field.labelEn}
+                      </span>
+                      <span className="min-w-0 text-sm leading-relaxed text-white/85">
+                        {isKo ? field.valueKo : field.valueEn}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         )}
