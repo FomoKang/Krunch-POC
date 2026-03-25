@@ -470,8 +470,18 @@ export default function ProfilePage() {
                   <h3 className="font-display text-2xl font-bold uppercase leading-snug tracking-wide text-white sm:text-[1.75rem]">
                     {formatCertificateItemDisplayName(selectedCertificate.name)}
                   </h3>
-                  <p className="text-xs tracking-wide text-white/40">
-                    {isKo ? "DNA 인증 · 블랙 티어" : "DNA Verified · Black Tier"}
+                  <p className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-xs tracking-wide">
+                    <span
+                      className="font-semibold uppercase tracking-[0.14em] text-[#00FF9C] [text-shadow:0_0_10px_rgba(0,255,156,0.45),0_0_22px_rgba(0,255,156,0.12)]"
+                    >
+                      {isKo ? "DNA 인증" : "DNA Verified"}
+                    </span>
+                    <span className="text-white/20 select-none" aria-hidden>
+                      ·
+                    </span>
+                    <span className="font-medium tracking-[0.04em] text-[#e8e8ec]">
+                      {isKo ? "블랙 티어" : "Black Tier"}
+                    </span>
                   </p>
                 </div>
 
