@@ -1,12 +1,12 @@
 "use client"
 
-import Link from "next/link"
 import Image from "next/image"
-import { Home, Trophy, Users, User, Store, Search, Bell } from "lucide-react"
-import { useSiteTheme } from "@/components/theme-provider"
+import Link from "next/link"
+import { Bell, Search, Store } from "lucide-react"
+import { LanguageToggle } from "@/components/language-toggle"
 import { useLocale } from "@/components/locale-provider"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { LanguageToggle } from "@/components/language-toggle"
+import { useSiteTheme } from "@/components/theme-provider"
 
 export default function SecondMarketPage() {
   const { theme } = useSiteTheme()
@@ -14,11 +14,11 @@ export default function SecondMarketPage() {
   const isKo = locale === "ko"
   const basePath = theme === "black" ? "/black" : ""
   const logoSrc = theme === "black" ? "/logo-white.png" : "/logo-pink.png"
+
   return (
-    <div className="min-h-screen bg-black text-white pb-for-nav">
-      {/* Header — 모바일: 로고 축소·우측 한 줄·테마 아이콘 안 짤리게 */}
-      <header className="sticky top-0 z-50 bg-black/90 backdrop-blur-sm border-b border-white/5 overflow-visible">
-        <div className="flex items-center justify-between gap-1.5 px-2.5 py-3 min-h-[3.5rem] sm:min-h-[6rem] sm:gap-2 sm:px-4">
+    <div className="min-h-screen bg-black pb-for-nav text-white">
+      <header className="sticky top-0 z-50 overflow-visible border-b border-white/5 bg-black/90 backdrop-blur-sm">
+        <div className="flex min-h-[3.5rem] items-center justify-between gap-1.5 px-2.5 py-3 sm:min-h-[6rem] sm:gap-2 sm:px-4">
           <div className="h-16 w-32 min-w-0 flex-shrink-0 sm:h-[72px] sm:w-[225px]">
             <Link href={basePath || "/"} className="block h-full w-full">
               <Image
@@ -26,21 +26,42 @@ export default function SecondMarketPage() {
                 alt="Krunch"
                 width={225}
                 height={72}
-                className={`h-full w-full object-contain object-left`}
+                className="h-full w-full object-contain object-left"
               />
             </Link>
           </div>
-          <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0 overflow-visible">
-            <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
-              <Store className={`w-4 h-4 shrink-0 sm:w-5 sm:h-5 ${theme === "black" ? "text-white store-icon-pink-outline" : "text-[#FF6B9D]"}`} />
-              <span className={isKo ? "font-sans font-bold tracking-tight text-xs sm:text-base text-white/95 uppercase whitespace-nowrap" : "font-display text-xs sm:text-lg tracking-wide text-white uppercase whitespace-nowrap"}>{isKo ? "2차 마켓" : "2nd Market"}</span>
+
+          <div className="flex flex-shrink-0 items-center gap-0.5 overflow-visible sm:gap-1">
+            <div className="flex min-w-0 items-center gap-1.5 sm:gap-2.5">
+              <Store
+                className={`h-4 w-4 shrink-0 sm:h-5 sm:w-5 ${
+                  theme === "black" ? "store-icon-pink-outline text-white" : "text-[#FF6B9D]"
+                }`}
+              />
+              <span
+                className={
+                  isKo
+                    ? "whitespace-nowrap font-sans text-xs font-bold uppercase tracking-tight text-white/95 sm:text-base"
+                    : "font-display whitespace-nowrap text-xs uppercase tracking-wide text-white sm:text-lg"
+                }
+              >
+                {isKo ? "2차 마켓" : "2nd Market"}
+              </span>
             </div>
-            <Link href={`${basePath}/search`} className="p-1.5 sm:p-2 hover:bg-white/10 rounded-full transition-colors shrink-0">
-              <Search className="w-4 h-4 sm:w-5 sm:h-5 text-white/80" />
+
+            <Link href={`${basePath}/search`} className="shrink-0 rounded-full p-1.5 transition-colors hover:bg-white/10 sm:p-2">
+              <Search className="h-4 w-4 text-white/80 sm:h-5 sm:w-5" />
             </Link>
-            <Link href={`${basePath}/notifications`} className="p-1.5 sm:p-2 hover:bg-white/10 rounded-full transition-colors relative shrink-0">
-              <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-white/80" />
-              <span className={`absolute top-0.5 right-0.5 sm:top-1 sm:right-1 w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${theme === "black" ? "bg-white" : "bg-[#FF6B9D]"}`} />
+            <Link
+              href={`${basePath}/notifications`}
+              className="relative shrink-0 rounded-full p-1.5 transition-colors hover:bg-white/10 sm:p-2"
+            >
+              <Bell className="h-4 w-4 text-white/80 sm:h-5 sm:w-5" />
+              <span
+                className={`absolute right-0.5 top-0.5 h-1.5 w-1.5 rounded-full sm:right-1 sm:top-1 sm:h-2 sm:w-2 ${
+                  theme === "black" ? "bg-white" : "bg-[#FF6B9D]"
+                }`}
+              />
             </Link>
             <ThemeToggle inline />
             <LanguageToggle inline />
@@ -48,34 +69,53 @@ export default function SecondMarketPage() {
         </div>
       </header>
 
-      <main className="px-4 flex flex-col items-center justify-center text-center gap-4 min-h-[calc(100vh-200px)]">
-        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${theme === "black" ? "bg-[#0a0a0a] border border-[rgba(255,105,180,0.3)]" : "bg-[#1a1a1a] border border-[#FF6B9D]/40 shadow-lg shadow-[#FF6B9D]/20"}`}>
-          <Store className={`w-8 h-8 ${theme === "black" ? "text-white store-icon-pink-outline" : "text-[#FF6B9D]"}`} />
+      <main className="flex min-h-[calc(100vh-200px)] flex-col items-center justify-center gap-4 px-4 text-center">
+        <div
+          className={`flex h-16 w-16 items-center justify-center rounded-2xl ${
+            theme === "black"
+              ? "border border-[rgba(255,105,180,0.3)] bg-[#0a0a0a]"
+              : "border border-[#FF6B9D]/40 bg-[#1a1a1a] shadow-lg shadow-[#FF6B9D]/20"
+          }`}
+        >
+          <Store className={`h-8 w-8 ${theme === "black" ? "store-icon-pink-outline text-white" : "text-[#FF6B9D]"}`} />
         </div>
-        <h1 className={isKo ? "font-sans font-bold italic text-3xl tracking-wide text-white uppercase" : "font-display text-3xl tracking-wide text-white uppercase italic"}>
+
+        <h1
+          className={
+            isKo
+              ? "font-sans text-3xl font-bold uppercase italic tracking-wide text-white"
+              : "font-display text-3xl uppercase italic tracking-wide text-white"
+          }
+        >
           {isKo ? "2차 마켓" : "2nd Market"}
         </h1>
-        <p className="text-white/60 text-sm max-w-xs">
+
+        <p className="max-w-xs text-sm text-white/60">
           {isKo ? (
             <>
-              P2P 거래가{" "}
-              <span className={theme === "black" ? "text-white font-semibold" : "text-[#FF6B9D] font-semibold"} style={theme === "black" ? { WebkitTextStroke: "1px rgba(255,105,180,0.4)" } : undefined}>
+              P2P 거래 기능은{" "}
+              <span
+                className={theme === "black" ? "font-semibold text-white" : "font-semibold text-[#FF6B9D]"}
+                style={theme === "black" ? { WebkitTextStroke: "1px rgba(255,105,180,0.4)" } : undefined}
+              >
                 준비 중
               </span>
-              {" "}이에요. 곧 다른 크런치 유저에게서 레전드·유니크 등의 아이템을 직접 거래할 수 있어요.
+              입니다. 곧 BLACK PINK 등급 및 다른 아이템들을 직접 거래할 수 있게 됩니다.
             </>
           ) : (
             <>
               Peer-to-peer trading is{" "}
-              <span className={theme === "black" ? "text-white font-semibold" : "text-[#FF6B9D] font-semibold"} style={theme === "black" ? { WebkitTextStroke: "1px rgba(255,105,180,0.4)" } : undefined}>
+              <span
+                className={theme === "black" ? "font-semibold text-white" : "font-semibold text-[#FF6B9D]"}
+                style={theme === "black" ? { WebkitTextStroke: "1px rgba(255,105,180,0.4)" } : undefined}
+              >
                 coming soon
               </span>
-              . Soon you&apos;ll be able to trade LEGEND·UNIQUE and other rare items directly with other Krunch users.
+              . Soon you&apos;ll be able to directly trade BLACK PINK tier items and other items.
             </>
           )}
         </p>
       </main>
-
     </div>
   )
 }
