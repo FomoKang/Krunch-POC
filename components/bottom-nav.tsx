@@ -34,7 +34,7 @@ export function BottomNav() {
     { href: `${basePath}/draw`, label: isKo ? "\uB4DC\uB85C\uC6B0" : "Draw", icon: Dices },
     { href: `${basePath}/market`, label: isKo ? "2\uCC28 \uB9C8\uCF13" : "2nd Market", icon: Store },
     {
-      href: `${basePath}/profile`,
+      href: user ? `${basePath}/profile` : `${basePath}/login`,
       label: isKo ? "\uB9C8\uC774 \uD504\uB85C\uD544" : "My Profile",
       icon: User,
       badge: Boolean(user),
@@ -49,7 +49,7 @@ export function BottomNav() {
       return pathSegment === "/trend" || pathSegment === "/ranking" || pathSegment === "/community"
     }
 
-    if (segment === "/profile") {
+    if (segment === "/profile" || segment === "/login") {
       return pathSegment === "/profile" || pathSegment === "/login" || pathSegment === "/signup"
     }
 

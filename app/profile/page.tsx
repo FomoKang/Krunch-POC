@@ -10,6 +10,7 @@ import { useLocale } from "@/components/locale-provider"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { LanguageToggle } from "@/components/language-toggle"
 import { Button } from "@/components/ui/button"
+import { AuthPanel } from "@/components/auth-panel"
 import { useSupabaseSession } from "@/hooks/use-supabase-session"
 import { useUserProfile } from "@/hooks/use-user-profile"
 import { useToast } from "@/hooks/use-toast"
@@ -194,87 +195,6 @@ function GalleryTile({
   )
 }
 
-function AuthRequiredDialog({
-  basePath,
-  isKo,
-  isBlack,
-  message,
-}: {
-  basePath: string
-  isKo: boolean
-  isBlack: boolean
-  message?: string | null
-}) {
-  return (
-    <div className="relative min-h-screen overflow-hidden bg-black text-white pb-for-nav">
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background: isBlack
-            ? "radial-gradient(circle at top, rgba(255,255,255,0.08), transparent 42%), linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.9))"
-            : "radial-gradient(circle at top, rgba(255,107,157,0.18), transparent 42%), linear-gradient(180deg, rgba(255,107,157,0.05), rgba(0,0,0,0.92))",
-        }}
-        aria-hidden
-      />
-
-      <div className="relative flex min-h-screen items-center justify-center px-4 py-10">
-        <div
-          className="w-full max-w-md rounded-[28px] border p-6 shadow-[0_24px_80px_rgba(0,0,0,0.5)] backdrop-blur-xl"
-          style={{
-            background: isBlack ? "rgba(10,10,10,0.9)" : "rgba(16,10,14,0.92)",
-            borderColor: isBlack ? "rgba(255,255,255,0.14)" : "rgba(255,107,157,0.22)",
-          }}
-        >
-          <p className={`text-xs uppercase tracking-[0.24em] ${isBlack ? "text-white/40" : "text-[#ff9ebe]"}`}>
-            {isKo ? "\uACC4\uC815 \uD655\uC778" : "Protected Page"}
-          </p>
-          <h1 className="mt-3 font-display text-3xl uppercase tracking-wide text-white">
-            {isKo ? "\uB85C\uADF8\uC778\uC774 \uD544\uC694\uD569\uB2C8\uB2E4" : "Sign in required"}
-          </h1>
-          <p className="mt-3 text-sm leading-6 text-white/65">
-            {isKo
-              ? "\uB9C8\uC774 \uD398\uC774\uC9C0\uB294 \uB85C\uADF8\uC778\uD55C \uACC4\uC815\uC758 \uB2C9\uB124\uC784, \uC774\uBA54\uC77C, \uAC00\uC785\uC77C \uC815\uBCF4\uB97C \uBCF4\uC5EC\uC8FC\uB294 \uACF5\uAC04\uC785\uB2C8\uB2E4."
-              : "My page is available only after sign-in because it shows real account data like nickname, email, and join date."}
-          </p>
-
-          <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-            <p className="text-xs uppercase tracking-[0.18em] text-white/45">
-              {isKo ? "\uB4E4\uC5B4\uAC00\uB824\uBA74" : "To continue"}
-            </p>
-            <p className="mt-2 text-sm text-white/70">
-              {isKo
-                ? "\uB85C\uADF8\uC778 \uD6C4 \uB2E4\uC2DC \uB9C8\uC774 \uD398\uC774\uC9C0\uB85C \uC624\uBA74 \uC2E4\uC81C Supabase \uD504\uB85C\uD544\uACFC \uC5F0\uB3D9\uB41C \uD654\uBA74\uC744 \uBC14\uB85C \uBCFC \uC218 \uC788\uC5B4\uC694."
-                : "After sign-in, return to My Page to load your Supabase-backed profile immediately."}
-            </p>
-          </div>
-
-          <div className="mt-6 flex flex-wrap gap-2">
-            <Button asChild className="bg-[#FF6B9D] text-black hover:bg-[#ff8bb2]">
-              <Link href={`${basePath}/login`}>{isKo ? "\uB85C\uADF8\uC778" : "Log in"}</Link>
-            </Button>
-            <Button
-              asChild
-              variant="outline"
-              className="border-white/15 bg-transparent text-white hover:bg-white/10 hover:text-white"
-            >
-              <Link href={`${basePath}/signup`}>{isKo ? "\uD68C\uC6D0\uAC00\uC785" : "Sign up"}</Link>
-            </Button>
-            <Button asChild variant="ghost" className="text-white/70 hover:bg-white/10 hover:text-white">
-              <Link href={basePath || "/"}>{isKo ? "\uD648\uC73C\uB85C" : "Go home"}</Link>
-            </Button>
-          </div>
-
-          {message && (
-            <div className="mt-4 rounded-xl border border-amber-300/20 bg-amber-300/10 px-3 py-2 text-sm text-amber-100">
-              {message}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
-
 export default function ProfilePage() {
   const router = useRouter()
   const { theme } = useSiteTheme()
@@ -282,7 +202,7 @@ export default function ProfilePage() {
   const isKo = locale === "ko"
   const isBlack = theme === "black"
   const basePath = isBlack ? "/black" : ""
-  const { user, session, loading: sessionLoading, error: sessionError, isConfigured } = useSupabaseSession()
+  const { user, session, loading: sessionLoading } = useSupabaseSession()
   const { profile, loading: profileLoading, error: profileError } = useUserProfile(user)
   const { toast } = useToast()
 
@@ -349,10 +269,10 @@ export default function ProfilePage() {
   }
 
   if (!user || !session) {
-    const authMessage = sessionError ?? profileError ?? (isConfigured ? null : isKo ? "Supabase \uC124\uC815\uC744 \uD655\uC778\uD574\uC8FC\uC138\uC694." : "Check your Supabase configuration.")
-
     return (
-      <AuthRequiredDialog basePath={basePath} isKo={isKo} isBlack={isBlack} message={authMessage} />
+      <div className="min-h-screen bg-black px-4 text-white">
+        <AuthPanel mode="login" />
+      </div>
     )
   }
 

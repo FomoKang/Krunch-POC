@@ -441,7 +441,7 @@ function StatsCard() {
           </div>
           <div>
             <p className={`text-[10px] uppercase tracking-wider ${isBlack ? "text-[#A0A0A0]" : "text-[#8c8c8c]"}`} style={{ fontFamily: "var(--font-inter), Inter, sans-serif" }}>{isKo ? "현재 당첨률" : "Current Win Rate"}</p>
-            <p className={`text-xl italic tracking-tight ${isBlack ? "text-[#F5F5F5]" : "text-[#fafafa]"}`} style={{ fontFamily: "var(--font-anton), Anton, sans-serif" }}>0.01%</p>
+            <p className={`text-xl italic tracking-tight ${isBlack ? "text-[#F5F5F5]" : "text-[#fafafa]"}`} style={{ fontFamily: "var(--font-anton), Anton, sans-serif" }}>{Math.round(WIN_RATE * 100)}%</p>
           </div>
         </div>
         {/* Divider */}
@@ -722,7 +722,7 @@ function DrawSlideTrigger({ onDrawTrigger, disabled, isKo, isBlack }: { onDrawTr
    MAIN PAGE - DRAW CONTENT ONLY
    ==================================================== */
 
-const WIN_RATE = 0.2 // 20% 당첨, 80% 실패
+const WIN_RATE = 0.5 // 50% win rate for demo
 
 export default function LuckyDrawPage() {
   const { theme } = useSiteTheme()
