@@ -1,14 +1,19 @@
-"use client"
+﻿"use client"
 
 import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
 import { Trophy, User, Settings, Wallet, Search, Bell, X, Plus, QrCode, Share2 } from "lucide-react"
 import { useSiteTheme } from "@/components/theme-provider"
 import { useLocale } from "@/components/locale-provider"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { LanguageToggle } from "@/components/language-toggle"
+import { Button } from "@/components/ui/button"
+import { useSupabaseSession } from "@/hooks/use-supabase-session"
+import { useUserProfile } from "@/hooks/use-user-profile"
 import { useToast } from "@/hooks/use-toast"
+import { getSupabaseBrowserClient } from "@/lib/supabase/client"
 
 const TIER_NAMES: Record<number, string> = {
   1: "Bronze",
@@ -52,9 +57,9 @@ const GALLERY_ITEMS: GalleryItem[] = [
     image: "/cap2.png",
     name: "PEACEMINUSONE1988-CAP",
     certificate: {
-      titleKo: "디지털 보증서",
+      titleKo: "디지털 인증서",
       titleEn: "Digital Certificate",
-      subtitleKo: "KRUNCH가 검증한 아티스트 실착 아이템",
+      subtitleKo: "KRUNCH가 검증한 아티스트 착용 아이템",
       subtitleEn: "Artist-worn item verified by KRUNCH",
       serialNumber: "KR-GD-UBM-2026-0001",
       lastPriceKo: "최종 거래가 : 52,000,000 KRW",
@@ -81,7 +86,7 @@ const GALLERY_ITEMS: GalleryItem[] = [
           valueEn: "Ubermensch Seoul Opening Stage",
         },
         {
-          labelKo: "무대 앨범/곡",
+          labelKo: "앨범 / 곡",
           labelEn: "Album / Track",
           valueKo: "Ubermensch / TOO BAD",
           valueEn: "Ubermensch / TOO BAD",
@@ -95,7 +100,7 @@ const GALLERY_ITEMS: GalleryItem[] = [
         {
           labelKo: "스타일리스트",
           labelEn: "Stylist",
-          valueKo: "김마라",
+          valueKo: "마라 킴",
           valueEn: "Mara Kim",
         },
         {
@@ -119,7 +124,7 @@ function getTierName(level: number) {
   return TIER_NAMES[level] ?? "Bronze"
 }
 
-/** e.g. PEACEMINUSONE1988-CAP → PEACEMINUSONE 1988 CAP */
+/** e.g. PEACEMINUSONE1988-CAP ??PEACEMINUSONE 1988 CAP */
 function formatCertificateItemDisplayName(name: string) {
   const m = name.match(/^([A-Za-z]+)(\d{4})-(.+)$/)
   if (m) return `${m[1]} ${m[2]} ${m[3].replace(/-/g, " ")}`.toUpperCase()
@@ -139,6 +144,7 @@ function GalleryTile({
 }) {
   const [imgError, setImgError] = useState(false)
   const hasImage = Boolean(item.image) && !imgError
+
 
   return (
     <button
@@ -174,7 +180,7 @@ function GalleryTile({
           </div>
           {item.certificate && (
             <div className="absolute left-2 top-2 rounded-full border border-[#ff8fbc]/50 bg-black/70 px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-[#ffd6e7] backdrop-blur-sm">
-              {isKo ? "보증서" : "Certified"}
+              {isKo ? "인증됨" : "Certified"}
             </div>
           )}
         </div>
@@ -189,11 +195,14 @@ function GalleryTile({
 }
 
 export default function ProfilePage() {
+  const router = useRouter()
   const { theme } = useSiteTheme()
   const { locale } = useLocale()
   const isKo = locale === "ko"
   const isBlack = theme === "black"
   const basePath = isBlack ? "/black" : ""
+  const { user, session, loading: sessionLoading, error: sessionError, isConfigured } = useSupabaseSession()
+  const { profile, loading: profileLoading, error: profileError } = useUserProfile(user)
   const { toast } = useToast()
 
   const [showAddItem, setShowAddItem] = useState(false)
@@ -205,6 +214,87 @@ export default function ProfilePage() {
     { label: isKo ? "낙찰 수" : "Won Items", value: "4" },
     { label: isKo ? "낙찰률" : "Win Rate", value: "18%" },
   ]
+
+  const isLoading = sessionLoading || (Boolean(user) && profileLoading)
+  const displayName = profile?.nickname ?? user?.user_metadata?.nickname ?? user?.email?.split("@")[0] ?? "Fomo_KR"
+  const memberId = user?.id.slice(0, 8).toUpperCase() ?? "KR-2024-00847"
+  const profileSubline = user?.email ?? (isKo ? "로그인 후 이메일이 표시됩니다." : "Your email appears after login.")
+  const joinedDate = profile?.created_at
+    ? new Date(profile.created_at).toLocaleDateString(isKo ? "ko-KR" : "en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      })
+    : isKo
+      ? "아직 없음"
+      : "Not available yet"
+
+  async function handleLogout() {
+    try {
+      const supabase = getSupabaseBrowserClient()
+      const { error: signOutError } = await supabase.auth.signOut()
+
+      if (signOutError) {
+        throw signOutError
+      }
+
+      toast({
+        title: isKo ? "로그아웃 완료" : "Logged out",
+        description: isKo ? "프로필 세션 연결을 종료했습니다." : "Your profile session has been cleared.",
+      })
+      router.replace(`${basePath}/login`)
+      router.refresh()
+    } catch (signOutError) {
+      toast({
+        title: isKo ? "로그아웃 실패" : "Logout failed",
+        description: signOutError instanceof Error ? signOutError.message : isKo ? "다시 시도해주세요." : "Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-black px-4 text-white">
+        <div className="w-full max-w-sm rounded-2xl border border-white/15 bg-[#0d0d0d] p-6 text-center shadow-[0_16px_52px_rgba(0,0,0,0.42)]">
+          <p className="text-xs uppercase tracking-[0.22em] text-white/45">Profile</p>
+          <h1 className="mt-3 font-display text-3xl uppercase tracking-wide text-white">{isKo ? "계정 확인 중" : "Checking account"}</h1>
+          <p className="mt-3 text-sm text-white/60">
+            {isKo ? "Supabase 세션과 프로필 정보를 불러오고 있습니다." : "Loading your Supabase session and profile data."}
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!user || !session) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-black px-4 text-white">
+        <div className="w-full max-w-md rounded-2xl border border-white/15 bg-[#0d0d0d] p-6 shadow-[0_16px_52px_rgba(0,0,0,0.42)]">
+          <p className="text-xs uppercase tracking-[0.22em] text-white/45">Protected Page</p>
+          <h1 className="mt-3 font-display text-3xl uppercase tracking-wide text-white">{isKo ? "로그인이 필요합니다" : "Sign in required"}</h1>
+          <p className="mt-3 text-sm leading-6 text-white/60">
+            {isKo
+              ? "마이페이지는 로그인한 계정의 닉네임, 이메일, 가입일을 보여주는 실제 계정 화면입니다."
+              : "Your profile page is now tied to real account data like nickname, email, and join date."}
+          </p>
+          <div className="mt-6 flex flex-wrap gap-2">
+            <Button asChild className="bg-[#FF6B9D] text-black hover:bg-[#ff8bb2]">
+              <Link href={`${basePath}/login`}>{isKo ? "로그인" : "Log in"}</Link>
+            </Button>
+            <Button asChild variant="outline" className="border-white/15 bg-transparent text-white hover:bg-white/10 hover:text-white">
+              <Link href={`${basePath}/signup`}>{isKo ? "회원가입" : "Sign up"}</Link>
+            </Button>
+          </div>
+          {(sessionError || profileError || !isConfigured) && (
+            <div className="mt-4 rounded-xl border border-amber-300/20 bg-amber-300/10 px-3 py-2 text-sm text-amber-100">
+              {sessionError ?? profileError ?? (isKo ? "Supabase 설정을 확인해주세요." : "Check your Supabase configuration.")}
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <>
@@ -265,7 +355,7 @@ export default function ProfilePage() {
                 <div className="w-16 h-16 rounded-full overflow-hidden border border-white/20 shadow-[0_0_0_3px_rgba(255,255,255,0.04)]">
                   <img
                     src="/profile-avatar.jpg"
-                    alt="Fomo_KR"
+                    alt={displayName}
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement
@@ -276,9 +366,9 @@ export default function ProfilePage() {
                   />
                 </div>
                 <div className="min-w-0">
-                  <p className="font-display text-xl tracking-wide uppercase leading-none">Fomo_KR</p>
-                  <p className="text-xs text-white/60">{isKo ? "멤버 ID" : "Member ID"}: KR-2024-00847</p>
-                  <p className="text-xs text-white/60">K-Point: 530,000</p>
+                  <p className="font-display text-xl tracking-wide uppercase leading-none">{displayName}</p>
+                  <p className="text-xs text-white/60">{profileSubline}</p>
+                  <p className="text-xs text-white/60">{`Member ID: ${memberId}`}</p>
                 </div>
               </div>
               <div className="relative">
@@ -321,6 +411,38 @@ export default function ProfilePage() {
                   </div>
                 )}
               </div>
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/15 bg-white/[0.03] p-3.5">
+              <div>
+                <p className="text-sm text-white/85">{isKo ? "Supabase 세션 연결이 완료되었습니다." : "Your Supabase session is connected."}</p>
+                <p className="text-xs text-white/55">{`Member ID: ${memberId}`}</p>
+              </div>
+              <Button variant="outline" className="border-white/15 bg-transparent text-white hover:bg-white/10 hover:text-white" onClick={handleLogout}>
+                {isKo ? "로그아웃" : "Log out"}
+              </Button>
+            </div>
+
+            <div className="mt-4 rounded-2xl border border-white/15 bg-white/[0.03] p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.18em] text-white/45">{isKo ? "내 정보" : "Account Info"}</p>
+                  <h2 className="mt-1 font-display text-xl uppercase tracking-wide text-white">{isKo ? "기본 프로필" : "Profile Basics"}</h2>
+                </div>
+              </div>
+              <div className="mt-4 space-y-3">
+                {[
+                  { label: isKo ? "닉네임" : "Nickname", value: profile?.nickname ?? displayName },
+                  { label: isKo ? "이메일" : "Email", value: user.email ?? "-" },
+                  { label: isKo ? "가입일" : "Joined", value: joinedDate },
+                ].map((item) => (
+                  <div key={item.label} className="flex items-center justify-between gap-4 border-b border-white/10 pb-3 last:border-b-0 last:pb-0">
+                    <span className="text-xs uppercase tracking-[0.18em] text-white/45">{item.label}</span>
+                    <span className="text-sm text-white/85">{item.value}</span>
+                  </div>
+                ))}
+              </div>
+              {profileError && <p className="mt-4 text-xs text-amber-200">{profileError}</p>}
             </div>
 
             <div className="mt-4 rounded-2xl bg-white/[0.04] border border-white/15 px-3.5 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
@@ -411,7 +533,7 @@ export default function ProfilePage() {
                   <X className="w-5 h-5 text-white/70" />
                 </button>
               </div>
-              <p className="text-sm text-white/60">{isKo ? "2차 마켓에서 구매한 아이템을 갤러리에 걸 수 있습니다. (준비 중)" : "Items purchased on 2nd Market can be displayed in your gallery. (Coming soon)"}</p>
+              <p className="text-sm text-white/60">{isKo ? "2차 마켓에서 구매한 아이템은 갤러리에 표시됩니다. (준비 중)" : "Items purchased on 2nd Market can be displayed in your gallery. (Coming soon)"}</p>
             </div>
           </div>
         )}
@@ -477,7 +599,7 @@ export default function ProfilePage() {
                       {isKo ? "DNA 인증" : "DNA Verified"}
                     </span>
                     <span className="text-white/20 select-none" aria-hidden>
-                      ·
+                      쨌
                     </span>
                     <span className="font-medium tracking-[0.04em] text-[#e8e8ec]">
                       {isKo ? "블랙 티어" : "Black Tier"}
