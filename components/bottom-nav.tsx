@@ -29,13 +29,13 @@ export function BottomNav() {
   }
 
   const tabs: TabItem[] = [
-    { href: basePath || "/", label: isKo ? "홈" : "Home", icon: Home },
-    { href: `${basePath}/trend`, label: isKo ? "트렌드" : "Trend", icon: TrendingUp },
-    { href: `${basePath}/draw`, label: isKo ? "드로우" : "Draw", icon: Dices },
-    { href: `${basePath}/market`, label: isKo ? "2차 마켓" : "2nd Market", icon: Store },
+    { href: basePath || "/", label: isKo ? "\uD648" : "Home", icon: Home },
+    { href: `${basePath}/trend`, label: isKo ? "\uD2B8\uB80C\uB4DC" : "Trend", icon: TrendingUp },
+    { href: `${basePath}/draw`, label: isKo ? "\uB4DC\uB85C\uC6B0" : "Draw", icon: Dices },
+    { href: `${basePath}/market`, label: isKo ? "2\uCC28 \uB9C8\uCF13" : "2nd Market", icon: Store },
     {
-      href: user ? `${basePath}/profile` : `${basePath}/login`,
-      label: user ? (isKo ? "마이 프로필" : "My Profile") : isKo ? "로그인" : "Log in",
+      href: `${basePath}/profile`,
+      label: isKo ? "\uB9C8\uC774 \uD504\uB85C\uD544" : "My Profile",
       icon: User,
       badge: Boolean(user),
     },
@@ -49,8 +49,8 @@ export function BottomNav() {
       return pathSegment === "/trend" || pathSegment === "/ranking" || pathSegment === "/community"
     }
 
-    if (segment === "/login") {
-      return pathSegment === "/login" || pathSegment === "/signup"
+    if (segment === "/profile") {
+      return pathSegment === "/profile" || pathSegment === "/login" || pathSegment === "/signup"
     }
 
     return segment === pathSegment
