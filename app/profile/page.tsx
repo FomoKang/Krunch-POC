@@ -4,16 +4,24 @@ import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { Trophy, User, Settings, Wallet, Search, Bell, X, Plus, QrCode, Share2 } from "lucide-react"
+import { Gavel, Heart, LogOut, Trophy, User, Settings, Wallet, Search, Bell, X, Plus, QrCode, Share2 } from "lucide-react"
 import { useSiteTheme } from "@/components/theme-provider"
 import { useLocale } from "@/components/locale-provider"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { LanguageToggle } from "@/components/language-toggle"
-import { Button } from "@/components/ui/button"
 import { AuthPanel } from "@/components/auth-panel"
+import { useFavoriteItems } from "@/hooks/use-favorite-items"
 import { useSupabaseSession } from "@/hooks/use-supabase-session"
 import { useUserProfile } from "@/hooks/use-user-profile"
 import { useToast } from "@/hooks/use-toast"
+import {
+  formatDropDate,
+  getParticipatingAuctionsForUser,
+  HYBRID_AUCTION_ITEMS,
+  isLegacyGalleryUser,
+  type HybridAuctionItem,
+  type ParticipatingAuctionItem,
+} from "@/lib/auction-catalog"
 import { getSupabaseBrowserClient } from "@/lib/supabase/client"
 
 const TIER_NAMES: Record<number, string> = {
@@ -195,6 +203,169 @@ function GalleryTile({
   )
 }
 
+function SectionTitle({ eyebrow, title }: { eyebrow: string; title: string }) {
+  return (
+    <div>
+      <p className="text-[10px] uppercase tracking-[0.22em] text-white/38">{eyebrow}</p>
+      <h2 className="mt-1 font-display text-xl uppercase tracking-wide text-white">{title}</h2>
+    </div>
+  )
+}
+
+function getHybridStatusLabel(item: HybridAuctionItem, isKo: boolean) {
+  if (item.status === "Coming Soon") {
+    return isKo ? "오픈 예정" : "Coming Soon"
+  }
+
+  if (item.status === "Live Now") {
+    return isKo ? "라이브" : "LIVE NOW"
+  }
+
+  if (item.status === "Sold Out") {
+    return isKo ? "마감" : "Sold Out"
+  }
+
+  return item.dateIso ? formatDropDate(item.dateIso, isKo) : ""
+}
+
+function FavoriteAuctionCard({
+  item,
+  isKo,
+  onToggle,
+}: {
+  item: HybridAuctionItem
+  isKo: boolean
+  onToggle: (itemId: string) => void
+}) {
+  const isFelix = item.id === "hybrid-human-made-tee"
+
+  return (
+    <article className="relative overflow-hidden rounded-2xl border border-white/12 bg-[#101010] shadow-[0_14px_36px_rgba(0,0,0,0.35)]">
+      <button
+        type="button"
+        aria-label="Remove from favorites"
+        onClick={() => onToggle(item.id)}
+        className="absolute right-2 top-2 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-[#FF6B9D]/60 bg-[#FF6B9D]/18 text-[#FF6B9D] shadow-[0_0_18px_rgba(255,107,157,0.24)] backdrop-blur-md transition-transform active:scale-95"
+      >
+        <Heart className="h-4 w-4 fill-current" />
+      </button>
+      <div className="relative aspect-[4/3] bg-[radial-gradient(circle_at_center,rgba(255,107,157,0.08),transparent_58%)]">
+        <Image
+          src={item.image}
+          alt={item.name}
+          fill
+          className={isFelix ? "object-cover" : "object-contain scale-[0.9] translate-x-1 translate-y-1"}
+        />
+      </div>
+      <div className="p-3">
+        <p className="text-[10px] uppercase tracking-[0.18em] text-[#ff9ebe]">{getHybridStatusLabel(item, isKo)}</p>
+        <h3 className="mt-1 line-clamp-1 text-sm font-semibold text-white">{isKo ? item.nameKo : item.name}</h3>
+        <p className="mt-0.5 line-clamp-1 text-xs italic text-white/45">{isKo ? item.subtitleKo : item.subtitle}</p>
+        <div className="mt-3 flex items-center justify-between gap-2 border-t border-white/10 pt-3">
+          <span className="text-[10px] uppercase tracking-[0.14em] text-white/35">{isKo ? "현재 정보" : "Current"}</span>
+          <span className="text-right text-xs font-semibold text-white/85">{item.currentBid}</span>
+        </div>
+      </div>
+    </article>
+  )
+}
+
+function FavoriteItemsSection({
+  favoriteItems,
+  favoritesLoading,
+  isKo,
+  onToggle,
+}: {
+  favoriteItems: HybridAuctionItem[]
+  favoritesLoading: boolean
+  isKo: boolean
+  onToggle: (itemId: string) => void
+}) {
+  return (
+    <section className="mt-4 rounded-2xl border border-white/15 bg-white/[0.035] p-4">
+      <div className="flex items-start justify-between gap-3">
+        <SectionTitle eyebrow={isKo ? "찜한 상품" : "Saved Items"} title={isKo ? "관심 있는 옥션" : "Saved Auctions"} />
+        <span className="rounded-full border border-[#FF6B9D]/30 bg-[#FF6B9D]/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#ffb0cb]">
+          {favoritesLoading ? "..." : favoriteItems.length}
+        </span>
+      </div>
+
+      {favoriteItems.length > 0 ? (
+        <div className="mt-4 grid grid-cols-2 gap-3">
+          {favoriteItems.map((item) => (
+            <FavoriteAuctionCard key={item.id} item={item} isKo={isKo} onToggle={onToggle} />
+          ))}
+        </div>
+      ) : (
+        <div className="mt-4 rounded-2xl border border-dashed border-white/14 bg-black/25 p-4 text-center">
+          <Heart className="mx-auto h-6 w-6 text-[#FF6B9D]/70" />
+          <p className="mt-3 text-sm font-medium text-white/85">{isKo ? "아직 찜한 상품이 없어요" : "No saved items yet"}</p>
+          <p className="mx-auto mt-1 max-w-[15rem] text-xs leading-5 text-white/48">
+            {isKo
+              ? "홈의 HYBRID AUCTION 카드에서 하트를 누르면 이곳에 저장됩니다."
+              : "Tap the heart on a Hybrid Auction card and it will appear here."}
+          </p>
+        </div>
+      )}
+    </section>
+  )
+}
+
+function ParticipatingAuctionsSection({
+  auctions,
+  isKo,
+}: {
+  auctions: ParticipatingAuctionItem[]
+  isKo: boolean
+}) {
+  return (
+    <section className="mt-4 rounded-2xl border border-white/15 bg-white/[0.035] p-4">
+      <SectionTitle eyebrow={isKo ? "참여중인 옥션" : "Active Auctions"} title={isKo ? "입찰 현황" : "Auction Activity"} />
+
+      {auctions.length > 0 ? (
+        <div className="mt-4 space-y-3">
+          {auctions.map((auction) => (
+            <article key={auction.id} className="flex gap-3 rounded-2xl border border-white/10 bg-black/28 p-3">
+              <div className="relative h-[74px] w-[74px] shrink-0 overflow-hidden rounded-xl bg-white/[0.04]">
+                <Image src={auction.image} alt={auction.name} fill className="object-cover" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <h3 className="line-clamp-1 text-sm font-semibold text-white">{auction.name}</h3>
+                    <p className="mt-0.5 text-xs uppercase tracking-[0.12em] text-white/45">{auction.artist}</p>
+                  </div>
+                  <span className="shrink-0 rounded-full border border-[#FF6B9D]/30 bg-[#FF6B9D]/10 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-[#ffb0cb]">
+                    {auction.status}
+                  </span>
+                </div>
+                <p className="mt-3 text-xs font-medium text-white/78">{auction.currentInfo}</p>
+                <p className="mt-1 text-[11px] text-white/42">{auction.note}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <div className="mt-4 rounded-2xl border border-dashed border-white/14 bg-black/25 p-4">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/12 bg-white/[0.04]">
+              <Gavel className="h-5 w-5 text-white/55" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-white/85">{isKo ? "현재 참여중인 옥션이 없습니다" : "No active auctions yet"}</p>
+              <p className="mt-1 text-xs leading-5 text-white/48">
+                {isKo
+                  ? "입찰하거나 드로우에 참여하면 진행 중인 항목이 이곳에 표시됩니다."
+                  : "Bids and joined auctions will appear here once you participate."}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
+  )
+}
+
 export default function ProfilePage() {
   const router = useRouter()
   const { theme } = useSiteTheme()
@@ -204,6 +375,7 @@ export default function ProfilePage() {
   const basePath = isBlack ? "/black" : ""
   const { user, session, loading: sessionLoading } = useSupabaseSession()
   const { profile, loading: profileLoading, error: profileError } = useUserProfile(user)
+  const { favoriteIds, loading: favoritesLoading, toggleFavorite } = useFavoriteItems(user)
   const { toast } = useToast()
 
   const [showAddItem, setShowAddItem] = useState(false)
@@ -217,6 +389,9 @@ export default function ProfilePage() {
   ]
 
   const isLoading = sessionLoading || (Boolean(user) && profileLoading)
+  const isLegacyUser = isLegacyGalleryUser(user?.email)
+  const favoriteItems = HYBRID_AUCTION_ITEMS.filter((item) => favoriteIds.includes(item.id))
+  const participatingAuctions = getParticipatingAuctionsForUser(user?.email)
   const displayName = profile?.nickname ?? user?.user_metadata?.nickname ?? user?.email?.split("@")[0] ?? "Fomo_KR"
   const memberId = user?.id.slice(0, 8).toUpperCase() ?? "KR-2024-00847"
   const profileSubline = user?.email ?? (isKo ? "로그인 후 이메일이 표시됩니다." : "Your email appears after login.")
@@ -351,14 +526,23 @@ export default function ProfilePage() {
                   <p className="text-xs text-white/60">{`Member ID: ${memberId}`}</p>
                 </div>
               </div>
-              <div className="relative">
+              <div className="relative flex shrink-0 flex-col items-end gap-2">
                 <button
                   type="button"
                   onClick={() => setShowQR((v) => !v)}
-                  className="rounded-xl p-2.5 border border-white/20 bg-white/[0.05] hover:bg-white/[0.1] transition-colors"
+                  className="flex h-10 min-w-[5.5rem] items-center justify-center gap-1.5 rounded-xl border border-white/20 bg-white/[0.05] px-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-white/80 transition-colors hover:bg-white/[0.1]"
                   aria-label="Show share QR"
                 >
-                  <QrCode className="w-5 h-5 text-white/80" />
+                  <QrCode className="w-4 h-4" />
+                  QR
+                </button>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="flex h-10 min-w-[5.5rem] items-center justify-center gap-1.5 rounded-xl border border-white/15 bg-black/30 px-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-white/70 transition-colors hover:border-[#FF6B9D]/45 hover:bg-[#FF6B9D]/10 hover:text-[#ffd6e7]"
+                >
+                  <LogOut className="w-4 h-4" />
+                  {isKo ? "로그아웃" : "Log out"}
                 </button>
                 {showQR && (
                   <div className="absolute right-0 top-11 z-20 w-[220px] rounded-xl border border-white/15 bg-black/95 p-3 shadow-2xl">
@@ -393,16 +577,6 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/15 bg-white/[0.03] p-3.5">
-              <div>
-                <p className="text-sm text-white/85">{isKo ? "Supabase 세션 연결이 완료되었습니다." : "Your Supabase session is connected."}</p>
-                <p className="text-xs text-white/55">{`Member ID: ${memberId}`}</p>
-              </div>
-              <Button variant="outline" className="border-white/15 bg-transparent text-white hover:bg-white/10 hover:text-white" onClick={handleLogout}>
-                {isKo ? "로그아웃" : "Log out"}
-              </Button>
-            </div>
-
             <div className="mt-4 rounded-2xl border border-white/15 bg-white/[0.03] p-4">
               <div className="flex items-center justify-between gap-3">
                 <div>
@@ -424,6 +598,17 @@ export default function ProfilePage() {
               </div>
               {profileError && <p className="mt-4 text-xs text-amber-200">{profileError}</p>}
             </div>
+
+            {!isLegacyUser && (
+              <FavoriteItemsSection
+                favoriteItems={favoriteItems}
+                favoritesLoading={favoritesLoading}
+                isKo={isKo}
+                onToggle={(itemId) => void toggleFavorite(itemId)}
+              />
+            )}
+
+            <ParticipatingAuctionsSection auctions={participatingAuctions} isKo={isKo} />
 
             <div className="mt-4 rounded-2xl bg-white/[0.04] border border-white/15 px-3.5 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
               <div className="flex items-center justify-between">
@@ -474,6 +659,7 @@ export default function ProfilePage() {
             ))}
           </section>
 
+          {isLegacyUser && (
           <section className="mt-6">
             <div className="flex items-center justify-between mb-4 px-0">
               <h2 className="text-lg font-display tracking-wide flex items-center gap-2">
@@ -502,6 +688,7 @@ export default function ProfilePage() {
               </div>
             </div>
           </section>
+          )}
         </main>
 
         {showAddItem && (

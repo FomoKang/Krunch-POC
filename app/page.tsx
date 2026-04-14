@@ -3,12 +3,15 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { Search, Bell, Home, Users, User, Trophy, Store } from "lucide-react"
+import { Bell, Heart, Search } from "lucide-react"
 import { useSiteTheme } from "@/components/theme-provider"
 import { useLocale } from "@/components/locale-provider"
 import { useSplash } from "@/components/splash-context"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { LanguageToggle } from "@/components/language-toggle"
+import { useFavoriteItems } from "@/hooks/use-favorite-items"
+import { useSupabaseSession } from "@/hooks/use-supabase-session"
+import { formatDropDate as formatHybridDropDate, HYBRID_AUCTION_ITEMS } from "@/lib/auction-catalog"
 
 // 로고 크기 통일 (logo-white, logo-pink, logo-black 동일 높이)
 const LOGO_WIDTH = 225
@@ -138,6 +141,8 @@ export default function HomePage() {
   const { theme } = useSiteTheme()
   const { locale } = useLocale()
   const { setSplashVisible } = useSplash()
+  const { user } = useSupabaseSession()
+  const { isFavorite, toggleFavorite } = useFavoriteItems(user)
   const isKo = locale === "ko"
   const basePath = theme === "black" ? "/black" : ""
   const accentText = theme === "black" ? "text-white" : "text-primary"
@@ -260,8 +265,9 @@ export default function HomePage() {
         <section>
           <h2 className={`font-display text-3xl tracking-wide uppercase italic mb-4 min-h-10 leading-tight flex items-center ${theme === "black" ? "black-mode-legend-title" : "text-white"}`}>HYBRID AUCTION</h2>
           <div className="grid grid-cols-2 gap-3">
-            {uniqueDrops.map((item) => {
-              const isFelix = item.id === 4
+            {HYBRID_AUCTION_ITEMS.map((item) => {
+              const isFelix = item.id === "hybrid-human-made-tee"
+              const favorite = isFavorite(item.id)
               const statusClass = theme === "black"
                 ? "text-white text-xs mt-2 font-medium uppercase tracking-wide"
                 : `${accentText} text-xs mt-2 font-medium uppercase tracking-wide`
@@ -269,8 +275,21 @@ export default function HomePage() {
               return (
                 <div
                   key={item.id}
-                  className={`rounded-xl overflow-hidden ${theme === "black" ? "black-home-unique-card" : "bg-[#1a1a1a] border border-[#FF6B9D]/30 hover:border-[#FF6B9D]/50"} transition-colors`}
+                  className={`relative rounded-xl overflow-hidden ${theme === "black" ? "black-home-unique-card" : "bg-[#1a1a1a] border border-[#FF6B9D]/30 hover:border-[#FF6B9D]/50"} transition-colors`}
                 >
+                  <button
+                    type="button"
+                    aria-label={favorite ? "Remove from favorites" : "Add to favorites"}
+                    aria-pressed={favorite}
+                    onClick={() => void toggleFavorite(item.id)}
+                    className={`absolute right-2 top-2 z-20 flex h-9 w-9 items-center justify-center rounded-full border backdrop-blur-md transition-all active:scale-95 ${
+                      favorite
+                        ? "border-[#FF6B9D]/70 bg-[#FF6B9D]/18 text-[#FF6B9D] shadow-[0_0_18px_rgba(255,107,157,0.28)]"
+                        : "border-white/15 bg-black/45 text-white/75 hover:border-[#FF6B9D]/50 hover:text-[#FF9EBE]"
+                    }`}
+                  >
+                    <Heart className={`h-4 w-4 ${favorite ? "fill-current" : ""}`} />
+                  </button>
                   <div className="relative aspect-[4/3] bg-transparent">
                     <Image
                       src={item.image || "/placeholder.svg"}
@@ -297,7 +316,7 @@ export default function HomePage() {
                           : item.status === "Sold Out"
                             ? (isKo ? "품절" : "Sold Out")
                             : "dateIso" in item && item.dateIso
-                              ? formatDropDate(item.dateIso, isKo)
+                              ? formatHybridDropDate(item.dateIso, isKo)
                               : null}
                     </p>
                   </div>
