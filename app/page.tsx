@@ -1,17 +1,19 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { Bell, Heart, Search } from "lucide-react"
+import { Bell, Gavel, Heart, Search } from "lucide-react"
 import { useSiteTheme } from "@/components/theme-provider"
 import { useLocale } from "@/components/locale-provider"
 import { useSplash } from "@/components/splash-context"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { LanguageToggle } from "@/components/language-toggle"
 import { useFavoriteItems } from "@/hooks/use-favorite-items"
+import { useToast } from "@/hooks/use-toast"
 import { useSupabaseSession } from "@/hooks/use-supabase-session"
-import { formatDropDate as formatHybridDropDate, HYBRID_AUCTION_ITEMS } from "@/lib/auction-catalog"
+import { useUserItemActivity } from "@/hooks/use-user-item-activity"
+import { formatDropDate as formatHybridDropDate, HYBRID_AUCTION_ITEMS, type HybridAuctionItem } from "@/lib/auction-catalog"
 
 // 로고 크기 통일 (logo-white, logo-pink, logo-black 동일 높이)
 const LOGO_WIDTH = 225
@@ -143,11 +145,14 @@ export default function HomePage() {
   const { setSplashVisible } = useSplash()
   const { user } = useSupabaseSession()
   const { isFavorite, toggleFavorite } = useFavoriteItems(user)
+  const { participations, recordViewed, watchAuction } = useUserItemActivity(user)
+  const { toast } = useToast()
   const isKo = locale === "ko"
   const basePath = theme === "black" ? "/black" : ""
   const accentText = theme === "black" ? "text-white" : "text-primary"
   const accentBg = theme === "black" ? "bg-white" : "bg-primary"
   const logoSrc = theme === "black" ? "/logo-white.png" : "/logo-pink.png"
+  const watchedItemIds = useMemo(() => new Set(participations.map((item) => item.item_id)), [participations])
 
   const [showSplash, setShowSplash] = useState(true)
   const [mounted, setMounted] = useState(false)
@@ -166,6 +171,51 @@ export default function HomePage() {
       setSplashVisible(false)
     }
   }, [setSplashVisible])
+
+  function showLoginPrompt() {
+    toast({
+      title: isKo ? "로그인이 필요해요" : "Log in to save this",
+      description: isKo
+        ? "로그인하면 찜, 참여 옥션, 최근 본 상품이 마이 프로필에 저장됩니다."
+        : "Saved items, watched auctions, and recent views appear in your profile after login.",
+    })
+  }
+
+  async function handleFavoriteToggle(itemId: string) {
+    if (!user) {
+      showLoginPrompt()
+      return
+    }
+
+    await toggleFavorite(itemId)
+  }
+
+  async function handleCardViewed(itemId: string) {
+    if (!user) {
+      return
+    }
+
+    await recordViewed(itemId)
+  }
+
+  async function handleWatchAuction(item: HybridAuctionItem) {
+    if (!user) {
+      showLoginPrompt()
+      return
+    }
+
+    await recordViewed(item.id)
+    const saved = await watchAuction(item.id, item.currentPrice)
+
+    if (saved) {
+      toast({
+        title: isKo ? "옥션을 지켜보는 중" : "Auction added",
+        description: isKo
+          ? "마이 프로필의 참여중인 옥션에 반영됩니다."
+          : "This now appears in your active auctions.",
+      })
+    }
+  }
 
   if (!mounted || showSplash) {
     return <SplashScreen accentBg={accentBg} logoSrc={logoSrc} isKo={isKo} />
@@ -267,7 +317,8 @@ export default function HomePage() {
           <div className="grid grid-cols-2 gap-3">
             {HYBRID_AUCTION_ITEMS.map((item) => {
               const isFelix = item.id === "hybrid-human-made-tee"
-              const favorite = isFavorite(item.id)
+              const favorite = user ? isFavorite(item.id) : false
+              const watched = user ? watchedItemIds.has(item.id) : false
               const statusClass = theme === "black"
                 ? "text-white text-xs mt-2 font-medium uppercase tracking-wide"
                 : `${accentText} text-xs mt-2 font-medium uppercase tracking-wide`
@@ -275,13 +326,25 @@ export default function HomePage() {
               return (
                 <div
                   key={item.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => void handleCardViewed(item.id)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault()
+                      void handleCardViewed(item.id)
+                    }
+                  }}
                   className={`relative rounded-xl overflow-hidden ${theme === "black" ? "black-home-unique-card" : "bg-[#1a1a1a] border border-[#FF6B9D]/30 hover:border-[#FF6B9D]/50"} transition-colors`}
                 >
                   <button
                     type="button"
                     aria-label={favorite ? "Remove from favorites" : "Add to favorites"}
                     aria-pressed={favorite}
-                    onClick={() => void toggleFavorite(item.id)}
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      void handleFavoriteToggle(item.id)
+                    }}
                     className={`absolute right-2 top-2 z-20 flex h-9 w-9 items-center justify-center rounded-full border backdrop-blur-md transition-all active:scale-95 ${
                       favorite
                         ? "border-[#FF6B9D]/70 bg-[#FF6B9D]/18 text-[#FF6B9D] shadow-[0_0_18px_rgba(255,107,157,0.28)]"
@@ -319,6 +382,21 @@ export default function HomePage() {
                               ? formatHybridDropDate(item.dateIso, isKo)
                               : null}
                     </p>
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        void handleWatchAuction(item)
+                      }}
+                      className={`mt-3 flex h-8 w-full items-center justify-center gap-1.5 rounded-lg border text-[10px] font-bold uppercase tracking-[0.12em] transition-colors ${
+                        watched
+                          ? "border-[#FF6B9D]/45 bg-[#FF6B9D]/14 text-[#ffc1d7]"
+                          : "border-white/12 bg-white/[0.04] text-white/72 hover:border-[#FF6B9D]/45 hover:text-[#ffc1d7]"
+                      }`}
+                    >
+                      <Gavel className="h-3.5 w-3.5" />
+                      {watched ? (isKo ? "관심 등록됨" : "Watching") : item.status === "Live Now" ? (isKo ? "옥션 보기" : "Watch Auction") : (isKo ? "관심 등록" : "Watch")}
+                    </button>
                   </div>
                 </div>
               )

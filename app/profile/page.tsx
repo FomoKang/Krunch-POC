@@ -1,10 +1,10 @@
 ﻿"use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { Gavel, Heart, LogOut, Trophy, User, Settings, Wallet, Search, Bell, X, Plus, QrCode, Share2 } from "lucide-react"
+import { Bell, Eye, Gavel, Heart, LogOut, Plus, QrCode, Search, Settings, Share2, Trophy, User, Wallet, X } from "lucide-react"
 import { useSiteTheme } from "@/components/theme-provider"
 import { useLocale } from "@/components/locale-provider"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -12,17 +12,24 @@ import { LanguageToggle } from "@/components/language-toggle"
 import { AuthPanel } from "@/components/auth-panel"
 import { useFavoriteItems } from "@/hooks/use-favorite-items"
 import { useSupabaseSession } from "@/hooks/use-supabase-session"
+import { useUserItemActivity } from "@/hooks/use-user-item-activity"
 import { useUserProfile } from "@/hooks/use-user-profile"
 import { useToast } from "@/hooks/use-toast"
 import {
+  formatKrwAmount,
   formatDropDate,
+  getCatalogItemById,
+  getCatalogSubtitle,
+  getCatalogTitle,
   getParticipatingAuctionsForUser,
   HYBRID_AUCTION_ITEMS,
   isLegacyGalleryUser,
+  type CatalogItem,
   type HybridAuctionItem,
   type ParticipatingAuctionItem,
 } from "@/lib/auction-catalog"
 import { getSupabaseBrowserClient } from "@/lib/supabase/client"
+import type { AuctionParticipationRecord } from "@/lib/supabase/item-activity"
 
 const TIER_NAMES: Record<number, string> = {
   1: "Bronze",
@@ -212,6 +219,86 @@ function SectionTitle({ eyebrow, title }: { eyebrow: string; title: string }) {
   )
 }
 
+type ProfileAuctionActivity = {
+  id: string
+  itemId: string
+  title: string
+  artist: string
+  image: string
+  status: string
+  currentInfo: string
+  note: string
+}
+
+function getParticipationStatusLabel(status: AuctionParticipationRecord["status"]) {
+  if (status === "bid_placed") return "BID PLACED"
+  if (status === "leading") return "LEADING"
+  if (status === "outbid") return "OUTBID"
+  return "WATCHING"
+}
+
+function getParticipationNote(status: AuctionParticipationRecord["status"], isKo: boolean) {
+  if (status === "bid_placed") {
+    return isKo ? "입찰 내역이 프로필에 저장되었습니다." : "Your bid is saved to this profile."
+  }
+
+  if (status === "leading") {
+    return isKo ? "현재 리드 중인 옥션입니다." : "You are currently leading this auction."
+  }
+
+  if (status === "outbid") {
+    return isKo ? "상위 입찰이 발생했습니다." : "A higher bid has been placed."
+  }
+
+  return isKo ? "관심 옥션으로 지켜보는 중입니다." : "You are watching this auction."
+}
+
+function getParticipationCurrentInfo(record: AuctionParticipationRecord, item: CatalogItem, isKo: boolean) {
+  const amount = formatKrwAmount(record.current_bid ?? item.currentPrice)
+
+  if (!amount) {
+    return isKo ? "가격 공개 예정" : "Price pending"
+  }
+
+  if (record.status === "watching") {
+    return isKo ? `현재가 ${amount}` : `Current price ${amount}`
+  }
+
+  return isKo ? `참여 금액 ${amount}` : `Your amount ${amount}`
+}
+
+function mapParticipationRecord(record: AuctionParticipationRecord, isKo: boolean): ProfileAuctionActivity | null {
+  const item = getCatalogItemById(record.item_id)
+
+  if (!item) {
+    return null
+  }
+
+  return {
+    id: record.id,
+    itemId: record.item_id,
+    title: getCatalogTitle(item, isKo),
+    artist: item.artistName,
+    image: item.imageUrl,
+    status: getParticipationStatusLabel(record.status),
+    currentInfo: getParticipationCurrentInfo(record, item, isKo),
+    note: getParticipationNote(record.status, isKo),
+  }
+}
+
+function mapLegacyParticipation(item: ParticipatingAuctionItem): ProfileAuctionActivity {
+  return {
+    id: item.id,
+    itemId: item.id,
+    title: item.name,
+    artist: item.artist,
+    image: item.image,
+    status: item.status,
+    currentInfo: item.currentInfo,
+    note: item.note,
+  }
+}
+
 function getHybridStatusLabel(item: HybridAuctionItem, isKo: boolean) {
   if (item.status === "Coming Soon") {
     return isKo ? "오픈 예정" : "Coming Soon"
@@ -311,28 +398,90 @@ function FavoriteItemsSection({
   )
 }
 
-function ParticipatingAuctionsSection({
-  auctions,
+function RecentViewedItemsSection({
+  items,
+  loading,
   isKo,
 }: {
-  auctions: ParticipatingAuctionItem[]
+  items: CatalogItem[]
+  loading: boolean
   isKo: boolean
 }) {
   return (
     <section className="mt-4 rounded-2xl border border-white/15 bg-white/[0.035] p-4">
-      <SectionTitle eyebrow={isKo ? "참여중인 옥션" : "Active Auctions"} title={isKo ? "입찰 현황" : "Auction Activity"} />
+      <div className="flex items-start justify-between gap-3">
+        <SectionTitle eyebrow={isKo ? "최근 본 상품" : "Recent Views"} title={isKo ? "다시 볼 만한 아이템" : "Recently Viewed"} />
+        <span className="rounded-full border border-white/15 bg-white/[0.04] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/60">
+          {loading ? "..." : items.length}
+        </span>
+      </div>
+
+      {items.length > 0 ? (
+        <div className="mt-4 space-y-3">
+          {items.map((item) => (
+            <article key={item.id} className="flex gap-3 rounded-2xl border border-white/10 bg-black/28 p-3">
+              <div className="relative h-[70px] w-[70px] shrink-0 overflow-hidden rounded-xl bg-white/[0.04]">
+                <Image src={item.imageUrl} alt={getCatalogTitle(item, isKo)} fill className="object-cover" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] uppercase tracking-[0.16em] text-white/38">{item.artistName}</p>
+                <h3 className="mt-1 line-clamp-1 text-sm font-semibold text-white">{getCatalogTitle(item, isKo)}</h3>
+                <p className="mt-0.5 line-clamp-1 text-xs italic text-white/45">{getCatalogSubtitle(item, isKo)}</p>
+                <p className="mt-2 text-xs font-medium text-[#ffb0cb]">{formatKrwAmount(item.currentPrice) ?? (isKo ? "가격 공개 예정" : "Price pending")}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <div className="mt-4 rounded-2xl border border-dashed border-white/14 bg-black/25 p-4">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/12 bg-white/[0.04]">
+              <Eye className="h-5 w-5 text-white/55" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-white/85">{isKo ? "아직 최근 본 상품이 없습니다" : "No recent views yet"}</p>
+              <p className="mt-1 text-xs leading-5 text-white/48">
+                {isKo
+                  ? "홈의 HYBRID AUCTION 카드를 눌러 본 상품이 이곳에 쌓입니다."
+                  : "Tap a Hybrid Auction card on Home and it will appear here."}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
+  )
+}
+
+function ParticipatingAuctionsSection({
+  auctions,
+  loading,
+  isKo,
+}: {
+  auctions: ProfileAuctionActivity[]
+  loading: boolean
+  isKo: boolean
+}) {
+  return (
+    <section className="mt-4 rounded-2xl border border-white/15 bg-white/[0.035] p-4">
+      <div className="flex items-start justify-between gap-3">
+        <SectionTitle eyebrow={isKo ? "참여중인 옥션" : "Active Auctions"} title={isKo ? "입찰 현황" : "Auction Activity"} />
+        <span className="rounded-full border border-[#FF6B9D]/30 bg-[#FF6B9D]/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#ffb0cb]">
+          {loading ? "..." : auctions.length}
+        </span>
+      </div>
 
       {auctions.length > 0 ? (
         <div className="mt-4 space-y-3">
           {auctions.map((auction) => (
             <article key={auction.id} className="flex gap-3 rounded-2xl border border-white/10 bg-black/28 p-3">
               <div className="relative h-[74px] w-[74px] shrink-0 overflow-hidden rounded-xl bg-white/[0.04]">
-                <Image src={auction.image} alt={auction.name} fill className="object-cover" />
+                <Image src={auction.image} alt={auction.title} fill className="object-cover" />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <h3 className="line-clamp-1 text-sm font-semibold text-white">{auction.name}</h3>
+                    <h3 className="line-clamp-1 text-sm font-semibold text-white">{auction.title}</h3>
                     <p className="mt-0.5 text-xs uppercase tracking-[0.12em] text-white/45">{auction.artist}</p>
                   </div>
                   <span className="shrink-0 rounded-full border border-[#FF6B9D]/30 bg-[#FF6B9D]/10 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-[#ffb0cb]">
@@ -352,11 +501,17 @@ function ParticipatingAuctionsSection({
               <Gavel className="h-5 w-5 text-white/55" />
             </div>
             <div>
-              <p className="text-sm font-medium text-white/85">{isKo ? "현재 참여중인 옥션이 없습니다" : "No active auctions yet"}</p>
+              <p className="text-sm font-medium text-white/85">
+                {loading ? (isKo ? "옥션 활동을 불러오는 중입니다" : "Loading auction activity") : isKo ? "현재 참여중인 옥션이 없습니다" : "No active auctions yet"}
+              </p>
               <p className="mt-1 text-xs leading-5 text-white/48">
-                {isKo
-                  ? "입찰하거나 드로우에 참여하면 진행 중인 항목이 이곳에 표시됩니다."
-                  : "Bids and joined auctions will appear here once you participate."}
+                {loading
+                  ? isKo
+                    ? "잠시만 기다려주세요."
+                    : "Just a moment."
+                  : isKo
+                    ? "입찰하거나 관심 옥션을 등록하면 진행 중인 항목이 이곳에 표시됩니다."
+                    : "Watched auctions and bids will appear here once you participate."}
               </p>
             </div>
           </div>
@@ -376,6 +531,12 @@ export default function ProfilePage() {
   const { user, session, loading: sessionLoading } = useSupabaseSession()
   const { profile, loading: profileLoading, error: profileError } = useUserProfile(user)
   const { favoriteIds, loading: favoritesLoading, toggleFavorite } = useFavoriteItems(user)
+  const {
+    ownedItems,
+    participations,
+    viewedItems,
+    loading: activityLoading,
+  } = useUserItemActivity(user)
   const { toast } = useToast()
 
   const [showAddItem, setShowAddItem] = useState(false)
@@ -390,8 +551,26 @@ export default function ProfilePage() {
 
   const isLoading = sessionLoading || (Boolean(user) && profileLoading)
   const isLegacyUser = isLegacyGalleryUser(user?.email)
+  const hasGalleryExperience = isLegacyUser || ownedItems.length > 0
   const favoriteItems = HYBRID_AUCTION_ITEMS.filter((item) => favoriteIds.includes(item.id))
-  const participatingAuctions = getParticipatingAuctionsForUser(user?.email)
+  const participatingAuctions = useMemo(() => {
+    const remoteAuctions = participations
+      .map((participation) => mapParticipationRecord(participation, isKo))
+      .filter((auction): auction is ProfileAuctionActivity => Boolean(auction))
+
+    if (remoteAuctions.length > 0) {
+      return remoteAuctions
+    }
+
+    return getParticipatingAuctionsForUser(user?.email).map(mapLegacyParticipation)
+  }, [isKo, participations, user?.email])
+  const recentlyViewedItems = useMemo(
+    () =>
+      viewedItems
+        .map((viewedItem) => getCatalogItemById(viewedItem.item_id))
+        .filter((item): item is CatalogItem => Boolean(item)),
+    [viewedItems],
+  )
   const displayName = profile?.nickname ?? user?.user_metadata?.nickname ?? user?.email?.split("@")[0] ?? "Fomo_KR"
   const memberId = user?.id.slice(0, 8).toUpperCase() ?? "KR-2024-00847"
   const profileSubline = user?.email ?? (isKo ? "로그인 후 이메일이 표시됩니다." : "Your email appears after login.")
@@ -416,7 +595,7 @@ export default function ProfilePage() {
 
       toast({
         title: isKo ? "로그아웃 완료" : "Logged out",
-        description: isKo ? "프로필 세션 연결을 종료했습니다." : "Your profile session has been cleared.",
+        description: isKo ? "프로필에서 로그아웃했습니다." : "You have been signed out of this profile.",
       })
       router.replace(`${basePath}/login`)
       router.refresh()
@@ -436,7 +615,7 @@ export default function ProfilePage() {
           <p className="text-xs uppercase tracking-[0.22em] text-white/45">Profile</p>
           <h1 className="mt-3 font-display text-3xl uppercase tracking-wide text-white">{isKo ? "계정 확인 중" : "Checking account"}</h1>
           <p className="mt-3 text-sm text-white/60">
-            {isKo ? "Supabase 세션과 프로필 정보를 불러오고 있습니다." : "Loading your Supabase session and profile data."}
+            {isKo ? "프로필 정보를 불러오고 있습니다." : "Loading your profile."}
           </p>
         </div>
       </div>
@@ -596,19 +775,25 @@ export default function ProfilePage() {
                   </div>
                 ))}
               </div>
-              {profileError && <p className="mt-4 text-xs text-amber-200">{profileError}</p>}
+              {profileError && (
+                <p className="mt-4 text-xs text-amber-200">
+                  {isKo ? "일부 계정 정보는 로그인 정보 기준으로 표시 중입니다." : "Some account details are being shown from your sign-in info."}
+                </p>
+              )}
             </div>
 
-            {!isLegacyUser && (
-              <FavoriteItemsSection
-                favoriteItems={favoriteItems}
-                favoritesLoading={favoritesLoading}
-                isKo={isKo}
-                onToggle={(itemId) => void toggleFavorite(itemId)}
-              />
+            {!hasGalleryExperience && (
+              <>
+                <ParticipatingAuctionsSection auctions={participatingAuctions} loading={activityLoading} isKo={isKo} />
+                <FavoriteItemsSection
+                  favoriteItems={favoriteItems}
+                  favoritesLoading={favoritesLoading}
+                  isKo={isKo}
+                  onToggle={(itemId) => void toggleFavorite(itemId)}
+                />
+                <RecentViewedItemsSection items={recentlyViewedItems} loading={activityLoading} isKo={isKo} />
+              </>
             )}
-
-            <ParticipatingAuctionsSection auctions={participatingAuctions} isKo={isKo} />
 
             <div className="mt-4 rounded-2xl bg-white/[0.04] border border-white/15 px-3.5 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
               <div className="flex items-center justify-between">
@@ -659,7 +844,7 @@ export default function ProfilePage() {
             ))}
           </section>
 
-          {isLegacyUser && (
+          {hasGalleryExperience && (
           <section className="mt-6">
             <div className="flex items-center justify-between mb-4 px-0">
               <h2 className="text-lg font-display tracking-wide flex items-center gap-2">
@@ -688,6 +873,18 @@ export default function ProfilePage() {
               </div>
             </div>
           </section>
+          )}
+          {hasGalleryExperience && (
+            <>
+              <ParticipatingAuctionsSection auctions={participatingAuctions} loading={activityLoading} isKo={isKo} />
+              <FavoriteItemsSection
+                favoriteItems={favoriteItems}
+                favoritesLoading={favoritesLoading}
+                isKo={isKo}
+                onToggle={(itemId) => void toggleFavorite(itemId)}
+              />
+              <RecentViewedItemsSection items={recentlyViewedItems} loading={activityLoading} isKo={isKo} />
+            </>
           )}
         </main>
 
