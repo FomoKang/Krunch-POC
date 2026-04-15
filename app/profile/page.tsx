@@ -1,10 +1,10 @@
 ﻿"use client"
 
-import { useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { Trophy, User, Settings, Wallet, Search, Bell, X, Plus, QrCode, Share2 } from "lucide-react"
+import { Trophy, User, Settings, Wallet, Search, Bell, X, Plus, QrCode, Share2, ChevronLeft, ChevronRight } from "lucide-react"
 import { useSiteTheme } from "@/components/theme-provider"
 import { useLocale } from "@/components/locale-provider"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -12,7 +12,9 @@ import { LanguageToggle } from "@/components/language-toggle"
 import { Button } from "@/components/ui/button"
 import { useSupabaseSession } from "@/hooks/use-supabase-session"
 import { useUserProfile } from "@/hooks/use-user-profile"
+import { useUserProvenance } from "@/hooks/use-user-provenance"
 import { useToast } from "@/hooks/use-toast"
+import { buildProfileGalleryItems, type GalleryItem } from "@/lib/certificate-data"
 import { getSupabaseBrowserClient } from "@/lib/supabase/client"
 
 const TIER_NAMES: Record<number, string> = {
@@ -25,99 +27,6 @@ const TIER_NAMES: Record<number, string> = {
 
 const LEVEL_CURRENT = 3
 const XP_PERCENT = 87
-
-type CertificateField = {
-  labelKo: string
-  labelEn: string
-  valueKo: string
-  valueEn: string
-}
-
-type GalleryItem = {
-  id: number
-  image: string | null
-  name: string
-  certificate?: {
-    titleKo: string
-    titleEn: string
-    subtitleKo: string
-    subtitleEn: string
-    serialNumber: string
-    lastPriceKo: string
-    lastPriceEn: string
-    dnaVerified: boolean
-    videoSrc: string
-    fields: CertificateField[]
-  }
-}
-
-const GALLERY_ITEMS: GalleryItem[] = [
-  {
-    id: 1,
-    image: "/cap2.png",
-    name: "PEACEMINUSONE1988-CAP",
-    certificate: {
-      titleKo: "디지털 인증서",
-      titleEn: "Digital Certificate",
-      subtitleKo: "KRUNCH가 검증한 아티스트 착용 아이템",
-      subtitleEn: "Artist-worn item verified by KRUNCH",
-      serialNumber: "KR-GD-UBM-2026-0001",
-      lastPriceKo: "최종 거래가 : 52,000,000 KRW",
-      lastPriceEn: "Last Price : 52,000,000 KRW",
-      dnaVerified: true,
-      videoSrc: "/cap2-spin.mp4",
-      fields: [
-        {
-          labelKo: "아티스트 이름",
-          labelEn: "Artist",
-          valueKo: "G-DRAGON",
-          valueEn: "G-DRAGON",
-        },
-        {
-          labelKo: "착용 일자",
-          labelEn: "Worn On",
-          valueKo: "2026.01.12",
-          valueEn: "Jan 12, 2026",
-        },
-        {
-          labelKo: "무대 이름",
-          labelEn: "Stage",
-          valueKo: "Ubermensch Seoul Opening Stage",
-          valueEn: "Ubermensch Seoul Opening Stage",
-        },
-        {
-          labelKo: "앨범 / 곡",
-          labelEn: "Album / Track",
-          valueKo: "Ubermensch / TOO BAD",
-          valueEn: "Ubermensch / TOO BAD",
-        },
-        {
-          labelKo: "브랜드",
-          labelEn: "Brand",
-          valueKo: "PEACEMINUSONE",
-          valueEn: "PEACEMINUSONE",
-        },
-        {
-          labelKo: "스타일리스트",
-          labelEn: "Stylist",
-          valueKo: "마라 킴",
-          valueEn: "Mara Kim",
-        },
-        {
-          labelKo: "DNA 인증 여부",
-          labelEn: "DNA Verification",
-          valueKo: "인증 완료",
-          valueEn: "Verified",
-        },
-      ],
-    },
-  },
-  { id: 2, image: "/gallery-dress-1.png", name: "Black Ribbon Dress" },
-  { id: 3, image: "/gallery-dress-2.png", name: "Navy Sport Dress" },
-  { id: 4, image: "/gallery-dress-3.png", name: "Ice Ribbon Dress" },
-  { id: 5, image: null, name: "Empty Slot" },
-  { id: 6, image: null, name: "Empty Slot" },
-]
 
 function getTierName(level: number) {
   if (level >= 5) return "Diamond (VIP)"
@@ -203,11 +112,14 @@ export default function ProfilePage() {
   const basePath = isBlack ? "/black" : ""
   const { user, session, loading: sessionLoading, error: sessionError, isConfigured } = useSupabaseSession()
   const { profile, loading: profileLoading, error: profileError } = useUserProfile(user)
+  const { provenance, loading: provenanceLoading, error: provenanceError } = useUserProvenance(user)
   const { toast } = useToast()
 
   const [showAddItem, setShowAddItem] = useState(false)
   const [showQR, setShowQR] = useState(false)
-  const [selectedCertificate, setSelectedCertificate] = useState<GalleryItem | null>(null)
+  const [selectedCertificateId, setSelectedCertificateId] = useState<number | null>(null)
+  const [activeSheetIndex, setActiveSheetIndex] = useState(0)
+  const certificateScrollRef = useRef<HTMLDivElement>(null)
 
   const userStats = [
     { label: isKo ? "총 입찰" : "Total Bids", value: "127" },
@@ -215,7 +127,21 @@ export default function ProfilePage() {
     { label: isKo ? "낙찰률" : "Win Rate", value: "18%" },
   ]
 
-  const isLoading = sessionLoading || (Boolean(user) && profileLoading)
+  const isLoading = sessionLoading || (Boolean(user) && (profileLoading || provenanceLoading))
+  const gallerySource = useMemo(
+    () => ({
+      ...(profile ?? {}),
+      ...(provenance ?? {}),
+    }),
+    [profile, provenance],
+  )
+  const galleryItems = useMemo(() => buildProfileGalleryItems(gallerySource), [gallerySource])
+  const selectedCertificate = useMemo(
+    () => galleryItems.find((item) => item.id === selectedCertificateId) ?? null,
+    [galleryItems, selectedCertificateId],
+  )
+  const certificateSheets = selectedCertificate?.certificate?.sheets ?? []
+  const activeSheet = certificateSheets[activeSheetIndex] ?? null
   const displayName = profile?.nickname ?? user?.user_metadata?.nickname ?? user?.email?.split("@")[0] ?? "Fomo_KR"
   const memberId = user?.id.slice(0, 8).toUpperCase() ?? "KR-2024-00847"
   const profileSubline = user?.email ?? (isKo ? "로그인 후 이메일이 표시됩니다." : "Your email appears after login.")
@@ -228,6 +154,30 @@ export default function ProfilePage() {
     : isKo
       ? "아직 없음"
       : "Not available yet"
+
+  useEffect(() => {
+    setActiveSheetIndex(0)
+
+    if (certificateScrollRef.current) {
+      certificateScrollRef.current.scrollTo({ top: 0 })
+    }
+  }, [selectedCertificateId])
+
+  useEffect(() => {
+    if (!selectedCertificate?.certificate || !certificateScrollRef.current) {
+      return
+    }
+
+    certificateScrollRef.current.scrollTo({ top: 0 })
+  }, [activeSheetIndex, selectedCertificate])
+
+  useEffect(() => {
+    if (!certificateSheets.length || activeSheetIndex < certificateSheets.length) {
+      return
+    }
+
+    setActiveSheetIndex(certificateSheets.length - 1)
+  }, [activeSheetIndex, certificateSheets.length])
 
   async function handleLogout() {
     try {
@@ -510,16 +460,21 @@ export default function ProfilePage() {
 
             <div className="rounded-3xl border border-white/15 bg-white/[0.03] p-3.5 shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {GALLERY_ITEMS.map((item) => (
+                {galleryItems.map((item) => (
                   <GalleryTile
                     key={item.id}
                     item={item}
                     isKo={isKo}
                     onAdd={() => setShowAddItem(true)}
-                    onSelect={(selectedItem) => setSelectedCertificate(selectedItem)}
+                    onSelect={(selectedItem) => setSelectedCertificateId(selectedItem.id)}
                   />
                 ))}
               </div>
+              {provenanceError && (
+                <p className="mt-3 text-xs text-amber-200">
+                  {provenanceError}
+                </p>
+              )}
             </div>
           </section>
         </main>
@@ -541,7 +496,7 @@ export default function ProfilePage() {
         {selectedCertificate?.certificate && (
           <div
             className="fixed inset-0 z-[10050] flex items-end justify-center overflow-hidden bg-black/80 p-0 backdrop-blur-sm sm:items-center sm:p-6"
-            onClick={() => setSelectedCertificate(null)}
+            onClick={() => setSelectedCertificateId(null)}
           >
             <div
               className="relative max-h-[calc(100dvh-16px)] w-full max-w-lg overflow-hidden rounded-t-2xl bg-[#070707] sm:max-h-[min(900px,calc(100dvh-48px))] sm:rounded-2xl"
@@ -552,11 +507,14 @@ export default function ProfilePage() {
                 aria-hidden
               />
 
-              <div className="relative max-h-[calc(100dvh-16px)] min-h-0 overflow-y-auto overscroll-y-contain px-5 pb-[max(2.5rem,calc(1.25rem+env(safe-area-inset-bottom)))] pt-[max(0.75rem,env(safe-area-inset-top))] scrollbar-dark sm:max-h-[min(900px,calc(100dvh-48px))] sm:px-8 sm:pb-10 sm:pt-8">
+              <div
+                ref={certificateScrollRef}
+                className="relative max-h-[calc(100dvh-16px)] min-h-0 overflow-y-auto overscroll-y-contain px-5 pb-[max(2.5rem,calc(1.25rem+env(safe-area-inset-bottom)))] pt-[max(0.75rem,env(safe-area-inset-top))] scrollbar-dark sm:max-h-[min(900px,calc(100dvh-48px))] sm:px-8 sm:pb-10 sm:pt-8"
+              >
                 <div className="mb-8 flex justify-end">
                   <button
                     type="button"
-                    onClick={() => setSelectedCertificate(null)}
+                    onClick={() => setSelectedCertificateId(null)}
                     className="rounded-full p-2 text-white/50 transition-colors hover:bg-white/5 hover:text-white/80"
                     aria-label="Close certificate"
                   >
@@ -594,15 +552,21 @@ export default function ProfilePage() {
                   </h3>
                   <p className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-xs tracking-wide">
                     <span
-                      className="font-semibold uppercase tracking-[0.14em] text-[#00FF9C] [text-shadow:0_0_10px_rgba(0,255,156,0.45),0_0_22px_rgba(0,255,156,0.12)]"
+                      className={`font-semibold uppercase tracking-[0.14em] ${
+                        selectedCertificate.certificate.dnaVerified
+                          ? "text-[#00FF9C] [text-shadow:0_0_10px_rgba(0,255,156,0.45),0_0_22px_rgba(0,255,156,0.12)]"
+                          : "text-white/70"
+                      }`}
                     >
-                      {isKo ? "DNA 인증" : "DNA Verified"}
+                      {isKo
+                        ? selectedCertificate.certificate.verificationBadgeKo
+                        : selectedCertificate.certificate.verificationBadgeEn}
                     </span>
                     <span className="text-white/20 select-none" aria-hidden>
                       쨌
                     </span>
                     <span className="font-medium tracking-[0.04em] text-[#e8e8ec]">
-                      {isKo ? "블랙 티어" : "Black Tier"}
+                      {isKo ? selectedCertificate.certificate.tierLabelKo : selectedCertificate.certificate.tierLabelEn}
                     </span>
                   </p>
                 </div>
@@ -617,17 +581,79 @@ export default function ProfilePage() {
 
                 <div className="my-10 h-px w-full bg-white/[0.08]" />
 
-                <div className="space-y-5 pb-6">
-                  {selectedCertificate.certificate.fields.slice(0, 6).map((field) => (
-                    <div key={field.labelEn} className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-6">
-                      <span className="shrink-0 text-[11px] uppercase tracking-[0.15em] text-white/38">
-                        {isKo ? field.labelKo : field.labelEn}
-                      </span>
-                      <span className="min-w-0 text-sm leading-relaxed text-white/85">
-                        {isKo ? field.valueKo : field.valueEn}
-                      </span>
+                <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 sm:p-5">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-[0.18em] text-white/45">
+                        {isKo ? "인증서 시트" : "Certificate Sheets"}
+                      </p>
+                      <h4 className="mt-1 font-display text-xl uppercase tracking-[0.06em] text-white">
+                        {activeSheet ? (isKo ? activeSheet.labelKo : activeSheet.labelEn) : isKo ? "시트 준비 중" : "Preparing Sheet"}
+                      </h4>
                     </div>
-                  ))}
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setActiveSheetIndex((prev) => Math.max(prev - 1, 0))}
+                        disabled={activeSheetIndex === 0}
+                        className="flex h-9 w-9 items-center justify-center rounded-full border border-white/12 bg-white/[0.03] text-white/70 transition-colors hover:bg-white/[0.08] hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
+                        aria-label={isKo ? "이전 시트" : "Previous sheet"}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </button>
+                      <span className="min-w-[3.5rem] text-center text-[11px] uppercase tracking-[0.16em] text-white/45">
+                        {certificateSheets.length ? `${activeSheetIndex + 1} / ${certificateSheets.length}` : "0 / 0"}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setActiveSheetIndex((prev) => Math.min(prev + 1, Math.max(certificateSheets.length - 1, 0)))}
+                        disabled={!certificateSheets.length || activeSheetIndex >= certificateSheets.length - 1}
+                        className="flex h-9 w-9 items-center justify-center rounded-full border border-white/12 bg-white/[0.03] text-white/70 transition-colors hover:bg-white/[0.08] hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
+                        aria-label={isKo ? "다음 시트" : "Next sheet"}
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {certificateSheets.length > 1 && (
+                    <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
+                      {certificateSheets.map((sheet, index) => (
+                        <button
+                          key={sheet.id}
+                          type="button"
+                          onClick={() => setActiveSheetIndex(index)}
+                          className={`shrink-0 rounded-full border px-3 py-1.5 text-[11px] uppercase tracking-[0.12em] transition-colors ${
+                            index === activeSheetIndex
+                              ? "border-[#ff8fbc]/55 bg-[#ff8fbc]/14 text-[#ffd9e8]"
+                              : "border-white/12 bg-transparent text-white/50 hover:border-white/30 hover:text-white/75"
+                          }`}
+                        >
+                          {certificateSheets.length <= 4 ? `${index + 1}. ` : ""}
+                          {isKo ? sheet.labelKo : sheet.labelEn}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="mt-6 space-y-5 pb-1">
+                    {activeSheet ? (
+                      activeSheet.fields.map((field) => (
+                        <div key={`${activeSheet.id}-${field.labelEn}`} className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-6">
+                          <span className="shrink-0 text-[11px] uppercase tracking-[0.15em] text-white/38">
+                            {isKo ? field.labelKo : field.labelEn}
+                          </span>
+                          <span className="min-w-0 text-sm leading-relaxed text-white/85">
+                            {isKo ? field.valueKo : field.valueEn}
+                          </span>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm leading-relaxed text-white/55">
+                        {isKo ? "표시할 인증서 시트가 아직 없습니다." : "There are no certificate sheets to display yet."}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

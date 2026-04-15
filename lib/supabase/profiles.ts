@@ -6,6 +6,7 @@ export type ProfileRecord = {
   email: string
   nickname: string
   created_at: string
+  [key: string]: unknown
 }
 
 function normalizeNickname(user: User, nickname?: string) {
@@ -39,7 +40,7 @@ export async function getProfileById(userId: string) {
   const supabase = getSupabaseBrowserClient()
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, email, nickname, created_at")
+    .select("*")
     .eq("id", userId)
     .maybeSingle<ProfileRecord>()
 
@@ -68,7 +69,7 @@ export async function upsertProfileFromUser(user: User, nickname?: string) {
       },
       { onConflict: "id" },
     )
-    .select("id, email, nickname, created_at")
+    .select("*")
     .single<ProfileRecord>()
 
   if (error) {
