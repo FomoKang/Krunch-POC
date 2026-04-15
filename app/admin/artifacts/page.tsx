@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Copy, Download, Plus, Search, Shirt } from "lucide-react"
+import { ChevronRight, Copy, Download, Plus, Search, Shirt } from "lucide-react"
 import { ARTIFACT_STATUS_OPTIONS, USAGE_TIER_OPTIONS } from "@/lib/admin/constants"
 import { downloadCsv } from "@/lib/admin/utils"
 import { listArtifacts, type ArtifactRecord } from "@/lib/supabase/provenance"
@@ -92,6 +92,10 @@ export default function AdminArtifactsPage() {
       title: "Artifact code copied",
       description: `${code} is now on your clipboard.`,
     })
+  }
+
+  function openArtifact(artifactId: string) {
+    router.push(`/admin/artifacts/${artifactId}`)
   }
 
   return (
@@ -184,6 +188,7 @@ export default function AdminArtifactsPage() {
                   <TableHead className="text-white/55">Usage tier</TableHead>
                   <TableHead className="text-white/55">Status</TableHead>
                   <TableHead className="text-white/55">Holder</TableHead>
+                  <TableHead className="text-right text-white/55">Open</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -191,7 +196,16 @@ export default function AdminArtifactsPage() {
                   <TableRow
                     key={artifact.id}
                     className="cursor-pointer border-white/10 hover:bg-white/[0.03]"
-                    onClick={() => router.push(`/admin/artifacts/${artifact.id}`)}
+                    onClick={() => openArtifact(artifact.id)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault()
+                        openArtifact(artifact.id)
+                      }
+                    }}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`Open ${artifact.artifact_title}`}
                   >
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -208,7 +222,18 @@ export default function AdminArtifactsPage() {
                         </button>
                       </div>
                     </TableCell>
-                    <TableCell className="max-w-[320px] truncate text-white">{artifact.artifact_title}</TableCell>
+                    <TableCell className="max-w-[320px] truncate">
+                      <button
+                        type="button"
+                        className="truncate text-left text-white underline-offset-4 transition hover:text-[#ff9ebe] hover:underline"
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          openArtifact(artifact.id)
+                        }}
+                      >
+                        {artifact.artifact_title}
+                      </button>
+                    </TableCell>
                     <TableCell className="text-white/70">{artifact.artist_name ?? "-"}</TableCell>
                     <TableCell>
                       <StatusBadge value={artifact.usage_tier} />
@@ -217,6 +242,20 @@ export default function AdminArtifactsPage() {
                       <StatusBadge value={artifact.current_status} />
                     </TableCell>
                     <TableCell className="text-white/70">{artifact.current_holder ?? "-"}</TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="h-9 border border-white/10 bg-white/[0.03] px-3 text-white hover:bg-white/[0.07]"
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          openArtifact(artifact.id)
+                        }}
+                      >
+                        Open
+                        <ChevronRight className="ml-1 size-4" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
