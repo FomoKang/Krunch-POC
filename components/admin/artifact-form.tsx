@@ -94,7 +94,7 @@ function getDefaultValues(initialValues?: Partial<ArtifactRecord>): ArtifactForm
     current_holder: initialValues?.current_holder ?? "",
     storage_location: initialValues?.storage_location ?? "",
     public_visibility:
-      (initialValues?.public_visibility as ArtifactFormValues["public_visibility"]) ?? "internal_only",
+      (initialValues?.public_visibility as ArtifactFormValues["public_visibility"]) ?? "public",
     internal_notes: initialValues?.internal_notes ?? "",
   }
 }
@@ -327,6 +327,7 @@ export function ArtifactForm({ mode, artifactId, initialValues }: ArtifactFormPr
                   </Select>
                 )}
               />
+              <p className="text-xs text-white/45">Public artifacts appear in Search &gt; New Listings for logged-out visitors.</p>
             </div>
 
             <div className="space-y-2">
@@ -387,7 +388,7 @@ export function ArtifactForm({ mode, artifactId, initialValues }: ArtifactFormPr
             <div className="space-y-2">
               <Label htmlFor="material_summary_notes">Operator guidance</Label>
               <div className="rounded-lg border border-white/10 bg-black/20 p-4 text-sm leading-6 text-white/60">
-                Keep artifact codes stable, use the visibility field conservatively, and prefer plain-language notes that another operator can pick up without extra context.
+                Keep artifact codes stable, set visibility intentionally, and prefer plain-language notes that another operator can pick up without extra context.
               </div>
             </div>
           </div>

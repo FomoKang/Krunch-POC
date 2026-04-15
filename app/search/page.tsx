@@ -1,10 +1,9 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { ArrowLeft, Clock, Flame, Search, TrendingUp, X } from "lucide-react"
 import { formatDate, titleCase } from "@/lib/admin/utils"
-import { listArtifacts, listMediaAssets, type ArtifactRecord, type MediaAssetRecord } from "@/lib/supabase/provenance"
 
 const trendingSearches = [
   { id: 1, keyword: "G-DRAGON PEACEMINUSONE", hot: true },
@@ -49,33 +48,64 @@ function addRecentKeyword(list: string[], keyword: string) {
   return [value, ...list.filter((item) => item.toLowerCase() !== value.toLowerCase())].slice(0, 6)
 }
 
+type PublicSearchListing = {
+  id: string
+  artifact_code: string
+  artifact_title: string
+  artist_name: string | null
+  era_name: string | null
+  usage_tier: string | null
+  current_status: string | null
+  created_at: string | null
+  image_url: string | null
+}
+
 export default function SearchPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [recentList, setRecentList] = useState(initialRecentSearches)
-  const [newListings, setNewListings] = useState<ArtifactRecord[]>([])
-  const [mediaAssets, setMediaAssets] = useState<MediaAssetRecord[]>([])
+  const [newListings, setNewListings] = useState<PublicSearchListing[]>([])
   const [loadingListings, setLoadingListings] = useState(true)
   const [listingError, setListingError] = useState<string | null>(null)
 
   useEffect(() => {
     let active = true
+    const controller = new AbortController()
 
     async function loadNewListings() {
       try {
         setLoadingListings(true)
-        const nextListings = await listArtifacts({
-          search: searchQuery.trim() || undefined,
-          limit: 6,
+        const params = new URLSearchParams()
+
+        if (searchQuery.trim()) {
+          params.set("search", searchQuery.trim())
+        }
+
+        const response = await fetch(`/api/public/registry?${params.toString()}`, {
+          method: "GET",
+          signal: controller.signal,
         })
+
+        const payload = (await response.json()) as {
+          listings?: PublicSearchListing[]
+          error?: string
+        }
+
+        if (!response.ok) {
+          throw new Error(payload.error || "Unable to load public listings.")
+        }
 
         if (!active) {
           return
         }
 
-        setNewListings(nextListings)
+        setNewListings(payload.listings ?? [])
         setListingError(null)
       } catch (error) {
         if (!active) {
+          return
+        }
+
+        if (error instanceof Error && error.name === "AbortError") {
           return
         }
 
@@ -91,54 +121,9 @@ export default function SearchPage() {
 
     return () => {
       active = false
+      controller.abort()
     }
   }, [searchQuery])
-
-  useEffect(() => {
-    let active = true
-
-    async function loadMedia() {
-      try {
-        const nextMedia = await listMediaAssets({ limit: 48 })
-
-        if (!active) {
-          return
-        }
-
-        setMediaAssets(nextMedia)
-      } catch {
-        if (!active) {
-          return
-        }
-
-        setMediaAssets([])
-      }
-    }
-
-    void loadMedia()
-
-    return () => {
-      active = false
-    }
-  }, [])
-
-  const listingImageMap = useMemo(() => {
-    const map = new Map<string, string>()
-
-    for (const media of mediaAssets) {
-      if (!media.artifact_id || map.has(media.artifact_id)) {
-        continue
-      }
-
-      const imageUrl = media.thumbnail_url ?? media.file_url
-
-      if (imageUrl) {
-        map.set(media.artifact_id, imageUrl)
-      }
-    }
-
-    return map
-  }, [mediaAssets])
 
   function removeRecent(keyword: string) {
     setRecentList((current) => current.filter((item) => item !== keyword))
@@ -310,17 +295,15 @@ export default function SearchPage() {
             ) : newListings.length ? (
               <div className="space-y-3">
                 {newListings.map((artifact) => {
-                  const imageUrl = listingImageMap.get(artifact.id)
-
                   return (
                     <article
                       key={artifact.id}
                       className="flex gap-4 rounded-2xl border border-white/10 bg-white/[0.045] p-3 transition-colors hover:border-white/20"
                     >
                       <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-white/5">
-                        {imageUrl ? (
+                        {artifact.image_url ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={imageUrl} alt={artifact.artifact_title} className="h-full w-full object-cover" />
+                          <img src={artifact.image_url} alt={artifact.artifact_title} className="h-full w-full object-cover" />
                         ) : (
                           <div className="flex h-full w-full items-end bg-[linear-gradient(160deg,rgba(255,107,157,0.28),rgba(255,255,255,0.04))] p-2">
                             <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-white/70">

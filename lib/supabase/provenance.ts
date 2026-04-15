@@ -451,6 +451,7 @@ export async function createArtifact(payload: Partial<ArtifactRecord>) {
       ...payload,
       owner_user_id: ownerUserId,
       artifact_type: payload.artifact_type?.trim() || "artifact",
+      public_visibility: payload.public_visibility ?? "public",
       created_at: payload.created_at ?? new Date().toISOString().slice(0, 10),
     })
     .select(ARTIFACT_COLUMNS)
