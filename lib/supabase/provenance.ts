@@ -325,6 +325,10 @@ function getAdminErrorMessage(tableName: string, error: unknown) {
     return "artifact_code must be unique."
   }
 
+  if (message.includes("violates foreign key constraint") && tableName === "provenance_artifacts") {
+    return "This artifact still has linked records. Remove linked events, authentications, auctions, media, disclosure rules, or transactions first."
+  }
+
   return message
 }
 
@@ -478,6 +482,28 @@ export async function updateArtifact(artifactId: string, payload: Partial<Artifa
   }
 
   return castRow<ArtifactRecord>(data)
+}
+
+export async function deleteArtifact(artifactId: string) {
+  const supabase = getSupabaseBrowserClient()
+  await getAuthenticatedUserId()
+
+  const { data, error } = await supabase
+    .from("provenance_artifacts")
+    .delete()
+    .eq("id", artifactId)
+    .select("id, artifact_code")
+    .maybeSingle()
+
+  if (error) {
+    throw wrapError("provenance_artifacts", error)
+  }
+
+  if (!data) {
+    throw new Error("Artifact record was not deleted. It may already be gone or you may not have access.")
+  }
+
+  return castRow<Pick<ArtifactRecord, "id" | "artifact_code">>(data)
 }
 
 export async function listEvents(filters: EventFilters = {}) {

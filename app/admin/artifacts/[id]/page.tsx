@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import { AlertTriangle, Camera, FileBadge, Gavel, ShieldEllipsis, Sparkles } from "lucide-react"
+import { ArtifactDeleteButton } from "@/components/admin/artifact-delete-button"
 import { ArtifactForm } from "@/components/admin/artifact-form"
 import { EmptyState } from "@/components/admin/empty-state"
 import { PageHeader } from "@/components/admin/page-header"
@@ -160,6 +161,14 @@ export default function ArtifactDetailPage() {
     return <ErrorView message={error ?? "Unable to load this artifact."} />
   }
 
+  const linkedRecordCount =
+    events.length +
+    authentications.length +
+    auctions.length +
+    mediaAssets.length +
+    disclosureControls.length +
+    transactions.length
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -171,6 +180,12 @@ export default function ArtifactDetailPage() {
             <Button asChild variant="outline" className="border-white/10 bg-transparent text-white hover:bg-white/[0.04]">
               <Link href="/admin/artifacts">Back to artifacts</Link>
             </Button>
+            <ArtifactDeleteButton
+              artifactId={artifact.id}
+              artifactCode={artifact.artifact_code}
+              artifactTitle={artifact.artifact_title}
+              linkedRecordCount={linkedRecordCount}
+            />
             <StatusBadge value={artifact.usage_tier} />
             <StatusBadge value={artifact.current_status} />
           </>
