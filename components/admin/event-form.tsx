@@ -32,8 +32,16 @@ const eventFormSchema = z.object({
   artifact_id: z.string().min(1, "Select an artifact."),
   event_type: z.enum(EVENT_TYPE_OPTIONS),
   event_title: z.string().trim().min(1, "event_title is required."),
-  event_date_start: z.string().trim().optional(),
-  event_date_end: z.string().trim().optional(),
+  event_date_start: z
+    .string()
+    .trim()
+    .optional()
+    .refine((value) => !value || /^\d{4}-\d{2}-\d{2}$/.test(value), "Use YYYY-MM-DD."),
+  event_date_end: z
+    .string()
+    .trim()
+    .optional()
+    .refine((value) => !value || /^\d{4}-\d{2}-\d{2}$/.test(value), "Use YYYY-MM-DD."),
   event_location: z.string().trim().optional(),
   artist_name: z.string().trim().optional(),
   stylist_name: z.string().trim().optional(),
@@ -239,11 +247,27 @@ export function EventForm() {
 
             <div className="space-y-2">
               <Label htmlFor="event_date_start">Start date</Label>
-              <Input id="event_date_start" type="date" {...register("event_date_start")} className="border-white/10 bg-black/30 text-white" />
+              <Input
+                id="event_date_start"
+                type="text"
+                inputMode="numeric"
+                placeholder="2026-04-15"
+                {...register("event_date_start")}
+                className="border-white/10 bg-black/30 text-white"
+              />
+              <ErrorMessage message={errors.event_date_start?.message} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="event_date_end">End date</Label>
-              <Input id="event_date_end" type="date" {...register("event_date_end")} className="border-white/10 bg-black/30 text-white" />
+              <Input
+                id="event_date_end"
+                type="text"
+                inputMode="numeric"
+                placeholder="2026-04-16"
+                {...register("event_date_end")}
+                className="border-white/10 bg-black/30 text-white"
+              />
+              <ErrorMessage message={errors.event_date_end?.message} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="event_location">Location</Label>

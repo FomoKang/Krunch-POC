@@ -36,11 +36,19 @@ const authenticationFormSchema = z.object({
   artifact_id: z.string().min(1, "Select an artifact."),
   auth_method: z.enum(AUTH_METHOD_OPTIONS),
   auth_result: z.enum(AUTH_RESULT_OPTIONS),
-  auth_date: z.string().trim().optional(),
+  auth_date: z
+    .string()
+    .trim()
+    .optional()
+    .refine((value) => !value || /^\d{4}-\d{2}-\d{2}$/.test(value), "Use YYYY-MM-DD."),
   auth_provider: z.string().trim().optional(),
   forensic_ref: z.string().trim().optional(),
   certificate_code: z.string().trim().optional(),
-  expiry_date: z.string().trim().optional(),
+  expiry_date: z
+    .string()
+    .trim()
+    .optional()
+    .refine((value) => !value || /^\d{4}-\d{2}-\d{2}$/.test(value), "Use YYYY-MM-DD."),
   visibility_level: z.enum(PUBLIC_VISIBILITY_OPTIONS),
   notes: z.string().trim().optional(),
 })
@@ -265,11 +273,27 @@ export function AuthenticationForm() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="auth_date">Authentication date</Label>
-              <Input id="auth_date" type="date" {...register("auth_date")} className="border-white/10 bg-black/30 text-white" />
+              <Input
+                id="auth_date"
+                type="text"
+                inputMode="numeric"
+                placeholder="2026-04-15"
+                {...register("auth_date")}
+                className="border-white/10 bg-black/30 text-white"
+              />
+              <ErrorMessage message={errors.auth_date?.message} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="expiry_date">Expiry date</Label>
-              <Input id="expiry_date" type="date" {...register("expiry_date")} className="border-white/10 bg-black/30 text-white" />
+              <Input
+                id="expiry_date"
+                type="text"
+                inputMode="numeric"
+                placeholder="2027-04-15"
+                {...register("expiry_date")}
+                className="border-white/10 bg-black/30 text-white"
+              />
+              <ErrorMessage message={errors.expiry_date?.message} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="auth_provider">Auth provider</Label>

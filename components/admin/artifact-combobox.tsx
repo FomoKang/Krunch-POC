@@ -46,7 +46,7 @@ export function ArtifactCombobox({
         >
           <span className="truncate">
             {selectedArtifact
-              ? `${selectedArtifact.artifact_code} · ${selectedArtifact.artifact_title}`
+              ? `${selectedArtifact.artifact_code} - ${selectedArtifact.artifact_title}`
               : placeholder}
           </span>
           <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
@@ -71,11 +71,11 @@ export function ArtifactCombobox({
                   <Check className={cn("mt-1 size-4", value === artifact.id ? "opacity-100" : "opacity-0")} />
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium text-white">
-                      {artifact.artifact_code} · {artifact.artifact_title}
+                      {artifact.artifact_code} - {artifact.artifact_title}
                     </p>
                     <p className="truncate text-xs text-white/55">
                       {artifact.artist_name || "Unknown artist"}
-                      {artifact.current_status ? ` · ${artifact.current_status}` : ""}
+                      {artifact.current_status ? ` - ${artifact.current_status}` : ""}
                     </p>
                   </div>
                 </CommandItem>

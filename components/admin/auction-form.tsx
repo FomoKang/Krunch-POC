@@ -44,8 +44,16 @@ const auctionFormSchema = z.object({
   currency: z.string().trim().min(1, "currency is required."),
   buyer_premium_rate: z.string().trim().optional(),
   seller_fee_rate: z.string().trim().optional(),
-  auction_start_time: z.string().trim().optional(),
-  auction_end_time: z.string().trim().optional(),
+  auction_start_time: z
+    .string()
+    .trim()
+    .optional()
+    .refine((value) => !value || /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}$/.test(value), "Use YYYY-MM-DD HH:MM."),
+  auction_end_time: z
+    .string()
+    .trim()
+    .optional()
+    .refine((value) => !value || /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}$/.test(value), "Use YYYY-MM-DD HH:MM."),
   auction_status: z.enum(AUCTION_STATUS_OPTIONS),
   settlement_status: z.enum(SETTLEMENT_STATUS_OPTIONS),
   closing_reason: z.string().trim().optional(),
@@ -326,11 +334,27 @@ export function AuctionForm() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="auction_start_time">Auction start time</Label>
-              <Input id="auction_start_time" type="datetime-local" {...register("auction_start_time")} className="border-white/10 bg-black/30 text-white" />
+              <Input
+                id="auction_start_time"
+                type="text"
+                inputMode="numeric"
+                placeholder="2026-04-15 19:00"
+                {...register("auction_start_time")}
+                className="border-white/10 bg-black/30 text-white"
+              />
+              <ErrorMessage message={errors.auction_start_time?.message} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="auction_end_time">Auction end time</Label>
-              <Input id="auction_end_time" type="datetime-local" {...register("auction_end_time")} className="border-white/10 bg-black/30 text-white" />
+              <Input
+                id="auction_end_time"
+                type="text"
+                inputMode="numeric"
+                placeholder="2026-04-15 21:00"
+                {...register("auction_end_time")}
+                className="border-white/10 bg-black/30 text-white"
+              />
+              <ErrorMessage message={errors.auction_end_time?.message} />
             </div>
             <div className="space-y-2">
               <Label>Guarantee type</Label>

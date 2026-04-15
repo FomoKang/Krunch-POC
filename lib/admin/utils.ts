@@ -1,5 +1,8 @@
 import { STORAGE_BUCKET_FALLBACK } from "@/lib/admin/constants"
 
+const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
+const ISO_DATETIME_PATTERN = /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}$/
+
 export function normalizeOptionalString(value: string | null | undefined) {
   const trimmed = value?.trim()
   return trimmed ? trimmed : null
@@ -20,7 +23,17 @@ export function normalizeOptionalNumber(value: string | number | null | undefine
 
 export function normalizeOptionalDate(value: string | null | undefined) {
   const trimmed = value?.trim()
-  return trimmed ? trimmed : null
+
+  if (!trimmed) {
+    return null
+  }
+
+  if (ISO_DATE_PATTERN.test(trimmed)) {
+    return trimmed
+  }
+
+  const parsed = new Date(trimmed)
+  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString().slice(0, 10)
 }
 
 export function normalizeOptionalDateTime(value: string | null | undefined) {
@@ -30,7 +43,8 @@ export function normalizeOptionalDateTime(value: string | null | undefined) {
     return null
   }
 
-  const parsed = new Date(trimmed)
+  const normalized = ISO_DATETIME_PATTERN.test(trimmed) ? trimmed.replace(" ", "T") : trimmed
+  const parsed = new Date(normalized)
   return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString()
 }
 
@@ -69,7 +83,7 @@ export function formatDate(value: string | null | undefined) {
     return value
   }
 
-  return parsed.toLocaleDateString("ko-KR", {
+  return parsed.toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -87,7 +101,7 @@ export function formatDateTime(value: string | null | undefined) {
     return value
   }
 
-  return parsed.toLocaleString("ko-KR", {
+  return parsed.toLocaleString("en-US", {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -129,7 +143,7 @@ export function artifactDisplayName(input: {
   artist_name?: string | null
 }) {
   const parts = [input.artifact_code, input.artifact_title, input.artist_name].filter(Boolean)
-  return parts.join(" · ")
+  return parts.join(" - ")
 }
 
 export function getMediaBucketName() {

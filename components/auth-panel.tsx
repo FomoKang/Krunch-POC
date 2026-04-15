@@ -4,7 +4,6 @@ import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { type FormEvent, useEffect, useMemo, useState } from "react"
 import { LoaderCircle } from "lucide-react"
-import { useLocale } from "@/components/locale-provider"
 import { useSiteTheme } from "@/components/theme-provider"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -15,6 +14,7 @@ import { upsertProfileFromUser } from "@/lib/supabase/profiles"
 type AuthMode = "login" | "signup"
 
 type AuthCopy = {
+  continueCta: string
   description: string
   email: string
   loginSuccess: string
@@ -23,8 +23,8 @@ type AuthCopy = {
   nicknameRequired: string
   password: string
   passwordMismatch: string
+  redirecting: string
   registeredNotice: string
-  sessionCta: string
   sessionReady: string
   submit: string
   success: string
@@ -33,96 +33,67 @@ type AuthCopy = {
   title: string
 }
 
-function getCopy(mode: AuthMode, isKo: boolean): AuthCopy {
+function getCopy(mode: AuthMode): AuthCopy {
   if (mode === "login") {
-    return isKo
-      ? {
-          description: "이메일과 비밀번호로 로그인하고, 프로필 정보는 `profiles` 테이블에서 다시 불러옵니다.",
-          email: "이메일",
-          loginSuccess: "로그인되었습니다. 마이페이지로 이동할게요.",
-          missingConfig: "Supabase 환경변수가 아직 설정되지 않았습니다.",
-          nickname: "닉네임",
-          nicknameRequired: "닉네임을 입력해주세요.",
-          password: "비밀번호",
-          passwordMismatch: "비밀번호가 서로 다릅니다.",
-          registeredNotice: "회원가입이 완료되었습니다. 이메일 인증이 켜져 있다면 메일 확인 후 로그인해주세요.",
-          sessionCta: "마이페이지로 이동",
-          sessionReady: "이미 로그인된 계정이 있습니다.",
-          submit: "로그인",
-          success: "로그인되었습니다. 마이페이지로 이동할게요.",
-          switchAction: "회원가입",
-          switchPrompt: "아직 계정이 없나요?",
-          title: "로그인",
-        }
-      : {
-          description: "Sign in with email and password, then load the rest of your account from the profiles table.",
-          email: "Email",
-          loginSuccess: "Signed in. Moving to your profile.",
-          missingConfig: "Supabase environment variables are missing.",
-          nickname: "Nickname",
-          nicknameRequired: "Please enter a nickname.",
-          password: "Password",
-          passwordMismatch: "Passwords do not match.",
-          registeredNotice: "Your account was created. If email confirmation is enabled, verify your email before logging in.",
-          sessionCta: "Go to profile",
-          sessionReady: "You already have an active session.",
-          submit: "Log in",
-          success: "Signed in. Moving to your profile.",
-          switchAction: "Sign up",
-          switchPrompt: "Need an account?",
-          title: "Log in",
-        }
+    return {
+      continueCta: "Continue",
+      description: "Sign in with email and password, then load the rest of your account from the profiles table.",
+      email: "Email",
+      loginSuccess: "Signed in. Redirecting now.",
+      missingConfig: "Supabase environment variables are missing.",
+      nickname: "Nickname",
+      nicknameRequired: "Please enter a nickname.",
+      password: "Password",
+      passwordMismatch: "Passwords do not match.",
+      redirecting: "You already have an active session. Redirecting now.",
+      registeredNotice: "Your account was created. If email confirmation is enabled, verify your email before logging in.",
+      sessionReady: "You already have an active session.",
+      submit: "Log in",
+      success: "Signed in. Redirecting now.",
+      switchAction: "Sign up",
+      switchPrompt: "Need an account?",
+      title: "Log in",
+    }
   }
 
-  return isKo
-    ? {
-        description: "회원가입은 `auth` 계정 생성 후 `profiles` 테이블에 닉네임과 이메일을 저장하는 최소 흐름으로 시작합니다.",
-        email: "이메일",
-        loginSuccess: "로그인되었습니다. 마이페이지로 이동할게요.",
-        missingConfig: "Supabase 환경변수가 아직 설정되지 않았습니다.",
-        nickname: "닉네임",
-        nicknameRequired: "닉네임을 입력해주세요.",
-        password: "비밀번호",
-        passwordMismatch: "비밀번호가 서로 다릅니다.",
-        registeredNotice: "회원가입이 완료되었습니다. 이메일 인증이 켜져 있다면 메일 확인 후 로그인해주세요.",
-        sessionCta: "마이페이지로 이동",
-        sessionReady: "이미 로그인된 계정이 있습니다.",
-        submit: "회원가입",
-        success: "가입 요청이 완료되었습니다.",
-        switchAction: "로그인",
-        switchPrompt: "이미 계정이 있나요?",
-        title: "회원가입",
-      }
-    : {
-        description: "Sign-up starts with the smallest reliable flow: create an auth account, then store nickname and email in profiles.",
-        email: "Email",
-        loginSuccess: "Signed in. Moving to your profile.",
-        missingConfig: "Supabase environment variables are missing.",
-        nickname: "Nickname",
-        nicknameRequired: "Please enter a nickname.",
-        password: "Password",
-        passwordMismatch: "Passwords do not match.",
-        registeredNotice: "Your account was created. If email confirmation is enabled, verify your email before logging in.",
-        sessionCta: "Go to profile",
-        sessionReady: "You already have an active session.",
-        submit: "Sign up",
-        success: "Sign-up request complete.",
-        switchAction: "Log in",
-        switchPrompt: "Already have an account?",
-        title: "Sign up",
-      }
+  return {
+    continueCta: "Continue",
+    description: "Sign-up starts with a simple flow: create an auth account, then store nickname and email in profiles.",
+    email: "Email",
+    loginSuccess: "Signed in. Redirecting now.",
+    missingConfig: "Supabase environment variables are missing.",
+    nickname: "Nickname",
+    nicknameRequired: "Please enter a nickname.",
+    password: "Password",
+    passwordMismatch: "Passwords do not match.",
+    redirecting: "You already have an active session. Redirecting now.",
+    registeredNotice: "Your account was created. If email confirmation is enabled, verify your email before logging in.",
+    sessionReady: "You are already signed in.",
+    submit: "Sign up",
+    success: "Sign-up request complete.",
+    switchAction: "Log in",
+    switchPrompt: "Already have an account?",
+    title: "Sign up",
+  }
+}
+
+function getSafeReturnTo(basePath: string, requested: string | null) {
+  if (requested && requested.startsWith("/")) {
+    return requested
+  }
+
+  return `${basePath}/profile`
 }
 
 export function AuthPanel({ mode }: { mode: AuthMode }) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { locale } = useLocale()
   const { theme } = useSiteTheme()
   const { user, loading, isConfigured } = useSupabaseSession()
-  const isKo = locale === "ko"
   const isBlack = theme === "black"
   const basePath = isBlack ? "/black" : ""
-  const copy = useMemo(() => getCopy(mode, isKo), [isKo, mode])
+  const copy = useMemo(() => getCopy(mode), [mode])
+  const returnTo = getSafeReturnTo(basePath, searchParams.get("returnTo"))
 
   const [email, setEmail] = useState("")
   const [nickname, setNickname] = useState("")
@@ -133,10 +104,10 @@ export function AuthPanel({ mode }: { mode: AuthMode }) {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!loading && user) {
-      router.replace(`${basePath}/profile`)
+    if (!loading && user && mode === "login") {
+      router.replace(returnTo)
     }
-  }, [basePath, loading, router, user])
+  }, [loading, mode, returnTo, router, user])
 
   useEffect(() => {
     if (mode !== "login") {
@@ -197,13 +168,13 @@ export function AuthPanel({ mode }: { mode: AuthMode }) {
         }
 
         setMessage(copy.loginSuccess)
-        router.replace(`${basePath}/profile`)
+        router.replace(returnTo)
         router.refresh()
         return
       }
 
       const emailRedirectTo =
-        typeof window === "undefined" ? undefined : `${window.location.origin}${basePath}/profile`
+        typeof window === "undefined" ? undefined : `${window.location.origin}${returnTo}`
 
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: cleanEmail,
@@ -223,31 +194,52 @@ export function AuthPanel({ mode }: { mode: AuthMode }) {
       if (data.user && data.session) {
         await upsertProfileFromUser(data.user, cleanNickname)
         setMessage(copy.success)
-        router.replace(`${basePath}/profile`)
+        router.replace(returnTo)
         router.refresh()
         return
       }
 
-      router.replace(`${basePath}/login?registered=1&email=${encodeURIComponent(cleanEmail)}`)
+      router.replace(
+        `${basePath}/login?registered=1&email=${encodeURIComponent(cleanEmail)}&returnTo=${encodeURIComponent(returnTo)}`,
+      )
       router.refresh()
     } catch (submitError) {
-      const nextError =
-        submitError instanceof Error ? submitError.message : isKo ? "인증 중 오류가 발생했습니다." : "Authentication failed."
+      const nextError = submitError instanceof Error ? submitError.message : "Authentication failed."
       setError(nextError)
     } finally {
       setPending(false)
     }
   }
 
+  if (!loading && user && mode === "login") {
+    return (
+      <div className="mx-auto flex min-h-[calc(100vh-8rem)] w-full max-w-md items-center justify-center">
+        <div className="w-full rounded-2xl border border-white/15 bg-[#0d0d0d] p-6 text-white shadow-[0_16px_52px_rgba(0,0,0,0.42)]">
+          <p className={`text-xs uppercase tracking-[0.22em] ${isBlack ? "text-white/45" : "text-[#ff9ebe]"}`}>
+            Supabase Auth
+          </p>
+          <h1 className="mt-3 font-display text-3xl uppercase tracking-wide text-white">{copy.redirecting}</h1>
+          <p className="mt-3 text-sm text-white/60">{user.email}</p>
+          <div className="mt-6 flex items-center gap-2 text-sm text-white/70">
+            <LoaderCircle className="h-4 w-4 animate-spin" />
+            <span>Please wait a moment.</span>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   if (!loading && user) {
     return (
       <div className="mx-auto flex min-h-[calc(100vh-8rem)] w-full max-w-md items-center justify-center">
         <div className="w-full rounded-2xl border border-white/15 bg-[#0d0d0d] p-6 text-white shadow-[0_16px_52px_rgba(0,0,0,0.42)]">
-          <p className={`text-xs uppercase tracking-[0.22em] ${isBlack ? "text-white/45" : "text-[#ff9ebe]"}`}>Supabase Auth</p>
+          <p className={`text-xs uppercase tracking-[0.22em] ${isBlack ? "text-white/45" : "text-[#ff9ebe]"}`}>
+            Supabase Auth
+          </p>
           <h1 className="mt-3 font-display text-3xl uppercase tracking-wide text-white">{copy.sessionReady}</h1>
           <p className="mt-3 text-sm text-white/60">{user.email}</p>
           <Button asChild className="mt-6 h-11 w-full bg-[#FF6B9D] text-black hover:bg-[#ff8bb2]">
-            <Link href={`${basePath}/profile`}>{copy.sessionCta}</Link>
+            <Link href={returnTo}>{copy.continueCta}</Link>
           </Button>
         </div>
       </div>
@@ -257,7 +249,9 @@ export function AuthPanel({ mode }: { mode: AuthMode }) {
   return (
     <div className="mx-auto flex min-h-[calc(100vh-8rem)] w-full max-w-md items-center justify-center py-8">
       <div className="w-full rounded-2xl border border-white/15 bg-[#0d0d0d] p-6 text-white shadow-[0_16px_52px_rgba(0,0,0,0.42)]">
-        <p className={`text-xs uppercase tracking-[0.22em] ${isBlack ? "text-white/45" : "text-[#ff9ebe]"}`}>Supabase Auth</p>
+        <p className={`text-xs uppercase tracking-[0.22em] ${isBlack ? "text-white/45" : "text-[#ff9ebe]"}`}>
+          Supabase Auth
+        </p>
         <h1 className="mt-3 font-display text-3xl uppercase tracking-wide text-white">{copy.title}</h1>
         <p className="mt-3 text-sm leading-6 text-white/60">{copy.description}</p>
 
@@ -272,7 +266,7 @@ export function AuthPanel({ mode }: { mode: AuthMode }) {
                 required
                 autoComplete="nickname"
                 className="h-11 border-white/15 bg-black/50 text-white placeholder:text-white/25"
-                placeholder={isKo ? "닉네임" : "Nickname"}
+                placeholder="Nickname"
               />
             </div>
           )}
@@ -299,13 +293,13 @@ export function AuthPanel({ mode }: { mode: AuthMode }) {
               required
               autoComplete={mode === "login" ? "current-password" : "new-password"}
               className="h-11 border-white/15 bg-black/50 text-white placeholder:text-white/25"
-              placeholder={isKo ? "비밀번호" : "Password"}
+              placeholder="Password"
             />
           </div>
 
           {mode === "signup" && (
             <div className="space-y-2">
-              <label className="block text-xs uppercase tracking-[0.18em] text-white/45">{isKo ? "비밀번호 확인" : "Confirm password"}</label>
+              <label className="block text-xs uppercase tracking-[0.18em] text-white/45">Confirm password</label>
               <Input
                 type="password"
                 value={confirmPassword}
@@ -313,13 +307,21 @@ export function AuthPanel({ mode }: { mode: AuthMode }) {
                 required
                 autoComplete="new-password"
                 className="h-11 border-white/15 bg-black/50 text-white placeholder:text-white/25"
-                placeholder={isKo ? "비밀번호 확인" : "Confirm password"}
+                placeholder="Confirm password"
               />
             </div>
           )}
 
-          {message && <p className="rounded-xl border border-emerald-400/25 bg-emerald-400/10 px-3 py-2 text-sm text-emerald-200">{message}</p>}
-          {error && <p className="rounded-xl border border-rose-400/25 bg-rose-400/10 px-3 py-2 text-sm text-rose-200">{error}</p>}
+          {message ? (
+            <p className="rounded-xl border border-emerald-400/25 bg-emerald-400/10 px-3 py-2 text-sm text-emerald-200">
+              {message}
+            </p>
+          ) : null}
+          {error ? (
+            <p className="rounded-xl border border-rose-400/25 bg-rose-400/10 px-3 py-2 text-sm text-rose-200">
+              {error}
+            </p>
+          ) : null}
 
           <Button type="submit" disabled={pending} className="h-11 w-full bg-[#FF6B9D] text-black hover:bg-[#ff8bb2]">
             {pending ? (
@@ -335,7 +337,10 @@ export function AuthPanel({ mode }: { mode: AuthMode }) {
 
         <div className="mt-6 border-t border-white/10 pt-4 text-sm text-white/60">
           <span>{copy.switchPrompt}</span>{" "}
-          <Link className="text-[#ff9ebe] hover:text-[#ffc1d7]" href={`${basePath}/${mode === "login" ? "signup" : "login"}`}>
+          <Link
+            className="text-[#ff9ebe] hover:text-[#ffc1d7]"
+            href={`${basePath}/${mode === "login" ? "signup" : "login"}?returnTo=${encodeURIComponent(returnTo)}`}
+          >
             {copy.switchAction}
           </Link>
         </div>

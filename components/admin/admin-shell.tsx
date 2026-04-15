@@ -96,6 +96,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) {
+    const returnTo = pathname?.startsWith("/admin") ? pathname : "/admin/dashboard"
+
     return (
       <div className="min-h-screen bg-[#05070c] px-4 py-10 text-white">
         <div className="mx-auto max-w-3xl rounded-lg border border-white/10 bg-white/[0.03] p-8">
@@ -106,7 +108,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Button asChild className="bg-[#FF6B9D] text-black hover:bg-[#ff86b0]">
-              <Link href="/login">Go to login</Link>
+              <Link href={`/login?returnTo=${encodeURIComponent(returnTo)}`}>Go to login</Link>
             </Button>
             <Button asChild variant="outline" className="border-white/10 bg-transparent text-white hover:bg-white/[0.04]">
               <Link href="/">

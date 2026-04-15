@@ -43,7 +43,11 @@ const mediaUploadFormSchema = z.object({
   source: z.string().trim().optional(),
   copyright_status: z.string().trim().optional(),
   visibility_level: z.enum(PUBLIC_VISIBILITY_OPTIONS),
-  taken_at: z.string().trim().optional(),
+  taken_at: z
+    .string()
+    .trim()
+    .optional()
+    .refine((value) => !value || /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}$/.test(value), "Use YYYY-MM-DD HH:MM."),
 })
 
 type MediaUploadFormValues = z.infer<typeof mediaUploadFormSchema>
@@ -354,7 +358,15 @@ export function MediaUploadForm() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="taken_at">Taken at</Label>
-                  <Input id="taken_at" type="datetime-local" {...register("taken_at")} className="border-white/10 bg-black/30 text-white" />
+                  <Input
+                    id="taken_at"
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="2026-04-15 14:30"
+                    {...register("taken_at")}
+                    className="border-white/10 bg-black/30 text-white"
+                  />
+                  <ErrorMessage message={errors.taken_at?.message} />
                 </div>
               </div>
             </div>
@@ -371,16 +383,32 @@ export function MediaUploadForm() {
                         <FileUp className="size-5 text-white" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-white">Choose a file</p>
+                        <p className="text-sm font-medium text-white">Select file</p>
                         <p className="text-xs text-white/50">Images, videos, scans, and supporting files are all supported.</p>
+                      </div>
+                      <div className="rounded-md border border-white/10 bg-black/30 px-3 py-2 text-sm text-white">
+                        Browse files
                       </div>
                     </Label>
                     <Input
                       id="asset-file"
                       type="file"
-                      className="mt-4 border-white/10 bg-black/30 text-white file:text-white"
+                      className="sr-only"
                       onChange={(event) => setFile(event.target.files?.[0] ?? null)}
                     />
+                    <div className="mt-4 rounded-md border border-white/10 bg-black/30 px-3 py-2 text-sm text-white/70">
+                      {file ? (
+                        <div className="space-y-1">
+                          <p className="truncate font-medium text-white">{file.name}</p>
+                          <p className="text-xs text-white/50">
+                            {file.type || "Unknown type"}
+                            {Number.isFinite(file.size) ? ` - ${(file.size / 1024 / 1024).toFixed(2)} MB` : ""}
+                          </p>
+                        </div>
+                      ) : (
+                        "No file selected."
+                      )}
+                    </div>
                   </div>
 
                   {previewUrl ? (

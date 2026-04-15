@@ -50,7 +50,11 @@ const disclosureFormSchema = z.object({
   visibility_level: z.enum(PUBLIC_VISIBILITY_OPTIONS),
   reason_code: z.enum(DISCLOSURE_REASON_OPTIONS),
   approved_by: z.string().trim().optional(),
-  expires_at: z.string().trim().optional(),
+  expires_at: z
+    .string()
+    .trim()
+    .optional()
+    .refine((value) => !value || /^\d{4}-\d{2}-\d{2}$/.test(value), "Use YYYY-MM-DD."),
 })
 
 type DisclosureFormValues = z.infer<typeof disclosureFormSchema>
@@ -329,7 +333,15 @@ export default function DisclosurePage() {
 
               <div className="space-y-2">
                 <Label htmlFor="expires_at">Expires at</Label>
-                <Input id="expires_at" type="date" {...register("expires_at")} className="border-white/10 bg-black/30 text-white" />
+                <Input
+                  id="expires_at"
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="2026-12-31"
+                  {...register("expires_at")}
+                  className="border-white/10 bg-black/30 text-white"
+                />
+                <ErrorMessage message={errors.expires_at?.message} />
               </div>
 
               <div className="flex flex-wrap items-center justify-end gap-3">
@@ -392,10 +404,10 @@ export default function DisclosurePage() {
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <div className="min-w-0">
                           <p className="truncate text-sm font-medium text-white">
-                            {artifact ? `${artifact.artifact_code} · ${artifact.artifact_title}` : record.artifact_id}
+                            {artifact ? `${artifact.artifact_code} - ${artifact.artifact_title}` : record.artifact_id}
                           </p>
                           <p className="mt-1 truncate text-sm text-white/55">
-                            {record.field_name} · {record.field_value_reference}
+                            {record.field_name} - {record.field_value_reference}
                           </p>
                         </div>
                         <div className="flex items-center gap-2">
@@ -415,7 +427,7 @@ export default function DisclosurePage() {
                       </div>
                       <p className="mt-3 text-sm text-white/60">
                         Approved by {record.approved_by ?? "unknown"}
-                        {record.expires_at ? ` · Expires ${record.expires_at.slice(0, 10)}` : ""}
+                        {record.expires_at ? ` - Expires ${record.expires_at.slice(0, 10)}` : ""}
                       </p>
                     </div>
                   )

@@ -119,10 +119,10 @@ export default function AdminMediaPage() {
                     <StatusBadge value={media.visibility_level} />
                   </div>
                   <p className="text-sm text-white/55">
-                    {artifact ? `${artifact.artifact_code} · ${artifact.artifact_title}` : media.artifact_id}
+                    {artifact ? `${artifact.artifact_code} - ${artifact.artifact_title}` : media.artifact_id}
                   </p>
                   <p className="text-sm text-white/55">
-                    {media.asset_type ?? "asset"} · {formatDateTime(media.uploaded_at)}
+                    {media.asset_type ?? "asset"} - {formatDateTime(media.uploaded_at)}
                   </p>
                   <a href={media.file_url} target="_blank" rel="noreferrer" className="inline-flex text-sm text-[#ff9ebe] hover:text-[#ffc1d7]">
                     Open file

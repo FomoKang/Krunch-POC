@@ -1,3 +1,5 @@
+import Link from "next/link"
+import { AlertTriangle, Camera, FileBadge, Gavel, ShieldEllipsis, Sparkles } from "lucide-react"
 import { ArtifactForm } from "@/components/admin/artifact-form"
 import { EmptyState } from "@/components/admin/empty-state"
 import { PageHeader } from "@/components/admin/page-header"
@@ -5,7 +7,7 @@ import { StatusBadge } from "@/components/admin/status-badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { formatDate, formatDateTime, formatMoney } from "@/lib/admin/utils"
+import { artifactDisplayName, formatDate, formatDateTime, formatMoney } from "@/lib/admin/utils"
 import {
   getArtifactById,
   listAuthentications,
@@ -15,8 +17,6 @@ import {
   listMediaAssets,
   listTransactions,
 } from "@/lib/supabase/provenance"
-import { AlertTriangle, Camera, FileBadge, Gavel, ShieldEllipsis, Sparkles } from "lucide-react"
-import Link from "next/link"
 
 async function ArtifactDetailContent({ artifactId }: { artifactId: string }) {
   const [artifact, events, authentications, auctions, mediaAssets, disclosureControls, transactions] =
@@ -35,7 +35,7 @@ async function ArtifactDetailContent({ artifactId }: { artifactId: string }) {
       <PageHeader
         eyebrow="Artifact"
         title={artifact.artifact_title}
-        description={`${artifact.artifact_code}${artifact.artist_name ? ` · ${artifact.artist_name}` : ""}`}
+        description={artifactDisplayName(artifact)}
         actions={
           <>
             <StatusBadge value={artifact.usage_tier} />
@@ -63,7 +63,9 @@ async function ArtifactDetailContent({ artifactId }: { artifactId: string }) {
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle>Linked provenance events</CardTitle>
-                <p className="mt-1 text-sm text-white/55">Each event links public evidence and operator-only notes back to the canonical artifact.</p>
+                <p className="mt-1 text-sm text-white/55">
+                  Each event links public evidence and operator-only notes back to the canonical artifact.
+                </p>
               </div>
               <Button asChild className="bg-[#FF6B9D] text-black hover:bg-[#ff86b0]">
                 <Link href={`/admin/events/new?artifactId=${artifact.id}`}>Add event</Link>
@@ -78,7 +80,7 @@ async function ArtifactDetailContent({ artifactId }: { artifactId: string }) {
                         <div>
                           <p className="text-sm font-medium text-white">{event.event_title}</p>
                           <p className="mt-1 text-sm text-white/55">
-                            {event.event_type ?? "event"} · {event.event_location ?? "No location"}
+                            {event.event_type ?? "event"} - {event.event_location ?? "No location"}
                           </p>
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
@@ -88,9 +90,11 @@ async function ArtifactDetailContent({ artifactId }: { artifactId: string }) {
                       </div>
                       <p className="mt-3 text-sm text-white/65">
                         {event.event_date_start ? formatDate(event.event_date_start) : "No start date"}
-                        {event.event_date_end ? ` → ${formatDate(event.event_date_end)}` : ""}
+                        {event.event_date_end ? ` to ${formatDate(event.event_date_end)}` : ""}
                       </p>
-                      {event.evidence_summary ? <p className="mt-3 text-sm leading-6 text-white/60">{event.evidence_summary}</p> : null}
+                      {event.evidence_summary ? (
+                        <p className="mt-3 text-sm leading-6 text-white/60">{event.evidence_summary}</p>
+                      ) : null}
                     </div>
                   ))}
                 </div>
@@ -115,7 +119,9 @@ async function ArtifactDetailContent({ artifactId }: { artifactId: string }) {
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle>Authentication records</CardTitle>
-                <p className="mt-1 text-sm text-white/55">Verification history, providers, and certificate references for this artifact.</p>
+                <p className="mt-1 text-sm text-white/55">
+                  Verification history, providers, and certificate references for this artifact.
+                </p>
               </div>
               <Button asChild className="bg-[#FF6B9D] text-black hover:bg-[#ff86b0]">
                 <Link href={`/admin/authentications/new?artifactId=${artifact.id}`}>Add authentication</Link>
@@ -128,10 +134,12 @@ async function ArtifactDetailContent({ artifactId }: { artifactId: string }) {
                     <div key={record.id} className="rounded-lg border border-white/10 bg-black/25 p-4">
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
-                          <p className="text-sm font-medium text-white">{record.auth_method ?? "Authentication record"}</p>
+                          <p className="text-sm font-medium text-white">
+                            {record.auth_method ?? "Authentication record"}
+                          </p>
                           <p className="mt-1 text-sm text-white/55">
                             {record.auth_provider ?? "No provider"}
-                            {record.auth_date ? ` · ${formatDate(record.auth_date)}` : ""}
+                            {record.auth_date ? ` - ${formatDate(record.auth_date)}` : ""}
                           </p>
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
@@ -165,7 +173,9 @@ async function ArtifactDetailContent({ artifactId }: { artifactId: string }) {
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                   <CardTitle>Auctions</CardTitle>
-                  <p className="mt-1 text-sm text-white/55">Live and historical auction entries linked to this artifact.</p>
+                  <p className="mt-1 text-sm text-white/55">
+                    Live and historical auction entries linked to this artifact.
+                  </p>
                 </div>
                 <Button asChild className="bg-[#FF6B9D] text-black hover:bg-[#ff86b0]">
                   <Link href={`/admin/auctions/new?artifactId=${artifact.id}`}>Create auction</Link>
@@ -185,14 +195,16 @@ async function ArtifactDetailContent({ artifactId }: { artifactId: string }) {
                             <p className="text-sm font-medium text-white">{auction.auction_title}</p>
                             <p className="mt-1 text-sm text-white/55">
                               {auction.lot_number ? `Lot ${auction.lot_number}` : "No lot number"}
-                              {auction.auction_start_time ? ` · ${formatDateTime(auction.auction_start_time)}` : ""}
+                              {auction.auction_start_time ? ` - ${formatDateTime(auction.auction_start_time)}` : ""}
                             </p>
                           </div>
                           <StatusBadge value={auction.auction_status} />
                         </div>
                         <p className="mt-3 text-sm text-white/65">
                           Opening {formatMoney(auction.opening_bid, auction.currency ?? "USD")}
-                          {auction.final_price ? ` · Final ${formatMoney(auction.final_price, auction.currency ?? "USD")}` : ""}
+                          {auction.final_price
+                            ? ` - Final ${formatMoney(auction.final_price, auction.currency ?? "USD")}`
+                            : ""}
                         </p>
                       </Link>
                     ))}
@@ -215,17 +227,27 @@ async function ArtifactDetailContent({ artifactId }: { artifactId: string }) {
             <Card className="border-white/10 bg-white/[0.03] text-white">
               <CardHeader>
                 <CardTitle>Transactions</CardTitle>
-                <p className="mt-1 text-sm text-white/55">The current table is still lightweight, so this tab shows the live raw records already stored in Supabase.</p>
+                <p className="mt-1 text-sm text-white/55">
+                  The current table is still lightweight, so this tab shows the live raw records already stored in
+                  Supabase.
+                </p>
               </CardHeader>
               <CardContent>
                 {transactions.length ? (
                   <div className="space-y-3">
                     {transactions.map((transaction, index) => (
-                      <div key={`${transaction.transaction_id ?? index}`} className="rounded-lg border border-white/10 bg-black/25 p-4">
-                        <p className="text-sm font-medium text-white">{String(transaction.transaction_type ?? "transaction")}</p>
+                      <div
+                        key={`${transaction.transaction_id ?? index}`}
+                        className="rounded-lg border border-white/10 bg-black/25 p-4"
+                      >
+                        <p className="text-sm font-medium text-white">
+                          {String(transaction.transaction_type ?? "transaction")}
+                        </p>
                         <p className="mt-1 text-sm text-white/55">
                           {String(transaction.transaction_id ?? "No transaction id")}
-                          {"created_at" in transaction ? ` · ${formatDateTime(String(transaction.created_at))}` : ""}
+                          {"created_at" in transaction
+                            ? ` - ${formatDateTime(String(transaction.created_at))}`
+                            : ""}
                         </p>
                         {"notes" in transaction && transaction.notes ? (
                           <p className="mt-3 text-sm leading-6 text-white/60">{String(transaction.notes)}</p>
@@ -250,7 +272,9 @@ async function ArtifactDetailContent({ artifactId }: { artifactId: string }) {
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle>Media gallery</CardTitle>
-                <p className="mt-1 text-sm text-white/55">Uploaded files saved in Supabase Storage and indexed through media_assets.</p>
+                <p className="mt-1 text-sm text-white/55">
+                  Uploaded files saved in Supabase Storage and indexed through media_assets.
+                </p>
               </div>
               <Button asChild className="bg-[#FF6B9D] text-black hover:bg-[#ff86b0]">
                 <Link href={`/admin/media/upload?artifactId=${artifact.id}`}>Upload media</Link>
@@ -260,7 +284,10 @@ async function ArtifactDetailContent({ artifactId }: { artifactId: string }) {
               {mediaAssets.length ? (
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                   {mediaAssets.map((media, index) => (
-                    <div key={`${media.file_hash ?? media.file_url}-${index}`} className="overflow-hidden rounded-lg border border-white/10 bg-black/25">
+                    <div
+                      key={`${media.file_hash ?? media.file_url}-${index}`}
+                      className="overflow-hidden rounded-lg border border-white/10 bg-black/25"
+                    >
                       {media.thumbnail_url || media.file_url ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
@@ -271,11 +298,18 @@ async function ArtifactDetailContent({ artifactId }: { artifactId: string }) {
                       ) : null}
                       <div className="space-y-2 p-4">
                         <div className="flex items-center justify-between gap-2">
-                          <p className="truncate text-sm font-medium text-white">{media.caption ?? media.asset_type ?? "Uploaded asset"}</p>
+                          <p className="truncate text-sm font-medium text-white">
+                            {media.caption ?? media.asset_type ?? "Uploaded asset"}
+                          </p>
                           <StatusBadge value={media.visibility_level} />
                         </div>
                         <p className="text-sm text-white/55">{media.asset_type ?? "asset"}</p>
-                        <a href={media.file_url} target="_blank" rel="noreferrer" className="inline-flex text-sm text-[#ff9ebe] hover:text-[#ffc1d7]">
+                        <a
+                          href={media.file_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex text-sm text-[#ff9ebe] hover:text-[#ffc1d7]"
+                        >
                           Open file
                         </a>
                       </div>
@@ -303,7 +337,10 @@ async function ArtifactDetailContent({ artifactId }: { artifactId: string }) {
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle>Disclosure controls</CardTitle>
-                <p className="mt-1 text-sm text-white/55">Visibility overrides that keep sensitive stylist, production, or sourcing details off the public surfaces.</p>
+                <p className="mt-1 text-sm text-white/55">
+                  Visibility overrides that keep sensitive stylist, production, or sourcing details off the public
+                  surfaces.
+                </p>
               </div>
               <Button asChild className="bg-[#FF6B9D] text-black hover:bg-[#ff86b0]">
                 <Link href={`/admin/disclosure?artifactId=${artifact.id}`}>Manage disclosure</Link>
@@ -329,7 +366,7 @@ async function ArtifactDetailContent({ artifactId }: { artifactId: string }) {
                       </div>
                       <p className="mt-3 text-sm text-white/60">
                         Approved by {record.approved_by ?? "unknown"}
-                        {record.expires_at ? ` · Expires ${formatDate(record.expires_at)}` : ""}
+                        {record.expires_at ? ` - Expires ${formatDate(record.expires_at)}` : ""}
                       </p>
                     </div>
                   ))}
