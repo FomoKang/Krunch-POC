@@ -1,28 +1,25 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import Image from "next/image"
-import { ArrowLeft, Search, X, TrendingUp, Clock, Flame } from "lucide-react"
-import { useLocale } from "@/components/locale-provider"
+import { ArrowLeft, Clock, Flame, Search, TrendingUp, X } from "lucide-react"
+import { formatDate, titleCase } from "@/lib/admin/utils"
+import { listArtifacts, listMediaAssets, type ArtifactRecord, type MediaAssetRecord } from "@/lib/supabase/provenance"
 
-// 트렌딩 검색어
 const trendingSearches = [
   { id: 1, keyword: "G-DRAGON PEACEMINUSONE", hot: true },
-  { id: 2, keyword: "손흥민 버버리", hot: true },
-  { id: 3, keyword: "오징어게임2 마스크", hot: false },
-  { id: 4, keyword: "펠릭스 휴먼메이드", hot: false },
-  { id: 5, keyword: "공유 루이비통", hot: false },
+  { id: 2, keyword: "BLACKPINK stage look", hot: true },
+  { id: 3, keyword: "Tour jacket", hot: false },
+  { id: 4, keyword: "Broadcast outfit", hot: false },
+  { id: 5, keyword: "Signed archive piece", hot: false },
 ]
 
-// 최근 검색어
-const recentSearches = [
+const initialRecentSearches = [
   "PEACEMINUSONE Cap",
   "Burberry Trench",
-  "Supreme Hoodie",
+  "Stage Jacket",
 ]
 
-// 추천 아이템
 const recommendedItems = [
   {
     id: 1,
@@ -30,7 +27,7 @@ const recommendedItems = [
     artist: "G-DRAGON",
     image: "/peaceminusone-gd-cap-burgundy-red-with-flames-stre.jpg",
     status: "LIVE",
-    currentBid: "₩6,733,184",
+    meta: "Auction in progress",
   },
   {
     id: 2,
@@ -38,167 +35,342 @@ const recommendedItems = [
     artist: "SON HEUNG MIN",
     image: "/son-burberry.png",
     status: "UPCOMING",
-    currentBid: "Jan 28, 2026",
-  },
-  {
-    id: 3,
-    name: "Louis Vuitton Jacket",
-    artist: "GONG YOO",
-    image: "/gongyoo-suit.png",
-    status: "UPCOMING",
-    currentBid: "Coming Soon",
+    meta: "Preview listing",
   },
 ]
 
-export default function SearchPage() {
-  const { locale } = useLocale()
-  const isKo = locale === "ko"
-  const [searchQuery, setSearchQuery] = useState("")
-  const [recentList, setRecentList] = useState(recentSearches)
+function addRecentKeyword(list: string[], keyword: string) {
+  const value = keyword.trim()
 
-  const removeRecent = (keyword: string) => {
-    setRecentList(recentList.filter((item) => item !== keyword))
+  if (!value) {
+    return list
   }
 
-  const clearAllRecent = () => {
+  return [value, ...list.filter((item) => item.toLowerCase() !== value.toLowerCase())].slice(0, 6)
+}
+
+export default function SearchPage() {
+  const [searchQuery, setSearchQuery] = useState("")
+  const [recentList, setRecentList] = useState(initialRecentSearches)
+  const [newListings, setNewListings] = useState<ArtifactRecord[]>([])
+  const [mediaAssets, setMediaAssets] = useState<MediaAssetRecord[]>([])
+  const [loadingListings, setLoadingListings] = useState(true)
+  const [listingError, setListingError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let active = true
+
+    async function loadNewListings() {
+      try {
+        setLoadingListings(true)
+        const nextListings = await listArtifacts({
+          search: searchQuery.trim() || undefined,
+          limit: 6,
+        })
+
+        if (!active) {
+          return
+        }
+
+        setNewListings(nextListings)
+        setListingError(null)
+      } catch (error) {
+        if (!active) {
+          return
+        }
+
+        setListingError(error instanceof Error ? error.message : "Unable to load new listings.")
+      } finally {
+        if (active) {
+          setLoadingListings(false)
+        }
+      }
+    }
+
+    void loadNewListings()
+
+    return () => {
+      active = false
+    }
+  }, [searchQuery])
+
+  useEffect(() => {
+    let active = true
+
+    async function loadMedia() {
+      try {
+        const nextMedia = await listMediaAssets({ limit: 48 })
+
+        if (!active) {
+          return
+        }
+
+        setMediaAssets(nextMedia)
+      } catch {
+        if (!active) {
+          return
+        }
+
+        setMediaAssets([])
+      }
+    }
+
+    void loadMedia()
+
+    return () => {
+      active = false
+    }
+  }, [])
+
+  const listingImageMap = useMemo(() => {
+    const map = new Map<string, string>()
+
+    for (const media of mediaAssets) {
+      if (!media.artifact_id || map.has(media.artifact_id)) {
+        continue
+      }
+
+      const imageUrl = media.thumbnail_url ?? media.file_url
+
+      if (imageUrl) {
+        map.set(media.artifact_id, imageUrl)
+      }
+    }
+
+    return map
+  }, [mediaAssets])
+
+  function removeRecent(keyword: string) {
+    setRecentList((current) => current.filter((item) => item !== keyword))
+  }
+
+  function clearAllRecent() {
     setRecentList([])
   }
 
+  function applySuggestedSearch(keyword: string) {
+    setSearchQuery(keyword)
+    setRecentList((current) => addRecentKeyword(current, keyword))
+  }
+
   return (
-    <div className="min-h-screen bg-black text-white">
-      {/* 검색 헤더 */}
-      <header className="sticky top-0 z-50 bg-black/95 backdrop-blur-sm border-b border-white/5">
+    <div className="h-[100dvh] overflow-hidden bg-black text-white">
+      <header className="sticky top-0 z-50 border-b border-white/5 bg-black/95 backdrop-blur-sm">
         <div className="flex items-center gap-3 px-4 py-3">
-          <Link href="/" className="p-2 -ml-2 hover:bg-white/10 rounded-full transition-colors">
-            <ArrowLeft className="w-5 h-5 text-white" />
+          <Link href="/" className="-ml-2 rounded-full p-2 transition-colors hover:bg-white/10">
+            <ArrowLeft className="h-5 w-5 text-white" />
           </Link>
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={isKo ? "아티스트, 아이템, 컬렉션 검색..." : "Search artists, items, collections..."}
-              className="w-full bg-white/10 border border-white/10 rounded-full py-2.5 pl-10 pr-10 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-[#FF6B9D]/50 focus:ring-1 focus:ring-[#FF6B9D]/50 transition-all"
+              onChange={(event) => setSearchQuery(event.target.value)}
+              onBlur={() => {
+                if (searchQuery.trim()) {
+                  setRecentList((current) => addRecentKeyword(current, searchQuery))
+                }
+              }}
+              placeholder="Search artists, artifacts, or collections..."
+              className="w-full rounded-full border border-white/10 bg-white/10 py-2.5 pl-10 pr-10 text-sm text-white transition-all placeholder:text-white/40 focus:border-[#FF6B9D]/50 focus:outline-none focus:ring-1 focus:ring-[#FF6B9D]/50"
               autoFocus
             />
-            {searchQuery && (
+            {searchQuery ? (
               <button
                 onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-white/10 rounded-full"
+                className="absolute right-3 top-1/2 rounded-full p-1 -translate-y-1/2 hover:bg-white/10"
               >
-                <X className="w-4 h-4 text-white/40" />
+                <X className="h-4 w-4 text-white/40" />
               </button>
-            )}
+            ) : null}
           </div>
         </div>
       </header>
 
-      <main className="px-4 py-6 space-y-8">
-        {/* 최근 검색어 */}
-        {recentList.length > 0 && (
-          <section>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-white/40" />
-                <h2 className="text-sm font-medium text-white/60">{isKo ? "최근 검색어" : "Recent Searches"}</h2>
-              </div>
-              <button
-                onClick={clearAllRecent}
-                className="text-xs text-[#FF6B9D] hover:text-[#FF6B9D]/80 transition-colors"
-              >
-                {isKo ? "전체 삭제" : "Clear All"}
-              </button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {recentList.map((keyword) => (
-                <div
-                  key={keyword}
-                  className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-3 py-1.5"
+      <main className="scrollbar-dark h-[calc(100dvh-69px)] overflow-y-auto overscroll-y-contain px-4 py-6 pb-10">
+        <div className="space-y-8">
+          {recentList.length ? (
+            <section>
+              <div className="mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-white/40" />
+                  <h2 className="text-sm font-medium text-white/60">Recent Searches</h2>
+                </div>
+                <button
+                  onClick={clearAllRecent}
+                  className="text-xs text-[#FF6B9D] transition-colors hover:text-[#ff8bb2]"
                 >
-                  <span className="text-sm text-white/80">{keyword}</span>
+                  Clear All
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {recentList.map((keyword) => (
                   <button
-                    onClick={() => removeRecent(keyword)}
-                    className="p-0.5 hover:bg-white/10 rounded-full"
+                    key={keyword}
+                    onClick={() => applySuggestedSearch(keyword)}
+                    className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-left"
                   >
-                    <X className="w-3 h-3 text-white/40" />
+                    <span className="text-sm text-white/80">{keyword}</span>
+                    <span
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        removeRecent(keyword)
+                      }}
+                      className="rounded-full p-0.5 hover:bg-white/10"
+                    >
+                      <X className="h-3 w-3 text-white/40" />
+                    </span>
                   </button>
+                ))}
+              </div>
+            </section>
+          ) : null}
+
+          <section>
+            <div className="mb-4 flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-[#FF6B9D]" />
+              <h2 className="text-sm font-medium text-white/60">Trending Now</h2>
+            </div>
+            <div className="space-y-1">
+              {trendingSearches.map((item, index) => (
+                <button
+                  key={item.id}
+                  onClick={() => applySuggestedSearch(item.keyword)}
+                  className="flex w-full items-center gap-4 rounded-xl p-3 transition-colors hover:bg-white/5"
+                >
+                  <span className={`w-6 text-center font-bold ${index < 3 ? "text-[#FF6B9D]" : "text-white/40"}`}>
+                    {index + 1}
+                  </span>
+                  <span className="flex-1 text-left text-white/90">{item.keyword}</span>
+                  {item.hot ? (
+                    <span className="flex items-center gap-1 text-xs text-orange-400">
+                      <Flame className="h-3 w-3" />
+                      HOT
+                    </span>
+                  ) : null}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section>
+            <h2 className="mb-4 text-sm font-medium text-white/60">Recommended For You</h2>
+            <div className="space-y-3">
+              {recommendedItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center gap-4 rounded-xl border border-white/10 bg-white/5 p-3 transition-colors hover:border-[#FF6B9D]/30"
+                >
+                  <div className="relative h-16 w-16 overflow-hidden rounded-lg bg-black">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+                    {item.status === "LIVE" ? (
+                      <div className="absolute left-1 top-1 flex items-center gap-1 rounded-full bg-red-500 px-1.5 py-0.5 text-[8px] font-bold text-white">
+                        <span className="relative flex h-1.5 w-1.5">
+                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
+                          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-white" />
+                        </span>
+                        LIVE
+                      </div>
+                    ) : null}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="truncate text-sm font-medium text-white">{item.name}</h3>
+                    <p className="mt-0.5 text-xs text-white/40">{item.artist}</p>
+                    <p className={`mt-1 text-xs ${item.status === "LIVE" ? "text-[#FF6B9D]" : "text-white/60"}`}>
+                      {item.meta}
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>
           </section>
-        )}
 
-        {/* 트렌딩 검색어 */}
-        <section>
-          <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="w-4 h-4 text-[#FF6B9D]" />
-            <h2 className="text-sm font-medium text-white/60">{isKo ? "트렌딩 검색어" : "Trending Now"}</h2>
-          </div>
-          <div className="space-y-1">
-            {trendingSearches.map((item, index) => (
-              <button
-                key={item.id}
-                onClick={() => setSearchQuery(item.keyword)}
-                className="w-full flex items-center gap-4 p-3 hover:bg-white/5 rounded-xl transition-colors"
-              >
-                <span
-                  className={`w-6 text-center font-bold ${
-                    index < 3 ? "text-[#FF6B9D]" : "text-white/40"
-                  }`}
-                >
-                  {index + 1}
-                </span>
-                <span className="flex-1 text-left text-white/90">{item.keyword}</span>
-                {item.hot && (
-                  <span className="flex items-center gap-1 text-xs text-orange-400">
-                    <Flame className="w-3 h-3" />
-                    HOT
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-        </section>
+          <section>
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-sm font-medium text-white/60">New Listings</h2>
+                <p className="mt-1 text-xs text-white/35">Fresh registry entries from the admin dashboard appear here.</p>
+              </div>
+              {searchQuery.trim() ? (
+                <p className="text-xs text-white/45">Filtered by "{searchQuery.trim()}"</p>
+              ) : null}
+            </div>
 
-        {/* 추천 아이템 */}
-        <section>
-          <h2 className="text-sm font-medium text-white/60 mb-4">{isKo ? "추천 아이템" : "Recommended For You"}</h2>
-          <div className="space-y-3">
-            {recommendedItems.map((item) => (
-              <Link
-                key={item.id}
-                href={item.status === "LIVE" ? "/auction" : "#"}
-                className="flex items-center gap-4 p-3 bg-white/5 border border-white/10 rounded-xl hover:border-[#FF6B9D]/30 transition-colors"
-              >
-                <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-black">
-                  <Image
-                    src={item.image || "/placeholder.svg"}
-                    alt={item.name}
-                    fill
-                    className="object-cover"
-                  />
-                  {item.status === "LIVE" && (
-                    <div className="absolute top-1 left-1 flex items-center gap-1 bg-red-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full">
-                      <span className="relative flex h-1.5 w-1.5">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
-                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white" />
-                      </span>
-                      LIVE
-                    </div>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-white font-medium text-sm truncate">{item.name}</h3>
-                  <p className="text-white/40 text-xs mt-0.5">{item.artist}</p>
-                  <p className={`text-xs mt-1 ${item.status === "LIVE" ? "text-[#FF6B9D]" : "text-white/60"}`}>
-                    {item.currentBid}
-                  </p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
+            {listingError ? (
+              <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+                {listingError}
+              </div>
+            ) : loadingListings ? (
+              <div className="space-y-3">
+                {Array.from({ length: 3 }).map((_, index) => (
+                  <div key={index} className="h-24 rounded-xl bg-white/5" />
+                ))}
+              </div>
+            ) : newListings.length ? (
+              <div className="space-y-3">
+                {newListings.map((artifact) => {
+                  const imageUrl = listingImageMap.get(artifact.id)
+
+                  return (
+                    <article
+                      key={artifact.id}
+                      className="flex gap-4 rounded-2xl border border-white/10 bg-white/[0.045] p-3 transition-colors hover:border-white/20"
+                    >
+                      <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-white/5">
+                        {imageUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={imageUrl} alt={artifact.artifact_title} className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="flex h-full w-full items-end bg-[linear-gradient(160deg,rgba(255,107,157,0.28),rgba(255,255,255,0.04))] p-2">
+                            <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-white/70">
+                              {artifact.usage_tier ?? "Artifact"}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium text-white">{artifact.artifact_title}</p>
+                            <p className="mt-1 truncate text-xs text-white/45">
+                              {artifact.artist_name ?? "Unknown artist"}
+                              {artifact.era_name ? ` · ${artifact.era_name}` : ""}
+                            </p>
+                          </div>
+                          <span className="rounded-full border border-white/10 bg-white/5 px-2 py-1 text-[10px] uppercase tracking-[0.16em] text-white/55">
+                            {artifact.artifact_code}
+                          </span>
+                        </div>
+
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                          {artifact.current_status ? (
+                            <span className="rounded-full bg-[#FF6B9D]/12 px-2.5 py-1 text-[11px] text-[#ff9ebe]">
+                              {titleCase(artifact.current_status)}
+                            </span>
+                          ) : null}
+                          {artifact.usage_tier ? (
+                            <span className="rounded-full bg-white/7 px-2.5 py-1 text-[11px] text-white/70">
+                              {artifact.usage_tier}
+                            </span>
+                          ) : null}
+                          <span className="text-[11px] text-white/40">
+                            {artifact.created_at ? `Added ${formatDate(artifact.created_at)}` : "Recently added"}
+                          </span>
+                        </div>
+                      </div>
+                    </article>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-4 text-sm text-white/55">
+                No registry listings match this search yet.
+              </div>
+            )}
+          </section>
+        </div>
       </main>
     </div>
   )
