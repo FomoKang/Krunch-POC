@@ -24,7 +24,7 @@ export function BottomNav() {
   const basePath = theme === "black" ? "/black" : ""
   const isKo = locale === "ko"
 
-  if (isSplashVisible || pathname?.includes("/auction")) {
+  if (isSplashVisible || pathname?.includes("/auction") || pathname?.startsWith("/admin")) {
     return null
   }
 
