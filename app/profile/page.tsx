@@ -47,8 +47,6 @@ type CertificateSection = {
   chapter: string
   titleKo: string
   titleEn: string
-  summaryKo: string
-  summaryEn: string
   fields: CertificateField[]
 }
 
@@ -204,8 +202,6 @@ function getCertificateProvenanceSections(item: GalleryItem): CertificateSection
       chapter: "01",
       titleKo: "아티팩트 식별",
       titleEn: "Artifact Identity",
-      summaryKo: "아이템 자체와 아티스트 연결을 확인하는 기본 식별 정보입니다.",
-      summaryEn: "Core identity markers that anchor the object to the artist and archive record.",
       fields: [
         { labelKo: "아이템명", labelEn: "Artifact", valueKo: displayName, valueEn: displayName },
         { labelKo: "아티스트", labelEn: "Artist", valueKo: artist.valueKo, valueEn: artist.valueEn },
@@ -218,8 +214,6 @@ function getCertificateProvenanceSections(item: GalleryItem): CertificateSection
       chapter: "02",
       titleKo: "착용 맥락",
       titleEn: "Performance Context",
-      summaryKo: "어디서, 언제, 누구의 스타일링으로 사용됐는지에 대한 현장 기록입니다.",
-      summaryEn: "Live-use context covering where it appeared, when it was worn, and who styled it.",
       fields: [
         { labelKo: "착용 일자", labelEn: "Worn On", valueKo: wornOn.valueKo, valueEn: wornOn.valueEn },
         { labelKo: "무대", labelEn: "Stage", valueKo: stage.valueKo, valueEn: stage.valueEn },
@@ -232,8 +226,6 @@ function getCertificateProvenanceSections(item: GalleryItem): CertificateSection
       chapter: "03",
       titleKo: "소장 이력",
       titleEn: "Custody Record",
-      summaryKo: "수집 이후 현재까지의 보관 경로와 내부 핸들링 상태를 정리한 구간입니다.",
-      summaryEn: "A compact chain-of-custody summary from archive intake to current controlled storage.",
       fields: [
         { labelKo: "최초 인수", labelEn: "Archive Intake", valueKo: "2026.01.18 / KRUNCH archive intake", valueEn: "Jan 18, 2026 / KRUNCH archive intake" },
         { labelKo: "현재 보관", labelEn: "Current Holder", valueKo: "KRUNCH 온습도 보관 아카이브", valueEn: "KRUNCH climate archive" },
@@ -246,8 +238,6 @@ function getCertificateProvenanceSections(item: GalleryItem): CertificateSection
       chapter: "04",
       titleKo: "검증 로그",
       titleEn: "Verification Ledger",
-      summaryKo: "인증 방식, 증빙 묶음, 인증서 코드까지 포함한 최종 검증 레이어입니다.",
-      summaryEn: "Final verification layer including method, evidence bundle, and certificate references.",
       fields: [
         { labelKo: "인증 결과", labelEn: "Verification", valueKo: verification.valueKo, valueEn: verification.valueEn },
         { labelKo: "검증 방식", labelEn: "Method", valueKo: "DNA + 시각 연속성 검토", valueEn: "DNA + visual continuity review" },
@@ -924,18 +914,10 @@ export default function ProfilePage() {
                 <div className="my-10 h-px w-full bg-white/[0.08]" />
 
                 <div className="pb-6">
-                  <div className="mb-5 flex items-end justify-between gap-3">
-                    <div>
-                      <p className="text-[10px] uppercase tracking-[0.22em] text-white/34">
-                        {isKo ? "프로비넌스" : "Provenance"}
-                      </p>
-                      <h4 className="mt-2 text-sm font-medium text-white/78">
-                        {isKo ? "4개의 챕터로 넘겨보는 검증 기록" : "Swipe through the four provenance chapters"}
-                      </h4>
-                    </div>
-                    <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] uppercase tracking-[0.18em] text-white/45">
-                      {isKo ? "4 챕터" : "4 Chapters"}
-                    </span>
+                  <div className="mb-5">
+                    <h4 className="font-display text-[24px] uppercase leading-none tracking-[0.14em] text-[#ffd4e5] [text-shadow:0_0_18px_rgba(255,107,157,0.18)]">
+                      {isKo ? "프로비넌스" : "PROVENANCE"}
+                    </h4>
                   </div>
 
                   <div className="-mx-5 overflow-x-auto px-5 pb-2 scrollbar-hide sm:-mx-8 sm:px-8">
@@ -957,11 +939,7 @@ export default function ProfilePage() {
                             </span>
                           </div>
 
-                          <p className="mt-3 text-xs leading-5 text-white/48">
-                            {isKo ? section.summaryKo : section.summaryEn}
-                          </p>
-
-                          <div className="mt-5 space-y-4">
+                          <div className="mt-4 space-y-4">
                             {section.fields.map((field) => (
                               <div key={`${section.id}-${field.labelEn}`} className="border-t border-white/8 pt-4 first:border-t-0 first:pt-0">
                                 <p className="text-[10px] uppercase tracking-[0.18em] text-white/34">
