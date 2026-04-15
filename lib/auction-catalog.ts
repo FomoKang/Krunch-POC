@@ -18,6 +18,7 @@ export type ParticipatingAuctionItem = {
   name: string
   artist: string
   image: string
+  videoSrc?: string
   status: "LIVE NOW" | "ENDING SOON" | "BID PLACED"
   currentInfo: string
   note: string
@@ -79,6 +80,7 @@ const LEGACY_PARTICIPATING_AUCTIONS: ParticipatingAuctionItem[] = [
     name: "PEACEMINUSONE1988-CAP",
     artist: "G-DRAGON",
     image: "/cap2.png",
+    videoSrc: "/cap2-spin.mp4",
     status: "LIVE NOW",
     currentInfo: "Current bid 52,000,000 KRW",
     note: "Top bid watchlist",

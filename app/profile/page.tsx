@@ -327,7 +327,20 @@ function ParticipatingAuctionsSection({
           {auctions.map((auction) => (
             <article key={auction.id} className="flex gap-3 rounded-2xl border border-white/10 bg-black/28 p-3">
               <div className="relative h-[74px] w-[74px] shrink-0 overflow-hidden rounded-xl bg-white/[0.04]">
-                <Image src={auction.image} alt={auction.name} fill className="object-cover" />
+                {auction.videoSrc ? (
+                  <video
+                    src={auction.videoSrc}
+                    className="h-full w-full object-cover"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    preload="metadata"
+                    poster={auction.image}
+                  />
+                ) : (
+                  <Image src={auction.image} alt={auction.name} fill className="object-cover" />
+                )}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-2">
