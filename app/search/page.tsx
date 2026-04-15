@@ -24,7 +24,8 @@ const recommendedItems = [
     id: 1,
     name: "PEACEMINUSONE Cap",
     artist: "G-DRAGON",
-    image: "/peaceminusone-gd-cap-burgundy-red-with-flames-stre.jpg",
+    image: "/cap2-spin.mp4",
+    mediaType: "video",
     status: "LIVE",
     meta: "Auction in progress",
   },
@@ -33,6 +34,7 @@ const recommendedItems = [
     name: "Burberry Trench Jacket",
     artist: "SON HEUNG MIN",
     image: "/son-burberry.png",
+    mediaType: "image",
     status: "UPCOMING",
     meta: "Preview listing",
   },
@@ -172,7 +174,7 @@ export default function SearchPage() {
         </div>
       </header>
 
-      <main className="scrollbar-dark h-[calc(100dvh-69px)] overflow-y-auto overscroll-y-contain px-4 py-6 pb-10">
+      <main className="scrollbar-dark h-[calc(100dvh-69px)] overflow-y-auto overscroll-y-contain px-4 py-6 pb-28">
         <div className="space-y-8">
           {recentList.length ? (
             <section>
@@ -247,8 +249,20 @@ export default function SearchPage() {
                   className="flex items-center gap-4 rounded-xl border border-white/10 bg-white/5 p-3 transition-colors hover:border-[#FF6B9D]/30"
                 >
                   <div className="relative h-16 w-16 overflow-hidden rounded-lg bg-black">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+                    {item.mediaType === "video" ? (
+                      <video
+                        src={item.image}
+                        className="h-full w-full object-cover"
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        preload="metadata"
+                      />
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+                    )}
                     {item.status === "LIVE" ? (
                       <div className="absolute left-1 top-1 flex items-center gap-1 rounded-full bg-red-500 px-1.5 py-0.5 text-[8px] font-bold text-white">
                         <span className="relative flex h-1.5 w-1.5">
@@ -275,7 +289,7 @@ export default function SearchPage() {
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
                 <h2 className="text-sm font-medium text-white/60">New Listings</h2>
-                <p className="mt-1 text-xs text-white/35">Fresh registry entries from the admin dashboard appear here.</p>
+                <p className="mt-1 text-xs text-white/35">Fresh registry entries appear here.</p>
               </div>
               {searchQuery.trim() ? (
                 <p className="text-xs text-white/45">Filtered by "{searchQuery.trim()}"</p>
@@ -349,7 +363,7 @@ export default function SearchPage() {
               </div>
             ) : (
               <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-4 text-sm text-white/55">
-                No registry listings match this search yet.
+                No public listings are available yet.
               </div>
             )}
           </section>
