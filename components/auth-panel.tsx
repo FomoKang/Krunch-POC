@@ -103,9 +103,22 @@ export function AuthPanel({ mode }: { mode: AuthMode }) {
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
+  function hardNavigate(target: string) {
+    if (typeof window !== "undefined") {
+      window.location.replace(target)
+      return
+    }
+
+    router.replace(target)
+  }
+
   useEffect(() => {
     if (!loading && user && mode === "login") {
-      router.replace(returnTo)
+      const current = typeof window !== "undefined" ? `${window.location.pathname}${window.location.search}` : ""
+
+      if (current !== returnTo) {
+        hardNavigate(returnTo)
+      }
     }
   }, [loading, mode, returnTo, router, user])
 
@@ -168,8 +181,7 @@ export function AuthPanel({ mode }: { mode: AuthMode }) {
         }
 
         setMessage(copy.loginSuccess)
-        router.replace(returnTo)
-        router.refresh()
+        hardNavigate(returnTo)
         return
       }
 
@@ -194,15 +206,13 @@ export function AuthPanel({ mode }: { mode: AuthMode }) {
       if (data.user && data.session) {
         await upsertProfileFromUser(data.user, cleanNickname)
         setMessage(copy.success)
-        router.replace(returnTo)
-        router.refresh()
+        hardNavigate(returnTo)
         return
       }
 
-      router.replace(
+      hardNavigate(
         `${basePath}/login?registered=1&email=${encodeURIComponent(cleanEmail)}&returnTo=${encodeURIComponent(returnTo)}`,
       )
-      router.refresh()
     } catch (submitError) {
       const nextError = submitError instanceof Error ? submitError.message : "Authentication failed."
       setError(nextError)
@@ -224,6 +234,13 @@ export function AuthPanel({ mode }: { mode: AuthMode }) {
             <LoaderCircle className="h-4 w-4 animate-spin" />
             <span>Please wait a moment.</span>
           </div>
+          <Button
+            type="button"
+            className="mt-6 h-11 w-full bg-[#FF6B9D] text-black hover:bg-[#ff8bb2]"
+            onClick={() => hardNavigate(returnTo)}
+          >
+            Continue now
+          </Button>
         </div>
       </div>
     )
