@@ -915,7 +915,7 @@ export default function ProfilePage() {
 
                 <div className="pb-6">
                   <div className="mb-5">
-                    <h4 className="font-display text-[24px] uppercase leading-none tracking-[0.14em] text-[#ffd4e5] [text-shadow:0_0_18px_rgba(255,107,157,0.18)]">
+                    <h4 className="font-display text-[18px] uppercase leading-none tracking-[0.22em] text-[#ffd4e5] [text-shadow:0_0_14px_rgba(255,107,157,0.16)] sm:text-[19px]">
                       {isKo ? "프로비넌스" : "PROVENANCE"}
                     </h4>
                   </div>
