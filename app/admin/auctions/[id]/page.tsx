@@ -1,19 +1,136 @@
+"use client"
+
 import Link from "next/link"
-import { Gavel, History } from "lucide-react"
+import { useEffect, useState } from "react"
+import { useParams } from "next/navigation"
+import { History } from "lucide-react"
 import { EmptyState } from "@/components/admin/empty-state"
 import { PageHeader } from "@/components/admin/page-header"
 import { StatusBadge } from "@/components/admin/status-badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import { formatDateTime, formatMoney } from "@/lib/admin/utils"
-import { getAuctionById, listArtifactOptions, listBidHistory } from "@/lib/supabase/provenance"
+import { getAuctionById, listArtifactOptions, listBidHistory, type ArtifactOption, type AuctionRecord } from "@/lib/supabase/provenance"
 
-async function AuctionDetailContent({ auctionId }: { auctionId: string }) {
-  const [auction, artifacts, bidHistory] = await Promise.all([
-    getAuctionById(auctionId),
-    listArtifactOptions(),
-    listBidHistory(auctionId),
-  ])
+type BidHistoryRow = Record<string, unknown>
+
+function LoadingView() {
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow="Commerce"
+        title="Loading auction..."
+        description="Fetching the live record from Supabase."
+      />
+      <Card className="border-white/10 bg-white/[0.03] text-white">
+        <CardContent className="space-y-4 p-6">
+          <Skeleton className="h-10 w-64 bg-white/10" />
+          <Skeleton className="h-80 w-full bg-white/10" />
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+function ErrorView({ message }: { message: string }) {
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow="Commerce"
+        title="Auction record unavailable"
+        description={message}
+        actions={
+          <>
+            <Button asChild variant="outline" className="border-white/10 bg-transparent text-white hover:bg-white/[0.04]">
+              <Link href="/admin/dashboard">Back to dashboard</Link>
+            </Button>
+            <Button asChild className="bg-[#FF6B9D] text-black hover:bg-[#ff86b0]">
+              <Link href="/admin/auctions">Back to auctions</Link>
+            </Button>
+          </>
+        }
+      />
+      <Card className="border-white/10 bg-white/[0.03] text-white">
+        <CardContent className="p-6">
+          <div className="rounded-lg border border-rose-500/25 bg-rose-500/10 p-4 text-sm text-rose-200">
+            {message}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+export default function AuctionDetailPage() {
+  const params = useParams<{ id: string }>()
+  const auctionId = Array.isArray(params.id) ? params.id[0] : params.id
+  const [auction, setAuction] = useState<AuctionRecord | null>(null)
+  const [artifacts, setArtifacts] = useState<ArtifactOption[]>([])
+  const [bidHistory, setBidHistory] = useState<BidHistoryRow[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [softWarning, setSoftWarning] = useState<string | null>(null)
+
+  useEffect(() => {
+    let active = true
+
+    async function loadAuctionDetail() {
+      if (!auctionId) {
+        setError("Missing auction id.")
+        setLoading(false)
+        return
+      }
+
+      try {
+        setLoading(true)
+        setError(null)
+        setSoftWarning(null)
+
+        const nextAuction = await getAuctionById(auctionId)
+        const related = await Promise.allSettled([
+          listArtifactOptions(),
+          listBidHistory(auctionId),
+        ])
+
+        if (!active) {
+          return
+        }
+
+        setAuction(nextAuction)
+        setArtifacts(related[0].status === "fulfilled" ? related[0].value : [])
+        setBidHistory(related[1].status === "fulfilled" ? related[1].value : [])
+
+        if (related.some((result) => result.status === "rejected")) {
+          setSoftWarning("Some linked sections could not be loaded, but the auction overview is still available.")
+        }
+      } catch (loadError) {
+        if (!active) {
+          return
+        }
+
+        setError(loadError instanceof Error ? loadError.message : "Unable to load this auction.")
+      } finally {
+        if (active) {
+          setLoading(false)
+        }
+      }
+    }
+
+    void loadAuctionDetail()
+
+    return () => {
+      active = false
+    }
+  }, [auctionId])
+
+  if (loading) {
+    return <LoadingView />
+  }
+
+  if (error || !auction) {
+    return <ErrorView message={error ?? "Unable to load this auction."} />
+  }
 
   const artifact = artifacts.find((item) => item.id === auction.artifact_id)
 
@@ -25,11 +142,20 @@ async function AuctionDetailContent({ auctionId }: { auctionId: string }) {
         description={artifact ? `${artifact.artifact_code} - ${artifact.artifact_title}` : auction.artifact_id}
         actions={
           <>
+            <Button asChild variant="outline" className="border-white/10 bg-transparent text-white hover:bg-white/[0.04]">
+              <Link href="/admin/auctions">Back to auctions</Link>
+            </Button>
             <StatusBadge value={auction.auction_status} />
             <StatusBadge value={auction.settlement_status} />
           </>
         }
       />
+
+      {softWarning ? (
+        <div className="rounded-lg border border-amber-400/25 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
+          {softWarning}
+        </div>
+      ) : null}
 
       <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
         <Card className="border-white/10 bg-white/[0.03] text-white">
@@ -126,13 +252,4 @@ async function AuctionDetailContent({ auctionId }: { auctionId: string }) {
       </div>
     </div>
   )
-}
-
-export default async function AuctionDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
-  const { id } = await params
-  return <AuctionDetailContent auctionId={id} />
 }

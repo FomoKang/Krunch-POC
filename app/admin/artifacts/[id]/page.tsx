@@ -1,4 +1,8 @@
+"use client"
+
 import Link from "next/link"
+import { useEffect, useState } from "react"
+import { useParams } from "next/navigation"
 import { AlertTriangle, Camera, FileBadge, Gavel, ShieldEllipsis, Sparkles } from "lucide-react"
 import { ArtifactForm } from "@/components/admin/artifact-form"
 import { EmptyState } from "@/components/admin/empty-state"
@@ -6,6 +10,7 @@ import { PageHeader } from "@/components/admin/page-header"
 import { StatusBadge } from "@/components/admin/status-badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { artifactDisplayName, formatDate, formatDateTime, formatMoney } from "@/lib/admin/utils"
 import {
@@ -16,19 +21,144 @@ import {
   listEvents,
   listMediaAssets,
   listTransactions,
+  type ArtifactRecord,
+  type AuthenticationRecord,
+  type AuctionRecord,
+  type DisclosureControlRecord,
+  type MediaAssetRecord,
+  type ProvenanceEventRecord,
 } from "@/lib/supabase/provenance"
 
-async function ArtifactDetailContent({ artifactId }: { artifactId: string }) {
-  const [artifact, events, authentications, auctions, mediaAssets, disclosureControls, transactions] =
-    await Promise.all([
-      getArtifactById(artifactId),
-      listEvents({ artifactId }),
-      listAuthentications({ artifactId }),
-      listAuctions({ artifactId }),
-      listMediaAssets({ artifactId }),
-      listDisclosureControls({ artifactId }),
-      listTransactions(artifactId),
-    ])
+type TransactionRow = Record<string, unknown>
+
+function LoadingView() {
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow="Artifact"
+        title="Loading artifact..."
+        description="Fetching the live record from Supabase."
+      />
+      <Card className="border-white/10 bg-white/[0.03] text-white">
+        <CardContent className="space-y-4 p-6">
+          <Skeleton className="h-10 w-64 bg-white/10" />
+          <Skeleton className="h-80 w-full bg-white/10" />
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+function ErrorView({ message }: { message: string }) {
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow="Artifact"
+        title="Artifact record unavailable"
+        description={message}
+        actions={
+          <>
+            <Button asChild variant="outline" className="border-white/10 bg-transparent text-white hover:bg-white/[0.04]">
+              <Link href="/admin/dashboard">Back to dashboard</Link>
+            </Button>
+            <Button asChild className="bg-[#FF6B9D] text-black hover:bg-[#ff86b0]">
+              <Link href="/admin/artifacts">Back to artifacts</Link>
+            </Button>
+          </>
+        }
+      />
+      <Card className="border-white/10 bg-white/[0.03] text-white">
+        <CardContent className="p-6">
+          <div className="rounded-lg border border-rose-500/25 bg-rose-500/10 p-4 text-sm text-rose-200">
+            {message}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+export default function ArtifactDetailPage() {
+  const params = useParams<{ id: string }>()
+  const artifactId = Array.isArray(params.id) ? params.id[0] : params.id
+  const [artifact, setArtifact] = useState<ArtifactRecord | null>(null)
+  const [events, setEvents] = useState<ProvenanceEventRecord[]>([])
+  const [authentications, setAuthentications] = useState<AuthenticationRecord[]>([])
+  const [auctions, setAuctions] = useState<AuctionRecord[]>([])
+  const [mediaAssets, setMediaAssets] = useState<MediaAssetRecord[]>([])
+  const [disclosureControls, setDisclosureControls] = useState<DisclosureControlRecord[]>([])
+  const [transactions, setTransactions] = useState<TransactionRow[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [softWarning, setSoftWarning] = useState<string | null>(null)
+
+  useEffect(() => {
+    let active = true
+
+    async function loadArtifactDetail() {
+      if (!artifactId) {
+        setError("Missing artifact id.")
+        setLoading(false)
+        return
+      }
+
+      try {
+        setLoading(true)
+        setError(null)
+        setSoftWarning(null)
+
+        const nextArtifact = await getArtifactById(artifactId)
+        const related = await Promise.allSettled([
+          listEvents({ artifactId }),
+          listAuthentications({ artifactId }),
+          listAuctions({ artifactId }),
+          listMediaAssets({ artifactId }),
+          listDisclosureControls({ artifactId }),
+          listTransactions(artifactId),
+        ])
+
+        if (!active) {
+          return
+        }
+
+        setArtifact(nextArtifact)
+        setEvents(related[0].status === "fulfilled" ? related[0].value : [])
+        setAuthentications(related[1].status === "fulfilled" ? related[1].value : [])
+        setAuctions(related[2].status === "fulfilled" ? related[2].value : [])
+        setMediaAssets(related[3].status === "fulfilled" ? related[3].value : [])
+        setDisclosureControls(related[4].status === "fulfilled" ? related[4].value : [])
+        setTransactions(related[5].status === "fulfilled" ? related[5].value : [])
+
+        if (related.some((result) => result.status === "rejected")) {
+          setSoftWarning("Some linked sections could not be loaded, but the artifact overview is still available.")
+        }
+      } catch (loadError) {
+        if (!active) {
+          return
+        }
+
+        setError(loadError instanceof Error ? loadError.message : "Unable to load this artifact.")
+      } finally {
+        if (active) {
+          setLoading(false)
+        }
+      }
+    }
+
+    void loadArtifactDetail()
+
+    return () => {
+      active = false
+    }
+  }, [artifactId])
+
+  if (loading) {
+    return <LoadingView />
+  }
+
+  if (error || !artifact) {
+    return <ErrorView message={error ?? "Unable to load this artifact."} />
+  }
 
   return (
     <div className="space-y-6">
@@ -38,11 +168,20 @@ async function ArtifactDetailContent({ artifactId }: { artifactId: string }) {
         description={artifactDisplayName(artifact)}
         actions={
           <>
+            <Button asChild variant="outline" className="border-white/10 bg-transparent text-white hover:bg-white/[0.04]">
+              <Link href="/admin/artifacts">Back to artifacts</Link>
+            </Button>
             <StatusBadge value={artifact.usage_tier} />
             <StatusBadge value={artifact.current_status} />
           </>
         }
       />
+
+      {softWarning ? (
+        <div className="rounded-lg border border-amber-400/25 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
+          {softWarning}
+        </div>
+      ) : null}
 
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList className="w-full justify-start overflow-x-auto border border-white/10 bg-white/[0.03] p-1">
@@ -228,8 +367,7 @@ async function ArtifactDetailContent({ artifactId }: { artifactId: string }) {
               <CardHeader>
                 <CardTitle>Transactions</CardTitle>
                 <p className="mt-1 text-sm text-white/55">
-                  The current table is still lightweight, so this tab shows the live raw records already stored in
-                  Supabase.
+                  The current table is still lightweight, so this tab shows the live raw records already stored in Supabase.
                 </p>
               </CardHeader>
               <CardContent>
@@ -245,9 +383,7 @@ async function ArtifactDetailContent({ artifactId }: { artifactId: string }) {
                         </p>
                         <p className="mt-1 text-sm text-white/55">
                           {String(transaction.transaction_id ?? "No transaction id")}
-                          {"created_at" in transaction
-                            ? ` - ${formatDateTime(String(transaction.created_at))}`
-                            : ""}
+                          {"created_at" in transaction ? ` - ${formatDateTime(String(transaction.created_at))}` : ""}
                         </p>
                         {"notes" in transaction && transaction.notes ? (
                           <p className="mt-3 text-sm leading-6 text-white/60">{String(transaction.notes)}</p>
@@ -338,8 +474,7 @@ async function ArtifactDetailContent({ artifactId }: { artifactId: string }) {
               <div>
                 <CardTitle>Disclosure controls</CardTitle>
                 <p className="mt-1 text-sm text-white/55">
-                  Visibility overrides that keep sensitive stylist, production, or sourcing details off the public
-                  surfaces.
+                  Visibility overrides that keep sensitive stylist, production, or sourcing details off the public surfaces.
                 </p>
               </div>
               <Button asChild className="bg-[#FF6B9D] text-black hover:bg-[#ff86b0]">
@@ -389,13 +524,4 @@ async function ArtifactDetailContent({ artifactId }: { artifactId: string }) {
       </Tabs>
     </div>
   )
-}
-
-export default async function ArtifactDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
-  const { id } = await params
-  return <ArtifactDetailContent artifactId={id} />
 }
