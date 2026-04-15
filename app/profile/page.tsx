@@ -42,22 +42,34 @@ type CertificateField = {
   valueEn: string
 }
 
+type CertificateSection = {
+  id: string
+  chapter: string
+  titleKo: string
+  titleEn: string
+  summaryKo: string
+  summaryEn: string
+  fields: CertificateField[]
+}
+
+type CertificateData = {
+  titleKo: string
+  titleEn: string
+  subtitleKo: string
+  subtitleEn: string
+  serialNumber: string
+  lastPriceKo: string
+  lastPriceEn: string
+  dnaVerified: boolean
+  videoSrc: string
+  fields: CertificateField[]
+}
+
 type GalleryItem = {
   id: number
   image: string | null
   name: string
-  certificate?: {
-    titleKo: string
-    titleEn: string
-    subtitleKo: string
-    subtitleEn: string
-    serialNumber: string
-    lastPriceKo: string
-    lastPriceEn: string
-    dnaVerified: boolean
-    videoSrc: string
-    fields: CertificateField[]
-  }
+  certificate?: CertificateData
 }
 
 const GALLERY_ITEMS: GalleryItem[] = [
@@ -133,7 +145,120 @@ function getTierName(level: number) {
   return TIER_NAMES[level] ?? "Bronze"
 }
 
-/** e.g. PEACEMINUSONE1988-CAP ??PEACEMINUSONE 1988 CAP */
+function resolveCertificateField(
+  certificate: CertificateData,
+  labels: { ko?: string[]; en?: string[] },
+  fallback: { valueKo: string; valueEn: string },
+) {
+  const match = certificate.fields.find((field) => {
+    const koMatch = labels.ko?.includes(field.labelKo)
+    const enMatch = labels.en?.includes(field.labelEn)
+    return Boolean(koMatch || enMatch)
+  })
+
+  return {
+    valueKo: match?.valueKo?.trim() || fallback.valueKo,
+    valueEn: match?.valueEn?.trim() || fallback.valueEn,
+  }
+}
+
+function getCertificateProvenanceSections(item: GalleryItem): CertificateSection[] {
+  if (!item.certificate) {
+    return []
+  }
+
+  const certificate = item.certificate
+  const displayName = formatCertificateItemDisplayName(item.name)
+  const artist = resolveCertificateField(certificate, { ko: ["아티스트 이름"], en: ["Artist"] }, {
+    valueKo: "G-DRAGON",
+    valueEn: "G-DRAGON",
+  })
+  const wornOn = resolveCertificateField(certificate, { ko: ["착용 일자"], en: ["Worn On"] }, {
+    valueKo: "2026.01.12",
+    valueEn: "Jan 12, 2026",
+  })
+  const stage = resolveCertificateField(certificate, { ko: ["무대 이름"], en: ["Stage"] }, {
+    valueKo: "Ubermensch Seoul Opening Stage",
+    valueEn: "Ubermensch Seoul Opening Stage",
+  })
+  const albumTrack = resolveCertificateField(certificate, { ko: ["앨범 / 곡"], en: ["Album / Track"] }, {
+    valueKo: "Ubermensch / TOO BAD",
+    valueEn: "Ubermensch / TOO BAD",
+  })
+  const brand = resolveCertificateField(certificate, { ko: ["브랜드"], en: ["Brand"] }, {
+    valueKo: "PEACEMINUSONE",
+    valueEn: "PEACEMINUSONE",
+  })
+  const stylist = resolveCertificateField(certificate, { ko: ["스타일리스트"], en: ["Stylist"] }, {
+    valueKo: "마라 킴",
+    valueEn: "Mara Kim",
+  })
+  const verification = resolveCertificateField(certificate, { ko: ["DNA 인증 여부"], en: ["DNA Verification"] }, {
+    valueKo: certificate.dnaVerified ? "인증 완료" : "검토 중",
+    valueEn: certificate.dnaVerified ? "Verified" : "Pending",
+  })
+
+  return [
+    {
+      id: "identity",
+      chapter: "01",
+      titleKo: "아티팩트 식별",
+      titleEn: "Artifact Identity",
+      summaryKo: "아이템 자체와 아티스트 연결을 확인하는 기본 식별 정보입니다.",
+      summaryEn: "Core identity markers that anchor the object to the artist and archive record.",
+      fields: [
+        { labelKo: "아이템명", labelEn: "Artifact", valueKo: displayName, valueEn: displayName },
+        { labelKo: "아티스트", labelEn: "Artist", valueKo: artist.valueKo, valueEn: artist.valueEn },
+        { labelKo: "브랜드", labelEn: "Brand", valueKo: brand.valueKo, valueEn: brand.valueEn },
+        { labelKo: "아카이브 분류", labelEn: "Archive Class", valueKo: "무대 착용 아카이브", valueEn: "Stage-worn archive" },
+      ],
+    },
+    {
+      id: "usage",
+      chapter: "02",
+      titleKo: "착용 맥락",
+      titleEn: "Performance Context",
+      summaryKo: "어디서, 언제, 누구의 스타일링으로 사용됐는지에 대한 현장 기록입니다.",
+      summaryEn: "Live-use context covering where it appeared, when it was worn, and who styled it.",
+      fields: [
+        { labelKo: "착용 일자", labelEn: "Worn On", valueKo: wornOn.valueKo, valueEn: wornOn.valueEn },
+        { labelKo: "무대", labelEn: "Stage", valueKo: stage.valueKo, valueEn: stage.valueEn },
+        { labelKo: "앨범 / 트랙", labelEn: "Album / Track", valueKo: albumTrack.valueKo, valueEn: albumTrack.valueEn },
+        { labelKo: "스타일리스트", labelEn: "Stylist", valueKo: stylist.valueKo, valueEn: stylist.valueEn },
+      ],
+    },
+    {
+      id: "custody",
+      chapter: "03",
+      titleKo: "소장 이력",
+      titleEn: "Custody Record",
+      summaryKo: "수집 이후 현재까지의 보관 경로와 내부 핸들링 상태를 정리한 구간입니다.",
+      summaryEn: "A compact chain-of-custody summary from archive intake to current controlled storage.",
+      fields: [
+        { labelKo: "최초 인수", labelEn: "Archive Intake", valueKo: "2026.01.18 / KRUNCH archive intake", valueEn: "Jan 18, 2026 / KRUNCH archive intake" },
+        { labelKo: "현재 보관", labelEn: "Current Holder", valueKo: "KRUNCH 온습도 보관 아카이브", valueEn: "KRUNCH climate archive" },
+        { labelKo: "보관 위치", labelEn: "Storage Zone", valueKo: "Vault B-12 / 직물 전용", valueEn: "Vault B-12 / textile controlled" },
+        { labelKo: "릴리즈 상태", labelEn: "Release Status", valueKo: "콜렉터 릴리즈 승인", valueEn: "Collector release approved" },
+      ],
+    },
+    {
+      id: "verification",
+      chapter: "04",
+      titleKo: "검증 로그",
+      titleEn: "Verification Ledger",
+      summaryKo: "인증 방식, 증빙 묶음, 인증서 코드까지 포함한 최종 검증 레이어입니다.",
+      summaryEn: "Final verification layer including method, evidence bundle, and certificate references.",
+      fields: [
+        { labelKo: "인증 결과", labelEn: "Verification", valueKo: verification.valueKo, valueEn: verification.valueEn },
+        { labelKo: "검증 방식", labelEn: "Method", valueKo: "DNA + 시각 연속성 검토", valueEn: "DNA + visual continuity review" },
+        { labelKo: "증빙 묶음", labelEn: "Evidence Bundle", valueKo: "무대 스틸 / 스타일리스트 노트 / 아카이브 미디어", valueEn: "stage stills / stylist note / archive media" },
+        { labelKo: "인증서 코드", labelEn: "Certificate Code", valueKo: certificate.serialNumber, valueEn: certificate.serialNumber },
+      ],
+    },
+  ]
+}
+
+/** e.g. PEACEMINUSONE1988-CAP -> PEACEMINUSONE 1988 CAP */
 function formatCertificateItemDisplayName(name: string) {
   const m = name.match(/^([A-Za-z]+)(\d{4})-(.+)$/)
   if (m) return `${m[1]} ${m[2]} ${m[3].replace(/-/g, " ")}`.toUpperCase()
@@ -408,6 +533,7 @@ export default function ProfilePage() {
   const displayName = profile?.nickname ?? user?.user_metadata?.nickname ?? user?.email?.split("@")[0] ?? "Fomo_KR"
   const memberId = user?.id.slice(0, 8).toUpperCase() ?? "KR-2024-00847"
   const profileSubline = user?.email ?? (isKo ? "로그인 후 이메일이 표시됩니다." : "Your email appears after login.")
+  const selectedCertificateSections = selectedCertificate ? getCertificateProvenanceSections(selectedCertificate) : []
   const joinedDate = profile?.created_at
     ? new Date(profile.created_at).toLocaleDateString(isKo ? "ko-KR" : "en-US", {
         year: "numeric",
@@ -779,7 +905,7 @@ export default function ProfilePage() {
                       {isKo ? "DNA 인증" : "DNA Verified"}
                     </span>
                     <span className="text-white/20 select-none" aria-hidden>
-                      쨌
+                      •
                     </span>
                     <span className="font-medium tracking-[0.04em] text-[#e8e8ec]">
                       {isKo ? "블랙 티어" : "Black Tier"}
@@ -797,17 +923,60 @@ export default function ProfilePage() {
 
                 <div className="my-10 h-px w-full bg-white/[0.08]" />
 
-                <div className="space-y-5 pb-6">
-                  {selectedCertificate.certificate.fields.slice(0, 6).map((field) => (
-                    <div key={field.labelEn} className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-6">
-                      <span className="shrink-0 text-[11px] uppercase tracking-[0.15em] text-white/38">
-                        {isKo ? field.labelKo : field.labelEn}
-                      </span>
-                      <span className="min-w-0 text-sm leading-relaxed text-white/85">
-                        {isKo ? field.valueKo : field.valueEn}
-                      </span>
+                <div className="pb-6">
+                  <div className="mb-5 flex items-end justify-between gap-3">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-[0.22em] text-white/34">
+                        {isKo ? "프로비넌스" : "Provenance"}
+                      </p>
+                      <h4 className="mt-2 text-sm font-medium text-white/78">
+                        {isKo ? "4개의 챕터로 넘겨보는 검증 기록" : "Swipe through the four provenance chapters"}
+                      </h4>
                     </div>
-                  ))}
+                    <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] uppercase tracking-[0.18em] text-white/45">
+                      {isKo ? "4 챕터" : "4 Chapters"}
+                    </span>
+                  </div>
+
+                  <div className="-mx-5 overflow-x-auto px-5 pb-2 scrollbar-hide sm:-mx-8 sm:px-8">
+                    <div className="flex snap-x snap-mandatory gap-4">
+                      {selectedCertificateSections.map((section, index) => (
+                        <article
+                          key={section.id}
+                          className="w-[84%] max-w-[21.5rem] shrink-0 snap-start rounded-[24px] border border-white/10 bg-white/[0.035] p-4 shadow-[0_18px_40px_rgba(0,0,0,0.24)]"
+                        >
+                          <div className="flex items-start justify-between gap-4">
+                            <div>
+                              <p className="text-[10px] uppercase tracking-[0.24em] text-[#ff98c0]">{section.chapter}</p>
+                              <h5 className="mt-2 text-base font-semibold text-white">
+                                {isKo ? section.titleKo : section.titleEn}
+                              </h5>
+                            </div>
+                            <span className="rounded-full border border-white/10 bg-black/25 px-2.5 py-1 text-[10px] uppercase tracking-[0.16em] text-white/38">
+                              {index + 1}/4
+                            </span>
+                          </div>
+
+                          <p className="mt-3 text-xs leading-5 text-white/48">
+                            {isKo ? section.summaryKo : section.summaryEn}
+                          </p>
+
+                          <div className="mt-5 space-y-4">
+                            {section.fields.map((field) => (
+                              <div key={`${section.id}-${field.labelEn}`} className="border-t border-white/8 pt-4 first:border-t-0 first:pt-0">
+                                <p className="text-[10px] uppercase tracking-[0.18em] text-white/34">
+                                  {isKo ? field.labelKo : field.labelEn}
+                                </p>
+                                <p className="mt-1.5 text-sm leading-6 text-white/86">
+                                  {isKo ? field.valueKo : field.valueEn}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        </article>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
