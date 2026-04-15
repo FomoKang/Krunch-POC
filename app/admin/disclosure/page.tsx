@@ -31,7 +31,6 @@ import {
 import {
   buildDisclosureRowKey,
   normalizeOptionalDate,
-  normalizeOptionalString,
 } from "@/lib/admin/utils"
 import {
   createDisclosureControl,
@@ -49,7 +48,6 @@ const disclosureFormSchema = z.object({
   field_value_reference: z.string().trim().min(1, "field_value_reference is required."),
   visibility_level: z.enum(PUBLIC_VISIBILITY_OPTIONS),
   reason_code: z.enum(DISCLOSURE_REASON_OPTIONS),
-  approved_by: z.string().trim().optional(),
   expires_at: z
     .string()
     .trim()
@@ -83,7 +81,6 @@ export default function DisclosurePage() {
       field_value_reference: "",
       visibility_level: "internal_only",
       reason_code: "privacy",
-      approved_by: "",
       expires_at: "",
     },
   })
@@ -154,7 +151,6 @@ export default function DisclosurePage() {
           field_value_reference: values.field_value_reference.trim(),
           visibility_level: values.visibility_level,
           reason_code: values.reason_code,
-          approved_by: normalizeOptionalString(values.approved_by),
           expires_at: normalizeOptionalDate(values.expires_at),
         }
 
@@ -180,7 +176,6 @@ export default function DisclosurePage() {
           field_value_reference: "",
           visibility_level: "internal_only",
           reason_code: "privacy",
-          approved_by: "",
           expires_at: "",
         })
 
@@ -208,7 +203,6 @@ export default function DisclosurePage() {
       field_value_reference: record.field_value_reference,
       visibility_level: (record.visibility_level as DisclosureFormValues["visibility_level"]) ?? "internal_only",
       reason_code: (record.reason_code as DisclosureFormValues["reason_code"]) ?? "privacy",
-      approved_by: record.approved_by ?? "",
       expires_at: record.expires_at?.slice(0, 10) ?? "",
     })
   }
@@ -319,15 +313,14 @@ export default function DisclosurePage() {
                             <SelectItem key={option} value={option}>
                               {option}
                             </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="approved_by">Approved by</Label>
-                  <Input id="approved_by" {...register("approved_by")} className="border-white/10 bg-black/30 text-white" />
+                <div className="rounded-lg border border-white/10 bg-black/20 px-4 py-3 text-sm text-white/60">
+                  Approved by is saved automatically from the signed-in operator.
                 </div>
               </div>
 
@@ -358,7 +351,6 @@ export default function DisclosurePage() {
                         field_value_reference: "",
                         visibility_level: "internal_only",
                         reason_code: "privacy",
-                        approved_by: "",
                         expires_at: "",
                       })
                     }}

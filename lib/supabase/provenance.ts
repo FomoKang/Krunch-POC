@@ -207,8 +207,8 @@ export type AuctionRecord = {
   hammer_price: number | null
   final_price: number | null
   currency: string | null
-  buyer_premium_rate: number | null
-  seller_fee_rate: number | null
+  buyer_premium_rate: string | null
+  seller_fee_rate: string | null
   auction_start_time: string | null
   auction_end_time: string | null
   settlement_status: string | null
@@ -332,6 +332,39 @@ function wrapError(tableName: string, error: PostgrestError | Error) {
   return new Error(getAdminErrorMessage(tableName, error))
 }
 
+async function getAuthenticatedUserId() {
+  const supabase = getSupabaseBrowserClient()
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser()
+
+  if (error) {
+    throw error
+  }
+
+  if (!user) {
+    throw new Error("Please log in before using the admin dashboard.")
+  }
+
+  return user.id
+}
+
+async function getArtifactOwnership(artifactId: string) {
+  const supabase = getSupabaseBrowserClient()
+  const { data, error } = await supabase
+    .from("provenance_artifacts")
+    .select("id, artifact_code, owner_user_id")
+    .eq("id", artifactId)
+    .single()
+
+  if (error) {
+    throw wrapError("provenance_artifacts", error)
+  }
+
+  return castRow<{ id: string; artifact_code: string; owner_user_id: string }>(data)
+}
+
 export async function listArtifactOptions() {
   const supabase = getSupabaseBrowserClient()
   const { data, error } = await supabase
@@ -411,9 +444,15 @@ export async function getArtifactByCode(artifactCode: string) {
 
 export async function createArtifact(payload: Partial<ArtifactRecord>) {
   const supabase = getSupabaseBrowserClient()
+  const ownerUserId = await getAuthenticatedUserId()
   const { data, error } = await supabase
     .from("provenance_artifacts")
-    .insert(payload)
+    .insert({
+      ...payload,
+      owner_user_id: ownerUserId,
+      artifact_type: payload.artifact_type?.trim() || "artifact",
+      created_at: payload.created_at ?? new Date().toISOString().slice(0, 10),
+    })
     .select(ARTIFACT_COLUMNS)
     .single()
 
@@ -466,9 +505,19 @@ export async function listEvents(filters: EventFilters = {}) {
 
 export async function createEvent(payload: Partial<ProvenanceEventRecord>) {
   const supabase = getSupabaseBrowserClient()
+  if (!payload.artifact_id) {
+    throw new Error("artifact_id is required.")
+  }
+
+  const artifact = await getArtifactOwnership(payload.artifact_id)
   const { data, error } = await supabase
     .from("provenance_events")
-    .insert(payload)
+    .insert({
+      ...payload,
+      owner_user_id: artifact.owner_user_id,
+      artifact_code: payload.artifact_code ?? artifact.artifact_code,
+      event_id: `evt_${crypto.randomUUID()}`,
+    })
     .select(EVENT_COLUMNS)
     .single()
 
@@ -505,9 +554,19 @@ export async function listAuthentications(filters: AuthenticationFilters = {}) {
 
 export async function createAuthentication(payload: Partial<AuthenticationRecord>) {
   const supabase = getSupabaseBrowserClient()
+  if (!payload.artifact_id) {
+    throw new Error("artifact_id is required.")
+  }
+
+  const artifact = await getArtifactOwnership(payload.artifact_id)
   const { data, error } = await supabase
     .from("provenance_authentications")
-    .insert(payload)
+    .insert({
+      ...payload,
+      owner_user_id: artifact.owner_user_id,
+      artifact_code: payload.artifact_code ?? artifact.artifact_code,
+      auth_id: `auth_${crypto.randomUUID()}`,
+    })
     .select(AUTH_COLUMNS)
     .single()
 
@@ -632,9 +691,13 @@ export async function uploadMediaFile(file: File, artifactId: string, provenance
 
 export async function createMediaAsset(payload: Partial<MediaAssetRecord>) {
   const supabase = getSupabaseBrowserClient()
+  const uploadedBy = await getAuthenticatedUserId()
   const { data, error } = await supabase
     .from("media_assets")
-    .insert(payload)
+    .insert({
+      ...payload,
+      uploaded_by: uploadedBy,
+    })
     .select(MEDIA_COLUMNS)
 
   if (error) {
@@ -666,9 +729,13 @@ export async function listDisclosureControls(filters: DisclosureFilters = {}) {
 
 export async function createDisclosureControl(payload: Partial<DisclosureControlRecord>) {
   const supabase = getSupabaseBrowserClient()
+  const approvedBy = (payload.approved_by as string | null | undefined) ?? (await getAuthenticatedUserId())
   const { data, error } = await supabase
     .from("disclosure_controls")
-    .insert(payload)
+    .insert({
+      ...payload,
+      approved_by: approvedBy,
+    })
     .select(DISCLOSURE_COLUMNS)
 
   if (error) {
@@ -683,9 +750,13 @@ export async function updateDisclosureControl(
   payload: Partial<DisclosureControlRecord>,
 ) {
   const supabase = getSupabaseBrowserClient()
+  const approvedBy = (payload.approved_by as string | null | undefined) ?? (await getAuthenticatedUserId())
   const { data, error } = await supabase
     .from("disclosure_controls")
-    .update(payload)
+    .update({
+      ...payload,
+      approved_by: approvedBy,
+    })
     .eq("artifact_id", lookup.artifact_id)
     .eq("field_name", lookup.field_name)
     .eq("field_value_reference", lookup.field_value_reference)

@@ -39,7 +39,7 @@ import { Spinner } from "@/components/ui/spinner"
 const artifactFormSchema = z.object({
   artifact_code: z.string().trim().min(1, "artifact_code is required."),
   artifact_title: z.string().trim().min(1, "artifact_title is required."),
-  artifact_type: z.string().trim().optional(),
+  artifact_type: z.string().trim().min(1, "artifact_type is required."),
   artist_name: z.string().trim().optional(),
   group_name: z.string().trim().optional(),
   agency_name: z.string().trim().optional(),
@@ -143,7 +143,7 @@ export function ArtifactForm({ mode, artifactId, initialValues }: ArtifactFormPr
         const payload = {
           artifact_code: values.artifact_code.trim(),
           artifact_title: values.artifact_title.trim(),
-          artifact_type: normalizeOptionalString(values.artifact_type),
+          artifact_type: values.artifact_type.trim(),
           artist_name: normalizeOptionalString(values.artist_name),
           group_name: normalizeOptionalString(values.group_name),
           agency_name: normalizeOptionalString(values.agency_name),
@@ -226,7 +226,13 @@ export function ArtifactForm({ mode, artifactId, initialValues }: ArtifactFormPr
             </div>
             <div className="space-y-2">
               <Label htmlFor="artifact_type">Artifact type</Label>
-              <Input id="artifact_type" {...register("artifact_type")} className="border-white/10 bg-black/30 text-white" />
+              <Input
+                id="artifact_type"
+                {...register("artifact_type")}
+                className="border-white/10 bg-black/30 text-white"
+                placeholder="Stage jacket"
+              />
+              <ErrorMessage message={errors.artifact_type?.message} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="artist_name">Artist name</Label>
