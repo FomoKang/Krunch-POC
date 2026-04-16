@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import type { ArtifactStatus, UsageTier } from "@/lib/admin/constants"
 import { getSupabaseServerClient } from "@/lib/supabase/server"
 
 const PUBLIC_ARTIFACT_COLUMNS = [
@@ -25,8 +26,8 @@ type PublicArtifactRow = {
   artifact_title: string
   artist_name: string | null
   era_name: string | null
-  usage_tier: string | null
-  current_status: string | null
+  usage_tier: UsageTier | null
+  current_status: ArtifactStatus | null
   created_at: string | null
 }
 
@@ -62,7 +63,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: artifactError.message, listings: [] }, { status: 500 })
   }
 
-  const artifacts = (artifactRows ?? []) as PublicArtifactRow[]
+  const artifacts = (artifactRows ?? []) as unknown as PublicArtifactRow[]
   const artifactIds = artifacts.map((artifact) => artifact.id).filter(Boolean)
   const mediaMap = new Map<string, string>()
 
@@ -78,7 +79,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: mediaError.message, listings: [] }, { status: 500 })
     }
 
-    for (const media of (mediaRows ?? []) as PublicMediaRow[]) {
+    for (const media of (mediaRows ?? []) as unknown as PublicMediaRow[]) {
       if (!media.artifact_id || mediaMap.has(media.artifact_id)) {
         continue
       }

@@ -7,15 +7,18 @@ import {
   BadgeCheck,
   Camera,
   Gavel,
+  KeyRound,
   LayoutDashboard,
   ShieldCheck,
   ShieldEllipsis,
   Shirt,
   Sparkles,
+  Users,
 } from "lucide-react"
-import { useSupabaseSession } from "@/hooks/use-supabase-session"
+import { StatusBadge } from "@/components/admin/status-badge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useAdminAccess } from "@/hooks/use-admin-access"
 import { cn } from "@/lib/utils"
 
 const NAVIGATION = [
@@ -42,6 +45,10 @@ const NAVIGATION = [
       { href: "/admin/disclosure", label: "Disclosure Control", icon: ShieldEllipsis },
     ],
   },
+  {
+    title: "System",
+    items: [{ href: "/admin/roles", label: "Access Control", icon: Users, requiredRoles: ["super_admin"] as const }],
+  },
 ] as const
 
 function isNavItemActive(pathname: string, href: string) {
@@ -54,12 +61,17 @@ function isNavItemActive(pathname: string, href: string) {
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  const { user, loading, isConfigured, error } = useSupabaseSession()
-  const allowedEmails = (process.env.NEXT_PUBLIC_KRUNCH_ADMIN_EMAILS ?? "")
-    .split(",")
-    .map((email) => email.trim().toLowerCase())
-    .filter(Boolean)
-  const isAllowed = !allowedEmails.length || allowedEmails.includes(user?.email?.toLowerCase() ?? "")
+  const { user, accessLoading, isConfigured, error, roles, rolesError, isInternalOperator } = useAdminAccess()
+  const visibleNavigation = NAVIGATION.map((group) => ({
+    ...group,
+    items: group.items.filter((item) => {
+      if (!("requiredRoles" in item) || !item.requiredRoles?.length) {
+        return true
+      }
+
+      return item.requiredRoles.some((role) => roles.includes(role))
+    }),
+  })).filter((group) => group.items.length > 0)
 
   if (!isConfigured) {
     return (
@@ -76,7 +88,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     )
   }
 
-  if (loading) {
+  if (accessLoading) {
     return (
       <div className="min-h-screen bg-[#05070c] px-4 py-6">
         <div className="mx-auto flex max-w-[1600px] flex-col gap-6 lg:flex-row">
@@ -122,16 +134,50 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     )
   }
 
-  if (!isAllowed) {
+  if (rolesError) {
+    return (
+      <div className="min-h-screen bg-[#05070c] px-4 py-10 text-white">
+        <div className="mx-auto max-w-3xl rounded-lg border border-rose-500/25 bg-rose-500/10 p-8">
+          <p className="text-xs font-medium uppercase tracking-[0.22em] text-rose-100/70">Role system unavailable</p>
+          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-rose-50">Admin access cannot be evaluated yet.</h1>
+          <p className="mt-3 text-sm leading-6 text-rose-100/80">{rolesError}</p>
+          <div className="mt-5 rounded-md border border-white/10 bg-black/30 p-4">
+            <p className="text-[11px] uppercase tracking-[0.2em] text-white/45">Bootstrap SQL</p>
+            <pre className="mt-3 overflow-x-auto whitespace-pre-wrap text-sm text-white/80">
+{`insert into public.user_roles (user_id, role, assigned_by)
+select id, 'super_admin', id
+from auth.users
+where lower(email) = 'jeniusokg@gmail.com'
+on conflict (user_id, role) do nothing;`}
+            </pre>
+          </div>
+          <p className="mt-4 text-sm text-rose-50">{user.email}</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isInternalOperator) {
     return (
       <div className="min-h-screen bg-[#05070c] px-4 py-10 text-white">
         <div className="mx-auto max-w-3xl rounded-lg border border-amber-500/25 bg-amber-500/10 p-8">
-          <p className="text-xs font-medium uppercase tracking-[0.22em] text-amber-100/70">Access restricted</p>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-amber-50">Your account is signed in, but not on the admin allowlist.</h1>
+          <div className="flex items-center gap-3 text-amber-50">
+            <KeyRound className="size-5" />
+            <p className="text-xs font-medium uppercase tracking-[0.22em] text-amber-100/70">Access restricted</p>
+          </div>
+          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-amber-50">This account does not have an internal admin role.</h1>
           <p className="mt-3 text-sm leading-6 text-amber-100/75">
-            Add this email address to `NEXT_PUBLIC_KRUNCH_ADMIN_EMAILS` if this account should manage provenance data.
+            Signing in is no longer enough. A Krunch super admin must explicitly assign `admin`, `ops`, `inspector`, `finance`, or `super_admin` before this account can open the admin console.
           </p>
           <p className="mt-4 text-sm text-amber-50">{user.email}</p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Button asChild variant="outline" className="border-white/10 bg-transparent text-white hover:bg-white/[0.04]">
+              <Link href="/">
+                Back to storefront
+                <ArrowUpRight className="ml-2 size-4" />
+              </Link>
+            </Button>
+          </div>
         </div>
       </div>
     )
@@ -154,11 +200,18 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             <div className="mt-4 rounded-md border border-white/10 bg-black/30 px-3 py-2">
               <p className="text-[11px] uppercase tracking-[0.2em] text-white/40">Signed in as</p>
               <p className="mt-1 truncate text-sm text-white/80">{user.email}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {roles.length ? (
+                  roles.map((role) => <StatusBadge key={role} value={role} />)
+                ) : (
+                  <span className="text-xs text-white/45">No internal roles assigned</span>
+                )}
+              </div>
             </div>
           </div>
 
           <nav className="mt-6 space-y-6">
-            {NAVIGATION.map((group) => (
+            {visibleNavigation.map((group) => (
               <div key={group.title} className="space-y-2">
                 <p className="px-2 text-[11px] font-medium uppercase tracking-[0.2em] text-white/35">{group.title}</p>
                 <div className="space-y-1">

@@ -5,6 +5,7 @@ const STATUS_CLASS_MAP: Record<string, string> = {
   BLACK: "border-violet-400/30 bg-violet-500/15 text-violet-100",
   PINK: "border-pink-400/30 bg-pink-500/15 text-pink-100",
   archived: "border-zinc-500/30 bg-zinc-500/15 text-zinc-200",
+  listed: "border-cyan-400/30 bg-cyan-500/15 text-cyan-100",
   in_storage: "border-sky-400/30 bg-sky-500/15 text-sky-100",
   on_auction: "border-amber-400/30 bg-amber-500/15 text-amber-100",
   sold: "border-emerald-400/30 bg-emerald-500/15 text-emerald-100",
@@ -22,9 +23,13 @@ const STATUS_CLASS_MAP: Record<string, string> = {
   draft: "border-zinc-500/30 bg-zinc-500/15 text-zinc-200",
   scheduled: "border-sky-400/30 bg-sky-500/15 text-sky-100",
   live: "border-emerald-400/30 bg-emerald-500/15 text-emerald-100",
+  ended: "border-zinc-500/30 bg-zinc-500/15 text-zinc-200",
   closed: "border-zinc-500/30 bg-zinc-500/15 text-zinc-200",
   cancelled: "border-rose-400/30 bg-rose-500/15 text-rose-100",
   settled: "border-indigo-400/30 bg-indigo-500/15 text-indigo-100",
+  active: "border-emerald-400/30 bg-emerald-500/15 text-emerald-100",
+  superseded: "border-amber-400/30 bg-amber-500/15 text-amber-100",
+  revoked: "border-rose-400/30 bg-rose-500/15 text-rose-100",
   domestic_only: "border-sky-400/30 bg-sky-500/15 text-sky-100",
   review_required: "border-amber-400/30 bg-amber-500/15 text-amber-100",
   international_ready: "border-emerald-400/30 bg-emerald-500/15 text-emerald-100",
@@ -69,6 +74,12 @@ const STATUS_CLASS_MAP: Record<string, string> = {
   event: "border-fuchsia-400/30 bg-fuchsia-500/15 text-fuchsia-100",
   authentication: "border-emerald-400/30 bg-emerald-500/15 text-emerald-100",
   auction: "border-amber-400/30 bg-amber-500/15 text-amber-100",
+  user: "border-zinc-500/30 bg-zinc-500/15 text-zinc-200",
+  admin: "border-sky-400/30 bg-sky-500/15 text-sky-100",
+  ops: "border-amber-400/30 bg-amber-500/15 text-amber-100",
+  inspector: "border-emerald-400/30 bg-emerald-500/15 text-emerald-100",
+  finance: "border-indigo-400/30 bg-indigo-500/15 text-indigo-100",
+  super_admin: "border-fuchsia-400/30 bg-fuchsia-500/15 text-fuchsia-100",
 }
 
 const STATUS_LABEL_MAP: Record<string, string> = {
@@ -82,6 +93,8 @@ const STATUS_LABEL_MAP: Record<string, string> = {
   international_ready: "International Ready",
   domestic_only: "Domestic Only",
   restricted: "Restricted",
+  ops: "Ops",
+  super_admin: "Super Admin",
 }
 
 type StatusBadgeProps = {

@@ -7,14 +7,28 @@ import {
   DDP_MODE_OPTIONS,
   INTERNATIONAL_SALE_STATUS_OPTIONS,
   PACKAGE_TYPE_OPTIONS,
+  type ArtifactStatus,
+  type AuthMethod,
+  type AuthResult,
+  type AuctionStatus,
+  type AuctionType,
   type BrokerageFeePolicy,
   type CarrierPreference,
   type CustomsInfoStatus,
   type CustomsRiskTier,
   type DdpMode,
+  type DisclosureField,
+  type DisclosureReason,
+  type EventType,
+  type GuaranteeType,
   type InternationalSaleStatus,
+  type MediaAssetType,
   type PackageType,
+  type PublicVisibility,
+  type SettlementStatus,
   type ShippingInfoStatus,
+  type SourceConfidence,
+  type UsageTier,
 } from "@/lib/admin/constants"
 import {
   artifactDisplayName,
@@ -222,17 +236,17 @@ export type ArtifactRecord = {
   era_name: string | null
   estimated_year: number | null
   first_documented_usage: string | null
-  usage_tier: string | null
+  usage_tier: UsageTier | null
   is_custom_made: boolean | null
   is_stage_used: boolean | null
   is_screen_used: boolean | null
   material_summary: string | null
   size_info: string | null
   colorway: string | null
-  current_status: string | null
+  current_status: ArtifactStatus | null
   current_holder: string | null
   storage_location: string | null
-  public_visibility: string | null
+  public_visibility: PublicVisibility | null
   internal_notes: string | null
   created_at: string | null
   updated_at: string | null
@@ -247,7 +261,7 @@ export type ProvenanceEventRecord = {
   id: string
   artifact_id: string
   artifact_code: string | null
-  event_type: string | null
+  event_type: EventType | null
   event_title: string
   event_date_start: string | null
   event_date_end: string | null
@@ -255,10 +269,10 @@ export type ProvenanceEventRecord = {
   artist_name: string | null
   stylist_name: string | null
   production_entity: string | null
-  source_confidence: string | null
+  source_confidence: SourceConfidence | null
   evidence_summary: string | null
   media_link: string | null
-  visibility_level: string | null
+  visibility_level: PublicVisibility | null
   internal_notes: string | null
   created_at: string | null
   updated_at: string | null
@@ -268,14 +282,14 @@ export type AuthenticationRecord = {
   id: string
   artifact_id: string
   artifact_code: string | null
-  auth_method: string | null
-  auth_result: string | null
+  auth_method: AuthMethod | null
+  auth_result: AuthResult | null
   auth_date: string | null
   auth_provider: string | null
   forensic_ref: string | null
   certificate_code: string | null
   expiry_date: string | null
-  visibility_level: string | null
+  visibility_level: PublicVisibility | null
   notes: string | null
   created_at: string | null
   updated_at: string | null
@@ -285,8 +299,8 @@ export type AuctionRecord = {
   auction_id: string
   artifact_id: string
   auction_title: string
-  auction_type: string | null
-  auction_status: string | null
+  auction_type: AuctionType | null
+  auction_status: AuctionStatus | null
   lot_number: string | null
   estimate_low: number | null
   estimate_high: number | null
@@ -299,9 +313,9 @@ export type AuctionRecord = {
   seller_fee_rate: string | null
   auction_start_time: string | null
   auction_end_time: string | null
-  settlement_status: string | null
+  settlement_status: SettlementStatus | null
   closing_reason: string | null
-  guarantee_type: string | null
+  guarantee_type: GuaranteeType | null
   guarantee_amount: number | null
   winner_bidder_id: string | null
   created_at: string | null
@@ -311,11 +325,11 @@ export type AuctionRecord = {
 export type MediaAssetRecord = {
   artifact_id: string
   provenance_event_id: string | null
-  asset_type: string | null
+  asset_type: MediaAssetType | null
   caption: string | null
   source: string | null
   copyright_status: string | null
-  visibility_level: string | null
+  visibility_level: PublicVisibility | null
   taken_at: string | null
   file_url: string
   thumbnail_url: string | null
@@ -326,10 +340,10 @@ export type MediaAssetRecord = {
 
 export type DisclosureControlRecord = {
   artifact_id: string
-  field_name: string
+  field_name: DisclosureField
   field_value_reference: string
-  visibility_level: string | null
-  reason_code: string | null
+  visibility_level: PublicVisibility | null
+  reason_code: DisclosureReason | null
   approved_by: string | null
   expires_at: string | null
   created_at: string | null

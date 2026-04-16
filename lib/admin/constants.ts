@@ -1,18 +1,45 @@
 export const USAGE_TIER_OPTIONS = ["BLACK", "PINK"] as const
 
 export const ARTIFACT_STATUS_OPTIONS = [
+  "draft",
   "archived",
   "in_storage",
+  "listed",
   "on_auction",
   "sold",
-  "retired",
   "disputed",
+  "retired",
 ] as const
 
 export const PUBLIC_VISIBILITY_OPTIONS = [
   "public",
   "collector_only",
   "internal_only",
+] as const
+
+export const KRUNCH_ROLE_OPTIONS = [
+  "user",
+  "admin",
+  "ops",
+  "inspector",
+  "finance",
+  "super_admin",
+] as const
+
+export const INTERNAL_KRUNCH_ROLE_OPTIONS = [
+  "admin",
+  "ops",
+  "inspector",
+  "finance",
+  "super_admin",
+] as const
+
+export const MANAGEABLE_KRUNCH_ROLE_OPTIONS = [
+  "admin",
+  "ops",
+  "inspector",
+  "finance",
+  "super_admin",
 ] as const
 
 export const SHIPPING_INFO_STATUS_OPTIONS = [
@@ -120,9 +147,15 @@ export const AUCTION_STATUS_OPTIONS = [
   "draft",
   "scheduled",
   "live",
-  "closed",
+  "ended",
   "cancelled",
   "settled",
+] as const
+
+export const CERTIFICATE_STATUS_OPTIONS = [
+  "active",
+  "superseded",
+  "revoked",
 ] as const
 
 export const AUCTION_ACTIVE_STATUS_OPTIONS = [
@@ -173,6 +206,9 @@ export const STORAGE_BUCKET_FALLBACK = "media-assets"
 export type UsageTier = (typeof USAGE_TIER_OPTIONS)[number]
 export type ArtifactStatus = (typeof ARTIFACT_STATUS_OPTIONS)[number]
 export type PublicVisibility = (typeof PUBLIC_VISIBILITY_OPTIONS)[number]
+export type KrunchRole = (typeof KRUNCH_ROLE_OPTIONS)[number]
+export type InternalKrunchRole = (typeof INTERNAL_KRUNCH_ROLE_OPTIONS)[number]
+export type ManageableKrunchRole = (typeof MANAGEABLE_KRUNCH_ROLE_OPTIONS)[number]
 export type ShippingInfoStatus = (typeof SHIPPING_INFO_STATUS_OPTIONS)[number]
 export type CustomsInfoStatus = (typeof CUSTOMS_INFO_STATUS_OPTIONS)[number]
 export type InternationalSaleStatus = (typeof INTERNATIONAL_SALE_STATUS_OPTIONS)[number]
@@ -187,6 +223,7 @@ export type AuthMethod = (typeof AUTH_METHOD_OPTIONS)[number]
 export type AuthResult = (typeof AUTH_RESULT_OPTIONS)[number]
 export type AuctionType = (typeof AUCTION_TYPE_OPTIONS)[number]
 export type AuctionStatus = (typeof AUCTION_STATUS_OPTIONS)[number]
+export type CertificateStatus = (typeof CERTIFICATE_STATUS_OPTIONS)[number]
 export type SettlementStatus = (typeof SETTLEMENT_STATUS_OPTIONS)[number]
 export type GuaranteeType = (typeof GUARANTEE_TYPE_OPTIONS)[number]
 export type MediaAssetType = (typeof MEDIA_ASSET_TYPE_OPTIONS)[number]
