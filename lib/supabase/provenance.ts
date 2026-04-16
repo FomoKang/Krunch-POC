@@ -1,6 +1,29 @@
 import type { PostgrestError } from "@supabase/supabase-js"
-import { AUCTION_ACTIVE_STATUS_OPTIONS } from "@/lib/admin/constants"
-import { artifactDisplayName, buildStoragePath, getMediaBucketName, hashFile } from "@/lib/admin/utils"
+import {
+  AUCTION_ACTIVE_STATUS_OPTIONS,
+  BROKERAGE_FEE_POLICY_OPTIONS,
+  CARRIER_PREFERENCE_OPTIONS,
+  CUSTOMS_RISK_TIER_OPTIONS,
+  DDP_MODE_OPTIONS,
+  INTERNATIONAL_SALE_STATUS_OPTIONS,
+  PACKAGE_TYPE_OPTIONS,
+  type BrokerageFeePolicy,
+  type CarrierPreference,
+  type CustomsInfoStatus,
+  type CustomsRiskTier,
+  type DdpMode,
+  type InternationalSaleStatus,
+  type PackageType,
+  type ShippingInfoStatus,
+} from "@/lib/admin/constants"
+import {
+  artifactDisplayName,
+  buildStoragePath,
+  getMediaBucketName,
+  hashFile,
+  normalizeOptionalNumber,
+  normalizeOptionalString,
+} from "@/lib/admin/utils"
 import { getSupabaseBrowserClient } from "@/lib/supabase/client"
 
 const ARTIFACT_COLUMNS = [
@@ -119,6 +142,71 @@ const DISCLOSURE_COLUMNS = [
   "reason_code",
   "approved_by",
   "expires_at",
+  "created_at",
+  "updated_at",
+].join(", ")
+
+const SHIPPING_PROFILE_COLUMNS = [
+  "shipping_profile_code",
+  "shipping_profile_name",
+  "estimated_package_weight_grams",
+  "estimated_package_length_cm",
+  "estimated_package_width_cm",
+  "estimated_package_height_cm",
+  "package_type",
+  "carrier_preference",
+  "ddp_supported",
+  "insurance_required",
+  "special_handling_required",
+  "is_active",
+  "created_at",
+  "updated_at",
+].join(", ")
+
+const SHIPPING_INFO_COLUMNS = [
+  "artifact_id",
+  "shipping_info_status",
+  "international_sale_status",
+  "manual_review_required",
+  "shipping_profile_code",
+  "shipping_profile_name",
+  "estimated_package_weight_grams",
+  "estimated_package_length_cm",
+  "estimated_package_width_cm",
+  "estimated_package_height_cm",
+  "package_type",
+  "carrier_preference",
+  "ddp_supported",
+  "insurance_required",
+  "special_handling_required",
+  "allowed_destination_countries",
+  "restricted_destination_countries",
+  "restricted_reason",
+  "brokerage_fee_policy",
+  "ddp_mode",
+  "customs_risk_tier",
+  "created_at",
+  "updated_at",
+].join(", ")
+
+const CUSTOMS_INFO_COLUMNS = [
+  "artifact_id",
+  "customs_info_status",
+  "customs_product_name_en",
+  "customs_product_type",
+  "hs_code_global_6",
+  "hs_code_local",
+  "country_of_origin",
+  "commercial_invoice_description",
+  "material_composition",
+  "contains_battery",
+  "contains_electronics",
+  "contains_leather",
+  "contains_fur",
+  "preferential_origin_eligible",
+  "declared_value_override",
+  "declared_currency",
+  "customs_notes_internal",
   "created_at",
   "updated_at",
 ].join(", ")
@@ -248,6 +336,87 @@ export type DisclosureControlRecord = {
   updated_at: string | null
 }
 
+export type ProductShippingProfileRecord = {
+  shipping_profile_code: string
+  shipping_profile_name: string
+  estimated_package_weight_grams: number | null
+  estimated_package_length_cm: number | null
+  estimated_package_width_cm: number | null
+  estimated_package_height_cm: number | null
+  package_type: PackageType | null
+  carrier_preference: CarrierPreference | null
+  ddp_supported: boolean
+  insurance_required: boolean
+  special_handling_required: boolean
+  is_active: boolean
+  created_at: string | null
+  updated_at: string | null
+}
+
+export type ProductShippingInfoRecord = {
+  artifact_id: string
+  shipping_info_status: ShippingInfoStatus
+  international_sale_status: InternationalSaleStatus
+  manual_review_required: boolean
+  shipping_profile_code: string | null
+  shipping_profile_name: string | null
+  estimated_package_weight_grams: number | null
+  estimated_package_length_cm: number | null
+  estimated_package_width_cm: number | null
+  estimated_package_height_cm: number | null
+  package_type: PackageType | null
+  carrier_preference: CarrierPreference | null
+  ddp_supported: boolean
+  insurance_required: boolean
+  special_handling_required: boolean
+  allowed_destination_countries: string[] | null
+  restricted_destination_countries: string[] | null
+  restricted_reason: string | null
+  brokerage_fee_policy: BrokerageFeePolicy | null
+  ddp_mode: DdpMode | null
+  customs_risk_tier: CustomsRiskTier | null
+  created_at: string | null
+  updated_at: string | null
+}
+
+export type ProductCustomsInfoRecord = {
+  artifact_id: string
+  customs_info_status: CustomsInfoStatus
+  customs_product_name_en: string | null
+  customs_product_type: string | null
+  hs_code_global_6: string | null
+  hs_code_local: string | null
+  country_of_origin: string | null
+  commercial_invoice_description: string | null
+  material_composition: string | null
+  contains_battery: boolean
+  contains_electronics: boolean
+  contains_leather: boolean
+  contains_fur: boolean
+  preferential_origin_eligible: boolean
+  declared_value_override: number | null
+  declared_currency: string | null
+  customs_notes_internal: string | null
+  created_at: string | null
+  updated_at: string | null
+}
+
+export type InternationalReadiness = {
+  shippingStatus: ShippingInfoStatus
+  customsStatus: CustomsInfoStatus
+  shippingReady: boolean
+  customsReady: boolean
+  internationalReady: boolean
+  missingFields: string[]
+}
+
+export type ProductLogisticsRecord = {
+  shipping: ProductShippingInfoRecord | null
+  customs: ProductCustomsInfoRecord | null
+  profile: ProductShippingProfileRecord | null
+  readiness: InternationalReadiness
+}
+
 export type RecentActivityItem = {
   id: string
   type: string
@@ -336,6 +505,220 @@ function wrapError(tableName: string, error: PostgrestError | Error) {
   return new Error(getAdminErrorMessage(tableName, error))
 }
 
+function hasTextValue(value: string | null | undefined) {
+  return Boolean(value?.trim())
+}
+
+function normalizeCountryCodes(codes: string[] | null | undefined) {
+  return Array.from(
+    new Set(
+      (codes ?? [])
+        .map((code) => code.trim().toUpperCase())
+        .filter(Boolean),
+    ),
+  )
+}
+
+function isKnownOption<T extends string>(value: string | null | undefined, options: readonly T[]): value is T {
+  return Boolean(value && options.includes(value as T))
+}
+
+function defaultShippingInfo(artifactId: string): ProductShippingInfoRecord {
+  return {
+    artifact_id: artifactId,
+    shipping_info_status: "empty",
+    international_sale_status: "draft",
+    manual_review_required: false,
+    shipping_profile_code: null,
+    shipping_profile_name: null,
+    estimated_package_weight_grams: null,
+    estimated_package_length_cm: null,
+    estimated_package_width_cm: null,
+    estimated_package_height_cm: null,
+    package_type: null,
+    carrier_preference: null,
+    ddp_supported: false,
+    insurance_required: false,
+    special_handling_required: false,
+    allowed_destination_countries: [],
+    restricted_destination_countries: [],
+    restricted_reason: null,
+    brokerage_fee_policy: null,
+    ddp_mode: null,
+    customs_risk_tier: null,
+    created_at: null,
+    updated_at: null,
+  }
+}
+
+function defaultCustomsInfo(artifactId: string): ProductCustomsInfoRecord {
+  return {
+    artifact_id: artifactId,
+    customs_info_status: "empty",
+    customs_product_name_en: null,
+    customs_product_type: null,
+    hs_code_global_6: null,
+    hs_code_local: null,
+    country_of_origin: null,
+    commercial_invoice_description: null,
+    material_composition: null,
+    contains_battery: false,
+    contains_electronics: false,
+    contains_leather: false,
+    contains_fur: false,
+    preferential_origin_eligible: false,
+    declared_value_override: null,
+    declared_currency: null,
+    customs_notes_internal: null,
+    created_at: null,
+    updated_at: null,
+  }
+}
+
+function hasShippingData(
+  shipping: Partial<ProductShippingInfoRecord> | null | undefined,
+  profile?: ProductShippingProfileRecord | null,
+) {
+  return Boolean(
+    hasTextValue(shipping?.shipping_profile_code) ||
+      hasTextValue(shipping?.shipping_profile_name) ||
+      hasTextValue(shipping?.package_type) ||
+      hasTextValue(shipping?.carrier_preference) ||
+      shipping?.estimated_package_weight_grams !== null && shipping?.estimated_package_weight_grams !== undefined ||
+      shipping?.estimated_package_length_cm !== null && shipping?.estimated_package_length_cm !== undefined ||
+      shipping?.estimated_package_width_cm !== null && shipping?.estimated_package_width_cm !== undefined ||
+      shipping?.estimated_package_height_cm !== null && shipping?.estimated_package_height_cm !== undefined ||
+      shipping?.ddp_supported ||
+      shipping?.insurance_required ||
+      shipping?.special_handling_required ||
+      Boolean(shipping?.allowed_destination_countries?.length) ||
+      Boolean(shipping?.restricted_destination_countries?.length) ||
+      hasTextValue(shipping?.restricted_reason) ||
+      hasTextValue(shipping?.brokerage_fee_policy) ||
+      hasTextValue(shipping?.ddp_mode) ||
+      hasTextValue(shipping?.customs_risk_tier) ||
+      profile
+  )
+}
+
+function hasCustomsData(customs: Partial<ProductCustomsInfoRecord> | null | undefined) {
+  return Boolean(
+    hasTextValue(customs?.customs_product_name_en) ||
+      hasTextValue(customs?.customs_product_type) ||
+      hasTextValue(customs?.hs_code_global_6) ||
+      hasTextValue(customs?.hs_code_local) ||
+      hasTextValue(customs?.country_of_origin) ||
+      hasTextValue(customs?.commercial_invoice_description) ||
+      hasTextValue(customs?.material_composition) ||
+      customs?.contains_battery ||
+      customs?.contains_electronics ||
+      customs?.contains_leather ||
+      customs?.contains_fur ||
+      customs?.preferential_origin_eligible ||
+      customs?.declared_value_override !== null && customs?.declared_value_override !== undefined ||
+      hasTextValue(customs?.declared_currency) ||
+      hasTextValue(customs?.customs_notes_internal)
+  )
+}
+
+export function isShippingReady(
+  shipping: Partial<ProductShippingInfoRecord> | null | undefined,
+  profile?: ProductShippingProfileRecord | null,
+) {
+  const hasProfileOrPackage = hasTextValue(shipping?.shipping_profile_code) || hasTextValue(shipping?.package_type) || Boolean(profile?.package_type)
+  const hasWeight =
+    shipping?.estimated_package_weight_grams !== null && shipping?.estimated_package_weight_grams !== undefined
+      ? shipping.estimated_package_weight_grams > 0
+      : Boolean(profile?.estimated_package_weight_grams && profile.estimated_package_weight_grams > 0)
+  const hasDdpMode = hasTextValue(shipping?.ddp_mode)
+
+  return hasProfileOrPackage && hasWeight && hasDdpMode
+}
+
+export function isCustomsReady(customs: Partial<ProductCustomsInfoRecord> | null | undefined) {
+  return Boolean(
+    hasTextValue(customs?.customs_product_name_en) &&
+      (hasTextValue(customs?.hs_code_global_6) || hasTextValue(customs?.hs_code_local)) &&
+      hasTextValue(customs?.country_of_origin),
+  )
+}
+
+export function computeShippingInfoStatus(
+  shipping: Partial<ProductShippingInfoRecord> | null | undefined,
+  profile?: ProductShippingProfileRecord | null,
+): ShippingInfoStatus {
+  if (!hasShippingData(shipping, profile)) {
+    return "empty"
+  }
+
+  return isShippingReady(shipping, profile) ? "complete" : "partial"
+}
+
+export function computeCustomsInfoStatus(
+  customs: Partial<ProductCustomsInfoRecord> | null | undefined,
+): CustomsInfoStatus {
+  if (!hasCustomsData(customs)) {
+    return "empty"
+  }
+
+  return isCustomsReady(customs) ? "complete" : "partial"
+}
+
+export function getInternationalReadiness(
+  shipping: Partial<ProductShippingInfoRecord> | null | undefined,
+  customs: Partial<ProductCustomsInfoRecord> | null | undefined,
+  profile?: ProductShippingProfileRecord | null,
+): InternationalReadiness {
+  const missingFields: string[] = []
+  const shippingReady = isShippingReady(shipping, profile)
+  const customsReady = isCustomsReady(customs)
+
+  if (!hasTextValue(customs?.customs_product_name_en)) {
+    missingFields.push("Customs product name (EN)")
+  }
+
+  if (!hasTextValue(customs?.hs_code_global_6) && !hasTextValue(customs?.hs_code_local)) {
+    missingFields.push("HS code")
+  }
+
+  if (!hasTextValue(customs?.country_of_origin)) {
+    missingFields.push("Country of origin")
+  }
+
+  if (!hasTextValue(shipping?.shipping_profile_code) && !hasTextValue(shipping?.package_type) && !profile?.package_type) {
+    missingFields.push("Shipping profile or package type")
+  }
+
+  const hasWeight =
+    shipping?.estimated_package_weight_grams !== null && shipping?.estimated_package_weight_grams !== undefined
+      ? shipping.estimated_package_weight_grams > 0
+      : Boolean(profile?.estimated_package_weight_grams && profile.estimated_package_weight_grams > 0)
+
+  if (!hasWeight) {
+    missingFields.push("Estimated package weight")
+  }
+
+  if (!hasTextValue(shipping?.ddp_mode)) {
+    missingFields.push("DDP mode")
+  }
+
+  if (shipping?.manual_review_required) {
+    missingFields.push("Manual review clearance")
+  }
+
+  const shippingStatus = computeShippingInfoStatus(shipping, profile)
+  const customsStatus = computeCustomsInfoStatus(customs)
+
+  return {
+    shippingStatus,
+    customsStatus,
+    shippingReady,
+    customsReady,
+    internationalReady: shippingReady && customsReady && !shipping?.manual_review_required,
+    missingFields,
+  }
+}
+
 async function getAuthenticatedUserId() {
   const supabase = getSupabaseBrowserClient()
   const {
@@ -367,6 +750,307 @@ async function getArtifactOwnership(artifactId: string) {
   }
 
   return castRow<{ id: string; artifact_code: string; owner_user_id: string }>(data)
+}
+
+async function getShippingProfileByCode(shippingProfileCode: string) {
+  const supabase = getSupabaseBrowserClient()
+  const { data, error } = await supabase
+    .from("product_shipping_profiles")
+    .select(SHIPPING_PROFILE_COLUMNS)
+    .eq("shipping_profile_code", shippingProfileCode)
+    .maybeSingle()
+
+  if (error) {
+    throw wrapError("product_shipping_profiles", error)
+  }
+
+  return castMaybeRow<ProductShippingProfileRecord>(data)
+}
+
+async function getShippingInfoRow(artifactId: string) {
+  const supabase = getSupabaseBrowserClient()
+  const { data, error } = await supabase
+    .from("product_shipping_info")
+    .select(SHIPPING_INFO_COLUMNS)
+    .eq("artifact_id", artifactId)
+    .maybeSingle()
+
+  if (error) {
+    throw wrapError("product_shipping_info", error)
+  }
+
+  return castMaybeRow<ProductShippingInfoRecord>(data)
+}
+
+async function getCustomsInfoRow(artifactId: string) {
+  const supabase = getSupabaseBrowserClient()
+  const { data, error } = await supabase
+    .from("product_customs_info")
+    .select(CUSTOMS_INFO_COLUMNS)
+    .eq("artifact_id", artifactId)
+    .maybeSingle()
+
+  if (error) {
+    throw wrapError("product_customs_info", error)
+  }
+
+  return castMaybeRow<ProductCustomsInfoRecord>(data)
+}
+
+function buildShippingInfoRecord(
+  artifactId: string,
+  current: ProductShippingInfoRecord | null,
+  payload: Partial<ProductShippingInfoRecord>,
+  profile: ProductShippingProfileRecord | null,
+): ProductShippingInfoRecord {
+  const packageType = normalizeOptionalString(payload.package_type ?? current?.package_type)
+  const carrierPreference = normalizeOptionalString(
+    payload.carrier_preference ?? current?.carrier_preference,
+  )
+  const brokerageFeePolicy = normalizeOptionalString(
+    payload.brokerage_fee_policy ?? current?.brokerage_fee_policy,
+  )
+  const ddpMode = normalizeOptionalString(payload.ddp_mode ?? current?.ddp_mode)
+  const customsRiskTier = normalizeOptionalString(
+    payload.customs_risk_tier ?? current?.customs_risk_tier,
+  )
+  const internationalSaleStatus = normalizeOptionalString(
+    payload.international_sale_status ?? current?.international_sale_status,
+  )
+
+  const next = {
+    ...defaultShippingInfo(artifactId),
+    ...(current ?? {}),
+    ...payload,
+    artifact_id: artifactId,
+    shipping_profile_code: normalizeOptionalString(payload.shipping_profile_code ?? current?.shipping_profile_code),
+    shipping_profile_name: normalizeOptionalString(
+      payload.shipping_profile_name ?? current?.shipping_profile_name ?? profile?.shipping_profile_name,
+    ),
+    estimated_package_weight_grams: normalizeOptionalNumber(
+      payload.estimated_package_weight_grams ?? current?.estimated_package_weight_grams,
+    ),
+    estimated_package_length_cm: normalizeOptionalNumber(
+      payload.estimated_package_length_cm ?? current?.estimated_package_length_cm,
+    ),
+    estimated_package_width_cm: normalizeOptionalNumber(
+      payload.estimated_package_width_cm ?? current?.estimated_package_width_cm,
+    ),
+    estimated_package_height_cm: normalizeOptionalNumber(
+      payload.estimated_package_height_cm ?? current?.estimated_package_height_cm,
+    ),
+    package_type: isKnownOption(packageType, PACKAGE_TYPE_OPTIONS) ? packageType : null,
+    carrier_preference: isKnownOption(carrierPreference, CARRIER_PREFERENCE_OPTIONS)
+      ? carrierPreference
+      : null,
+    ddp_supported: payload.ddp_supported ?? current?.ddp_supported ?? false,
+    insurance_required: payload.insurance_required ?? current?.insurance_required ?? false,
+    special_handling_required:
+      payload.special_handling_required ?? current?.special_handling_required ?? false,
+    allowed_destination_countries: normalizeCountryCodes(
+      payload.allowed_destination_countries ?? current?.allowed_destination_countries,
+    ),
+    restricted_destination_countries: normalizeCountryCodes(
+      payload.restricted_destination_countries ?? current?.restricted_destination_countries,
+    ),
+    restricted_reason: normalizeOptionalString(payload.restricted_reason ?? current?.restricted_reason),
+    brokerage_fee_policy: isKnownOption(brokerageFeePolicy, BROKERAGE_FEE_POLICY_OPTIONS)
+      ? brokerageFeePolicy
+      : null,
+    ddp_mode: isKnownOption(ddpMode, DDP_MODE_OPTIONS) ? ddpMode : null,
+    customs_risk_tier: isKnownOption(customsRiskTier, CUSTOMS_RISK_TIER_OPTIONS)
+      ? customsRiskTier
+      : null,
+    manual_review_required: payload.manual_review_required ?? current?.manual_review_required ?? false,
+    international_sale_status: isKnownOption(
+      internationalSaleStatus,
+      INTERNATIONAL_SALE_STATUS_OPTIONS,
+    )
+      ? internationalSaleStatus
+      : "draft",
+    created_at: current?.created_at ?? null,
+    updated_at: new Date().toISOString(),
+  } satisfies ProductShippingInfoRecord
+
+  return {
+    ...next,
+    shipping_info_status: computeShippingInfoStatus(next, profile),
+  }
+}
+
+function buildCustomsInfoRecord(
+  artifactId: string,
+  current: ProductCustomsInfoRecord | null,
+  payload: Partial<ProductCustomsInfoRecord>,
+): ProductCustomsInfoRecord {
+  const next = {
+    ...defaultCustomsInfo(artifactId),
+    ...(current ?? {}),
+    ...payload,
+    artifact_id: artifactId,
+    customs_product_name_en: normalizeOptionalString(
+      payload.customs_product_name_en ?? current?.customs_product_name_en,
+    ),
+    customs_product_type: normalizeOptionalString(payload.customs_product_type ?? current?.customs_product_type),
+    hs_code_global_6: normalizeOptionalString(payload.hs_code_global_6 ?? current?.hs_code_global_6),
+    hs_code_local: normalizeOptionalString(payload.hs_code_local ?? current?.hs_code_local),
+    country_of_origin: normalizeOptionalString(payload.country_of_origin ?? current?.country_of_origin),
+    commercial_invoice_description: normalizeOptionalString(
+      payload.commercial_invoice_description ?? current?.commercial_invoice_description,
+    ),
+    material_composition: normalizeOptionalString(payload.material_composition ?? current?.material_composition),
+    contains_battery: payload.contains_battery ?? current?.contains_battery ?? false,
+    contains_electronics: payload.contains_electronics ?? current?.contains_electronics ?? false,
+    contains_leather: payload.contains_leather ?? current?.contains_leather ?? false,
+    contains_fur: payload.contains_fur ?? current?.contains_fur ?? false,
+    preferential_origin_eligible:
+      payload.preferential_origin_eligible ?? current?.preferential_origin_eligible ?? false,
+    declared_value_override: normalizeOptionalNumber(
+      payload.declared_value_override ?? current?.declared_value_override,
+    ),
+    declared_currency: normalizeOptionalString(payload.declared_currency ?? current?.declared_currency),
+    customs_notes_internal: normalizeOptionalString(
+      payload.customs_notes_internal ?? current?.customs_notes_internal,
+    ),
+    created_at: current?.created_at ?? null,
+    updated_at: new Date().toISOString(),
+  } satisfies ProductCustomsInfoRecord
+
+  return {
+    ...next,
+    customs_info_status: computeCustomsInfoStatus(next),
+  }
+}
+
+export async function listShippingProfiles() {
+  const supabase = getSupabaseBrowserClient()
+  const { data, error } = await supabase
+    .from("product_shipping_profiles")
+    .select(SHIPPING_PROFILE_COLUMNS)
+    .eq("is_active", true)
+    .order("shipping_profile_name", { ascending: true })
+
+  if (error) {
+    throw wrapError("product_shipping_profiles", error)
+  }
+
+  return castRows<ProductShippingProfileRecord>(data)
+}
+
+export async function getArtifactLogistics(artifactId: string): Promise<ProductLogisticsRecord> {
+  const [shipping, customs] = await Promise.all([getShippingInfoRow(artifactId), getCustomsInfoRow(artifactId)])
+  const profile = shipping?.shipping_profile_code ? await getShippingProfileByCode(shipping.shipping_profile_code) : null
+  const readiness = getInternationalReadiness(shipping, customs, profile)
+
+  return {
+    shipping,
+    customs,
+    profile,
+    readiness,
+  }
+}
+
+export async function upsertProductShippingInfo(
+  artifactId: string,
+  payload: Partial<ProductShippingInfoRecord>,
+) {
+  await getArtifactOwnership(artifactId)
+
+  const supabase = getSupabaseBrowserClient()
+  const current = await getShippingInfoRow(artifactId)
+  const profileCode = normalizeOptionalString(payload.shipping_profile_code ?? current?.shipping_profile_code)
+  const profile = profileCode ? await getShippingProfileByCode(profileCode) : null
+  const next = buildShippingInfoRecord(artifactId, current, payload, profile)
+
+  const { data, error } = await supabase
+    .from("product_shipping_info")
+    .upsert(next, { onConflict: "artifact_id" })
+    .select(SHIPPING_INFO_COLUMNS)
+    .single()
+
+  if (error) {
+    throw wrapError("product_shipping_info", error)
+  }
+
+  return castRow<ProductShippingInfoRecord>(data)
+}
+
+export async function upsertProductCustomsInfo(
+  artifactId: string,
+  payload: Partial<ProductCustomsInfoRecord>,
+) {
+  await getArtifactOwnership(artifactId)
+
+  const supabase = getSupabaseBrowserClient()
+  const current = await getCustomsInfoRow(artifactId)
+  const next = buildCustomsInfoRecord(artifactId, current, payload)
+
+  const { data, error } = await supabase
+    .from("product_customs_info")
+    .upsert(next, { onConflict: "artifact_id" })
+    .select(CUSTOMS_INFO_COLUMNS)
+    .single()
+
+  if (error) {
+    throw wrapError("product_customs_info", error)
+  }
+
+  return castRow<ProductCustomsInfoRecord>(data)
+}
+
+export async function saveArtifactLogistics(
+  artifactId: string,
+  payload: {
+    shipping?: Partial<ProductShippingInfoRecord>
+    customs?: Partial<ProductCustomsInfoRecord>
+  },
+) {
+  const [shipping, customs] = await Promise.all([
+    upsertProductShippingInfo(artifactId, payload.shipping ?? {}),
+    upsertProductCustomsInfo(artifactId, payload.customs ?? {}),
+  ])
+  const profile = shipping.shipping_profile_code
+    ? await getShippingProfileByCode(shipping.shipping_profile_code)
+    : null
+
+  return {
+    shipping,
+    customs,
+    profile,
+    readiness: getInternationalReadiness(shipping, customs, profile),
+  }
+}
+
+export async function markArtifactInternationalReady(artifactId: string) {
+  const logistics = await getArtifactLogistics(artifactId)
+
+  if (!logistics.readiness.internationalReady) {
+    throw new Error(
+      `International readiness requirements missing: ${logistics.readiness.missingFields.join(", ")}.`,
+    )
+  }
+
+  const shipping = await upsertProductShippingInfo(artifactId, {
+    ...(logistics.shipping ?? defaultShippingInfo(artifactId)),
+    international_sale_status: "international_ready",
+    manual_review_required: false,
+  })
+
+  const profile = shipping.shipping_profile_code
+    ? await getShippingProfileByCode(shipping.shipping_profile_code)
+    : null
+  const readiness = getInternationalReadiness(shipping, logistics.customs, profile)
+
+  return {
+    shipping,
+    customs: logistics.customs,
+    profile,
+    readiness: {
+      ...readiness,
+      internationalReady: true,
+      missingFields: [],
+    },
+  }
 }
 
 export async function listArtifactOptions() {

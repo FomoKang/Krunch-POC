@@ -15,6 +15,63 @@ export const PUBLIC_VISIBILITY_OPTIONS = [
   "internal_only",
 ] as const
 
+export const SHIPPING_INFO_STATUS_OPTIONS = [
+  "empty",
+  "partial",
+  "complete",
+] as const
+
+export const CUSTOMS_INFO_STATUS_OPTIONS = [
+  "empty",
+  "partial",
+  "complete",
+] as const
+
+export const INTERNATIONAL_SALE_STATUS_OPTIONS = [
+  "draft",
+  "domestic_only",
+  "review_required",
+  "international_ready",
+  "restricted",
+] as const
+
+export const PACKAGE_TYPE_OPTIONS = [
+  "soft",
+  "box",
+  "premium_box",
+  "framed",
+  "electronics",
+  "special",
+] as const
+
+export const CARRIER_PREFERENCE_OPTIONS = [
+  "dhl",
+  "fedex",
+  "ups",
+  "ems",
+  "local",
+  "hand_carry",
+  "special",
+] as const
+
+export const BROKERAGE_FEE_POLICY_OPTIONS = [
+  "included",
+  "excluded",
+  "manual",
+] as const
+
+export const DDP_MODE_OPTIONS = [
+  "none",
+  "available",
+  "required",
+] as const
+
+export const CUSTOMS_RISK_TIER_OPTIONS = [
+  "low",
+  "medium",
+  "high",
+] as const
+
 export const EVENT_TYPE_OPTIONS = [
   "created",
   "fitted",
@@ -116,6 +173,14 @@ export const STORAGE_BUCKET_FALLBACK = "media-assets"
 export type UsageTier = (typeof USAGE_TIER_OPTIONS)[number]
 export type ArtifactStatus = (typeof ARTIFACT_STATUS_OPTIONS)[number]
 export type PublicVisibility = (typeof PUBLIC_VISIBILITY_OPTIONS)[number]
+export type ShippingInfoStatus = (typeof SHIPPING_INFO_STATUS_OPTIONS)[number]
+export type CustomsInfoStatus = (typeof CUSTOMS_INFO_STATUS_OPTIONS)[number]
+export type InternationalSaleStatus = (typeof INTERNATIONAL_SALE_STATUS_OPTIONS)[number]
+export type PackageType = (typeof PACKAGE_TYPE_OPTIONS)[number]
+export type CarrierPreference = (typeof CARRIER_PREFERENCE_OPTIONS)[number]
+export type BrokerageFeePolicy = (typeof BROKERAGE_FEE_POLICY_OPTIONS)[number]
+export type DdpMode = (typeof DDP_MODE_OPTIONS)[number]
+export type CustomsRiskTier = (typeof CUSTOMS_RISK_TIER_OPTIONS)[number]
 export type EventType = (typeof EVENT_TYPE_OPTIONS)[number]
 export type SourceConfidence = (typeof SOURCE_CONFIDENCE_OPTIONS)[number]
 export type AuthMethod = (typeof AUTH_METHOD_OPTIONS)[number]

@@ -7,7 +7,7 @@ export default function NewArtifactPage() {
       <PageHeader
         eyebrow="Registry"
         title="Create artifact"
-        description="Add the canonical provenance artifact record first, then attach events, authentications, media, and auctions from the linked admin flows."
+        description="Add the canonical provenance artifact record first. Shipping and customs data can stay partial until the ops team is ready to mark the product international-ready."
       />
       <ArtifactForm mode="create" />
     </div>
