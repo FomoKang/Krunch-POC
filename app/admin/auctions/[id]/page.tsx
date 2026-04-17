@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
-import { History } from "lucide-react"
+import { History, Sparkles } from "lucide-react"
 import { EmptyState } from "@/components/admin/empty-state"
 import { PageHeader } from "@/components/admin/page-header"
 import { StatusBadge } from "@/components/admin/status-badge"
@@ -11,9 +11,22 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { formatDateTime, formatMoney } from "@/lib/admin/utils"
-import { getAuctionById, listArtifactOptions, listBidHistory, type ArtifactOption, type AuctionRecord } from "@/lib/supabase/provenance"
-
-type BidHistoryRow = Record<string, unknown>
+import {
+  getAuctionById,
+  getAuctionCurrentHighestBid,
+  getAuctionMinimumNextBid,
+  getAuctionOutcome,
+  listArtifactOptions,
+  listAuctionBids,
+  seedDemoAuctionHistory,
+  simulateAuctionAction,
+  type ArtifactOption,
+  type AuctionBidRecord,
+  type AuctionOutcomeRecord,
+  type AuctionRecord,
+  type AuctionSimulationAction,
+} from "@/lib/supabase/provenance"
+import { toast } from "@/hooks/use-toast"
 
 function LoadingView() {
   return (
@@ -62,15 +75,33 @@ function ErrorView({ message }: { message: string }) {
   )
 }
 
+const SIMULATION_ACTIONS: Array<{ action: AuctionSimulationAction; label: string }> = [
+  { action: "simulate_bid", label: "Simulate Bid" },
+  { action: "simulate_last_minute_bid", label: "Simulate Last-Minute Bid" },
+  { action: "simulate_extension", label: "Simulate Extension" },
+  { action: "end_auction_now", label: "End Auction Now" },
+  { action: "mark_payment_pending", label: "Payment Pending" },
+  { action: "mark_payment_failed", label: "Payment Failed" },
+  { action: "reassign_to_underbidder", label: "Reassign to Underbidder" },
+]
+
+const DANGEROUS_ACTIONS = new Set<AuctionSimulationAction>([
+  "end_auction_now",
+  "mark_payment_failed",
+  "reassign_to_underbidder",
+])
+
 export default function AuctionDetailPage() {
   const params = useParams<{ id: string }>()
   const auctionId = Array.isArray(params.id) ? params.id[0] : params.id
   const [auction, setAuction] = useState<AuctionRecord | null>(null)
   const [artifacts, setArtifacts] = useState<ArtifactOption[]>([])
-  const [bidHistory, setBidHistory] = useState<BidHistoryRow[]>([])
+  const [bids, setBids] = useState<AuctionBidRecord[]>([])
+  const [outcome, setOutcome] = useState<AuctionOutcomeRecord | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [softWarning, setSoftWarning] = useState<string | null>(null)
+  const [runningAction, setRunningAction] = useState<string | null>(null)
 
   useEffect(() => {
     let active = true
@@ -90,7 +121,8 @@ export default function AuctionDetailPage() {
         const nextAuction = await getAuctionById(auctionId)
         const related = await Promise.allSettled([
           listArtifactOptions(),
-          listBidHistory(auctionId),
+          listAuctionBids({ auctionId, limit: 30 }),
+          getAuctionOutcome(auctionId),
         ])
 
         if (!active) {
@@ -99,10 +131,11 @@ export default function AuctionDetailPage() {
 
         setAuction(nextAuction)
         setArtifacts(related[0].status === "fulfilled" ? related[0].value : [])
-        setBidHistory(related[1].status === "fulfilled" ? related[1].value : [])
+        setBids(related[1].status === "fulfilled" ? related[1].value : [])
+        setOutcome(related[2].status === "fulfilled" ? related[2].value : null)
 
         if (related.some((result) => result.status === "rejected")) {
-          setSoftWarning("Some linked sections could not be loaded, but the auction overview is still available.")
+          setSoftWarning("Some linked auction sections could not be loaded, but the auction overview is still available.")
         }
       } catch (loadError) {
         if (!active) {
@@ -124,6 +157,86 @@ export default function AuctionDetailPage() {
     }
   }, [auctionId])
 
+  async function refreshAuctionDetail() {
+    if (!auctionId) {
+      return
+    }
+
+    const [nextAuction, nextArtifacts, nextBids, nextOutcome] = await Promise.all([
+      getAuctionById(auctionId),
+      listArtifactOptions(),
+      listAuctionBids({ auctionId, limit: 30 }),
+      getAuctionOutcome(auctionId),
+    ])
+
+    setAuction(nextAuction)
+    setArtifacts(nextArtifacts)
+    setBids(nextBids)
+    setOutcome(nextOutcome)
+  }
+
+  async function handleSimulationAction(action: AuctionSimulationAction) {
+    if (!auctionId) {
+      return
+    }
+
+    if (DANGEROUS_ACTIONS.has(action)) {
+      const confirmed = window.confirm(`Run ${action.replaceAll("_", " ")} on this demo auction?`)
+
+      if (!confirmed) {
+        return
+      }
+    }
+
+    setRunningAction(action)
+
+    try {
+      await simulateAuctionAction(auctionId, action)
+      await refreshAuctionDetail()
+
+      toast({
+        title: "Simulation applied",
+        description: `${action} has been recorded in the demo auction ledger.`,
+      })
+    } catch (actionError) {
+      const message = actionError instanceof Error ? actionError.message : "Unable to run the simulation."
+      toast({
+        title: "Simulation failed",
+        description: message,
+        variant: "destructive",
+      })
+    } finally {
+      setRunningAction(null)
+    }
+  }
+
+  async function handleSeedHistory() {
+    if (!auctionId) {
+      return
+    }
+
+    setRunningAction("seed")
+
+    try {
+      await seedDemoAuctionHistory(auctionId)
+      await refreshAuctionDetail()
+
+      toast({
+        title: "Sample bid history seeded",
+        description: "Demo bid history has been written to auction_bids.",
+      })
+    } catch (seedError) {
+      const message = seedError instanceof Error ? seedError.message : "Unable to seed demo bid history."
+      toast({
+        title: "Seed failed",
+        description: message,
+        variant: "destructive",
+      })
+    } finally {
+      setRunningAction(null)
+    }
+  }
+
   if (loading) {
     return <LoadingView />
   }
@@ -133,6 +246,64 @@ export default function AuctionDetailPage() {
   }
 
   const artifact = artifacts.find((item) => item.id === auction.artifact_id)
+  const currentHighestBid = getAuctionCurrentHighestBid(auction, bids)
+  const minimumNextBid = getAuctionMinimumNextBid(auction, bids)
+  const bidActionDisabled = auction.auction_status !== "live"
+  const extensionDisabled =
+    auction.auction_status === "ended" ||
+    auction.auction_status === "cancelled" ||
+    auction.auction_status === "settled"
+  const closeAuctionDisabled =
+    auction.auction_status === "ended" ||
+    auction.auction_status === "cancelled" ||
+    auction.auction_status === "settled"
+  const paymentActionDisabled =
+    auction.auction_status === "cancelled" ||
+    auction.auction_status === "settled" ||
+    bids.length === 0
+  const reassignDisabled = bids.length < 2
+
+  function isSimulationButtonDisabled(action: AuctionSimulationAction) {
+    if (runningAction !== null) {
+      return true
+    }
+
+    switch (action) {
+      case "simulate_bid":
+      case "simulate_last_minute_bid":
+        return bidActionDisabled
+      case "simulate_extension":
+        return extensionDisabled
+      case "end_auction_now":
+        return closeAuctionDisabled
+      case "mark_payment_pending":
+      case "mark_payment_failed":
+        return paymentActionDisabled
+      case "reassign_to_underbidder":
+        return reassignDisabled
+      default:
+        return false
+    }
+  }
+
+  function getSimulationButtonHint(action: AuctionSimulationAction) {
+    switch (action) {
+      case "simulate_bid":
+      case "simulate_last_minute_bid":
+        return bidActionDisabled ? "Available only while the demo auction is live." : null
+      case "simulate_extension":
+        return extensionDisabled ? "Extension is only available before the auction is finalized." : null
+      case "end_auction_now":
+        return closeAuctionDisabled ? "The auction is already finalized." : null
+      case "mark_payment_pending":
+      case "mark_payment_failed":
+        return paymentActionDisabled ? "Create at least one bid before changing payment state." : null
+      case "reassign_to_underbidder":
+        return reassignDisabled ? "At least two bids are required to reassign the winner." : null
+      default:
+        return null
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -145,8 +316,9 @@ export default function AuctionDetailPage() {
             <Button asChild variant="outline" className="border-white/10 bg-transparent text-white hover:bg-white/[0.04]">
               <Link href="/admin/auctions">Back to auctions</Link>
             </Button>
+            <StatusBadge value={auction.auction_type} />
+            {auction.demo_mode ? <StatusBadge value="demo_mode" /> : null}
             <StatusBadge value={auction.auction_status} />
-            <StatusBadge value={auction.settlement_status} />
           </>
         }
       />
@@ -186,69 +358,127 @@ export default function AuctionDetailPage() {
               </p>
             </div>
             <div className="rounded-lg border border-white/10 bg-black/25 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-white/35">Type</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-white/35">Auction type</p>
               <p className="mt-2 text-sm text-white">{auction.auction_type ?? "-"}</p>
             </div>
             <div className="rounded-lg border border-white/10 bg-black/25 p-4">
               <p className="text-xs uppercase tracking-[0.2em] text-white/35">Opening bid</p>
-              <p className="mt-2 text-sm text-white">{formatMoney(auction.opening_bid, auction.currency ?? "USD")}</p>
+              <p className="mt-2 text-sm text-white">{formatMoney(auction.opening_bid, auction.currency ?? "KRW")}</p>
             </div>
             <div className="rounded-lg border border-white/10 bg-black/25 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-white/35">Reserve price</p>
-              <p className="mt-2 text-sm text-white">{formatMoney(auction.reserve_price, auction.currency ?? "USD")}</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-white/35">Minimum increment</p>
+              <p className="mt-2 text-sm text-white">{formatMoney(auction.minimum_increment, auction.currency ?? "KRW")}</p>
             </div>
             <div className="rounded-lg border border-white/10 bg-black/25 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-white/35">Hammer price</p>
-              <p className="mt-2 text-sm text-white">{formatMoney(auction.hammer_price, auction.currency ?? "USD")}</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-white/35">Current highest bid</p>
+              <p className="mt-2 text-sm text-white">{formatMoney(currentHighestBid, auction.currency ?? "KRW")}</p>
             </div>
             <div className="rounded-lg border border-white/10 bg-black/25 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-white/35">Final price</p>
-              <p className="mt-2 text-sm text-white">{formatMoney(auction.final_price, auction.currency ?? "USD")}</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-white/35">Minimum next bid</p>
+              <p className="mt-2 text-sm text-white">{formatMoney(minimumNextBid, auction.currency ?? "KRW")}</p>
             </div>
             <div className="rounded-lg border border-white/10 bg-black/25 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-white/35">Guarantee</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-white/35">Buy Now Price</p>
               <p className="mt-2 text-sm text-white">
-                {auction.guarantee_type ?? "none"}
-                {auction.guarantee_amount
-                  ? ` - ${formatMoney(auction.guarantee_amount, auction.currency ?? "USD")}`
-                  : ""}
+                {auction.auction_type === "hybrid"
+                  ? formatMoney(auction.buy_now_price, auction.currency ?? "KRW")
+                  : "Hidden on Premium Auction"}
               </p>
             </div>
             <div className="rounded-lg border border-white/10 bg-black/25 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-white/35">Winner bidder ID</p>
-              <p className="mt-2 text-sm text-white">{auction.winner_bidder_id ?? "-"}</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-white/35">Outcome</p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <StatusBadge value={outcome?.outcome_status ?? "pending"} />
+                {auction.demo_mode ? <StatusBadge value="demo_mode" /> : null}
+              </div>
+              <p className="mt-2 text-sm text-white/70">
+                {outcome?.winner_display_name ?? outcome?.winner_user_id ?? auction.winner_bidder_id ?? "No winner yet"}
+              </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-white/10 bg-white/[0.03] text-white">
-          <CardHeader>
-            <CardTitle>Bid history</CardTitle>
-            <p className="mt-1 text-sm text-white/55">
-              This section reads the live bid_history table. It is empty right now, but the page is already wired to it.
-            </p>
-          </CardHeader>
-          <CardContent>
-            {bidHistory.length ? (
-              <div className="space-y-3">
-                {bidHistory.map((entry, index) => (
-                  <div key={`${entry.bid_id ?? index}`} className="rounded-lg border border-white/10 bg-black/25 p-4">
-                    <p className="text-sm font-medium text-white">{String(entry.bid_amount ?? entry.amount ?? "Bid")}</p>
-                    <p className="mt-1 text-sm text-white/55">
-                      {String(entry.bidder_id ?? entry.user_id ?? "Unknown bidder")}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <EmptyState
-                icon={History}
-                title="No bid history yet"
-                description="As soon as bid_history receives records, they will appear here without extra schema changes."
-              />
-            )}
-          </CardContent>
-        </Card>
+        <div className="space-y-6">
+          <Card className="border-white/10 bg-white/[0.03] text-white">
+            <CardHeader>
+              <CardTitle>Bid history</CardTitle>
+              <p className="mt-1 text-sm text-white/55">
+                Live demo and manual bids both land in the same auction_bids ledger, but demo rows stay isolated with `is_demo`.
+              </p>
+            </CardHeader>
+            <CardContent>
+              {bids.length ? (
+                <div className="space-y-3">
+                  {bids.map((entry) => (
+                    <div key={entry.bid_id} className="rounded-lg border border-white/10 bg-black/25 p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-medium text-white">{entry.bidder_display_name}</p>
+                          <p className="mt-1 text-xs text-white/45">{formatDateTime(entry.created_at)}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-semibold text-white">{formatMoney(entry.bid_amount, auction.currency ?? "KRW")}</p>
+                          <div className="mt-2 flex flex-wrap justify-end gap-2">
+                            <StatusBadge value={entry.bid_source} />
+                            {entry.is_winning_bid ? <StatusBadge value="active" /> : null}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <EmptyState
+                  icon={History}
+                  title="No bid history yet"
+                  description="Seed sample demo bids or place the first live/manual offer to start the auction narrative."
+                />
+              )}
+            </CardContent>
+          </Card>
+
+          {auction.demo_mode ? (
+            <Card className="border-white/10 bg-white/[0.03] text-white">
+              <CardHeader>
+                <CardTitle>Demo controls</CardTitle>
+                <p className="mt-1 text-sm text-white/55">
+                  Demo Mode only. These actions write real rows into the database, but they stay tagged as demo so they never blend into live auctions.
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full border-white/10 bg-black/25 text-white hover:bg-black/35"
+                  onClick={() => void handleSeedHistory()}
+                  disabled={runningAction !== null}
+                >
+                  <Sparkles className="mr-2 size-4" />
+                  Generate Sample Bid History
+                </Button>
+
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {SIMULATION_ACTIONS.map((item) => (
+                    <div key={item.action} className="space-y-1">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full justify-start border-white/10 bg-black/25 text-white hover:bg-black/35 disabled:opacity-50"
+                        onClick={() => void handleSimulationAction(item.action)}
+                        disabled={isSimulationButtonDisabled(item.action)}
+                      >
+                        {runningAction === item.action ? "Running..." : item.label}
+                      </Button>
+                      {getSimulationButtonHint(item.action) ? (
+                        <p className="text-xs text-white/40">{getSimulationButtonHint(item.action)}</p>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ) : null}
+        </div>
       </div>
     </div>
   )

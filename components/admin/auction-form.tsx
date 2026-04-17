@@ -1,22 +1,28 @@
 "use client"
 
-import { useEffect, useState, useTransition } from "react"
+import { useEffect, useMemo, useState, useTransition } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Controller, useForm } from "react-hook-form"
 import { z } from "zod"
 import { useRouter, useSearchParams } from "next/navigation"
 import {
   AUCTION_STATUS_OPTIONS,
-  AUCTION_TYPE_OPTIONS,
   GUARANTEE_TYPE_OPTIONS,
   SETTLEMENT_STATUS_OPTIONS,
+  type AuctionType,
 } from "@/lib/admin/constants"
 import {
+  formatMoney,
   normalizeOptionalDateTime,
   normalizeOptionalNumber,
   normalizeOptionalString,
 } from "@/lib/admin/utils"
-import { createAuction, listArtifactOptions, type ArtifactOption } from "@/lib/supabase/provenance"
+import {
+  calculateAuctionBuyNowPrice,
+  createAuction,
+  listArtifactOptions,
+  type ArtifactOption,
+} from "@/lib/supabase/provenance"
 import { toast } from "@/hooks/use-toast"
 import { ArtifactCombobox } from "@/components/admin/artifact-combobox"
 import { Button } from "@/components/ui/button"
@@ -31,34 +37,39 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Spinner } from "@/components/ui/spinner"
+import { Switch } from "@/components/ui/switch"
+
+const AUCTION_CREATION_TYPE_OPTIONS = ["premium", "hybrid"] as const satisfies readonly AuctionType[]
 
 const auctionFormSchema = z.object({
   artifact_id: z.string().min(1, "Select an artifact."),
   lot_number: z.string().trim().optional(),
-  auction_title: z.string().trim().min(1, "auction_title is required."),
-  auction_type: z.enum(AUCTION_TYPE_OPTIONS),
+  auction_title: z.string().trim().min(1, "Auction title is required."),
+  auction_type: z.enum(AUCTION_CREATION_TYPE_OPTIONS),
   estimate_low: z.string().trim().optional(),
   estimate_high: z.string().trim().optional(),
   reserve_price: z.string().trim().optional(),
-  opening_bid: z.string().trim().optional(),
-  currency: z.string().trim().min(1, "currency is required."),
+  opening_bid: z.string().trim().min(1, "Opening bid is required."),
+  minimum_increment: z.string().trim().min(1, "Minimum increment is required."),
+  currency: z.string().trim().min(1, "Currency is required."),
   buyer_premium_rate: z.string().trim().optional(),
   seller_fee_rate: z.string().trim().optional(),
   auction_start_time: z
     .string()
     .trim()
-    .optional()
-    .refine((value) => !value || /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}$/.test(value), "Use YYYY-MM-DD HH:MM."),
+    .min(1, "Auction start time is required.")
+    .refine((value) => /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}$/.test(value), "Use YYYY-MM-DD HH:MM."),
   auction_end_time: z
     .string()
     .trim()
-    .optional()
-    .refine((value) => !value || /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}$/.test(value), "Use YYYY-MM-DD HH:MM."),
+    .min(1, "Auction end time is required.")
+    .refine((value) => /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}$/.test(value), "Use YYYY-MM-DD HH:MM."),
   auction_status: z.enum(AUCTION_STATUS_OPTIONS),
   settlement_status: z.enum(SETTLEMENT_STATUS_OPTIONS),
   closing_reason: z.string().trim().optional(),
   guarantee_type: z.enum(GUARANTEE_TYPE_OPTIONS),
   guarantee_amount: z.string().trim().optional(),
+  demo_mode: z.boolean(),
 })
 
 type AuctionFormValues = z.infer<typeof auctionFormSchema>
@@ -69,6 +80,28 @@ function ErrorMessage({ message }: { message?: string }) {
   }
 
   return <p className="text-sm text-rose-300">{message}</p>
+}
+
+function ToggleField({
+  label,
+  description,
+  checked,
+  onCheckedChange,
+}: {
+  label: string
+  description: string
+  checked: boolean
+  onCheckedChange: (checked: boolean) => void
+}) {
+  return (
+    <div className="flex items-center justify-between rounded-md border border-white/10 bg-white/[0.03] px-3 py-2">
+      <div>
+        <p className="text-sm font-medium text-white">{label}</p>
+        <p className="text-xs text-white/50">{description}</p>
+      </div>
+      <Switch checked={checked} onCheckedChange={onCheckedChange} />
+    </div>
+  )
 }
 
 export function AuctionForm() {
@@ -89,7 +122,8 @@ export function AuctionForm() {
       estimate_high: "",
       reserve_price: "",
       opening_bid: "",
-      currency: "USD",
+      minimum_increment: "50000",
+      currency: "KRW",
       buyer_premium_rate: "",
       seller_fee_rate: "",
       auction_start_time: "",
@@ -99,6 +133,7 @@ export function AuctionForm() {
       closing_reason: "",
       guarantee_type: "none",
       guarantee_amount: "",
+      demo_mode: false,
     },
   })
 
@@ -107,8 +142,17 @@ export function AuctionForm() {
     handleSubmit,
     control,
     setValue,
+    watch,
     formState: { errors },
   } = form
+
+  const watchedType = watch("auction_type")
+  const watchedOpeningBid = watch("opening_bid")
+  const watchedCurrency = watch("currency")
+  const computedBuyNowPrice = useMemo(() => {
+    const openingBid = normalizeOptionalNumber(watchedOpeningBid)
+    return calculateAuctionBuyNowPrice(watchedType, openingBid)
+  }, [watchedOpeningBid, watchedType])
 
   useEffect(() => {
     let active = true
@@ -169,6 +213,8 @@ export function AuctionForm() {
           estimate_high: normalizeOptionalNumber(values.estimate_high),
           reserve_price: normalizeOptionalNumber(values.reserve_price),
           opening_bid: normalizeOptionalNumber(values.opening_bid),
+          minimum_increment: normalizeOptionalNumber(values.minimum_increment),
+          buy_now_price: calculateAuctionBuyNowPrice(values.auction_type, normalizeOptionalNumber(values.opening_bid)),
           currency: values.currency.trim().toUpperCase(),
           buyer_premium_rate: normalizeOptionalString(values.buyer_premium_rate),
           seller_fee_rate: normalizeOptionalString(values.seller_fee_rate),
@@ -179,6 +225,9 @@ export function AuctionForm() {
           closing_reason: normalizeOptionalString(values.closing_reason),
           guarantee_type: values.guarantee_type,
           guarantee_amount: normalizeOptionalNumber(values.guarantee_amount),
+          extension_rule_enabled: true,
+          extension_seconds: 30,
+          demo_mode: values.demo_mode,
         })
 
         toast({
@@ -231,15 +280,18 @@ export function AuctionForm() {
               />
               <ErrorMessage message={errors.artifact_id?.message} />
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="lot_number">Lot number</Label>
               <Input id="lot_number" {...register("lot_number")} className="border-white/10 bg-black/30 text-white" />
             </div>
+
             <div className="space-y-2 md:col-span-2">
               <Label htmlFor="auction_title">Auction title</Label>
               <Input id="auction_title" {...register("auction_title")} className="border-white/10 bg-black/30 text-white" />
               <ErrorMessage message={errors.auction_title?.message} />
             </div>
+
             <div className="space-y-2">
               <Label>Auction type</Label>
               <Controller
@@ -251,16 +303,14 @@ export function AuctionForm() {
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                     <SelectContent className="border-white/10 bg-[#0f1117] text-white">
-                      {AUCTION_TYPE_OPTIONS.map((option) => (
-                        <SelectItem key={option} value={option}>
-                          {option}
-                        </SelectItem>
-                      ))}
+                      <SelectItem value="premium">Premium Auction</SelectItem>
+                      <SelectItem value="hybrid">Hybrid Auction</SelectItem>
                     </SelectContent>
                   </Select>
                 )}
               />
             </div>
+
             <div className="space-y-2">
               <Label>Auction status</Label>
               <Controller
@@ -282,6 +332,7 @@ export function AuctionForm() {
                 )}
               />
             </div>
+
             <div className="space-y-2">
               <Label>Settlement status</Label>
               <Controller
@@ -303,59 +354,66 @@ export function AuctionForm() {
                 )}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="estimate_low">Estimate low</Label>
-              <Input id="estimate_low" {...register("estimate_low")} className="border-white/10 bg-black/30 text-white" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="estimate_high">Estimate high</Label>
-              <Input id="estimate_high" {...register("estimate_high")} className="border-white/10 bg-black/30 text-white" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="reserve_price">Reserve price</Label>
-              <Input id="reserve_price" {...register("reserve_price")} className="border-white/10 bg-black/30 text-white" />
-            </div>
+
             <div className="space-y-2">
               <Label htmlFor="opening_bid">Opening bid</Label>
               <Input id="opening_bid" {...register("opening_bid")} className="border-white/10 bg-black/30 text-white" />
+              <ErrorMessage message={errors.opening_bid?.message} />
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="minimum_increment">Minimum increment</Label>
+              <Input id="minimum_increment" {...register("minimum_increment")} className="border-white/10 bg-black/30 text-white" />
+              <ErrorMessage message={errors.minimum_increment?.message} />
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="currency">Currency</Label>
               <Input id="currency" {...register("currency")} className="border-white/10 bg-black/30 text-white" />
               <ErrorMessage message={errors.currency?.message} />
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="buyer_premium_rate">Buyer premium rate</Label>
-              <Input id="buyer_premium_rate" {...register("buyer_premium_rate")} className="border-white/10 bg-black/30 text-white" placeholder="15" />
+              <Label htmlFor="estimate_low">Estimate low</Label>
+              <Input id="estimate_low" {...register("estimate_low")} className="border-white/10 bg-black/30 text-white" />
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="seller_fee_rate">Seller fee rate</Label>
-              <Input id="seller_fee_rate" {...register("seller_fee_rate")} className="border-white/10 bg-black/30 text-white" placeholder="8" />
+              <Label htmlFor="estimate_high">Estimate high</Label>
+              <Input id="estimate_high" {...register("estimate_high")} className="border-white/10 bg-black/30 text-white" />
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="reserve_price">Reserve price</Label>
+              <Input id="reserve_price" {...register("reserve_price")} className="border-white/10 bg-black/30 text-white" />
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="auction_start_time">Auction start time</Label>
               <Input
                 id="auction_start_time"
                 type="text"
                 inputMode="numeric"
-                placeholder="2026-04-15 19:00"
+                placeholder="2026-04-17 19:00"
                 {...register("auction_start_time")}
                 className="border-white/10 bg-black/30 text-white"
               />
               <ErrorMessage message={errors.auction_start_time?.message} />
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="auction_end_time">Auction end time</Label>
               <Input
                 id="auction_end_time"
                 type="text"
                 inputMode="numeric"
-                placeholder="2026-04-15 21:00"
+                placeholder="2026-04-17 21:00"
                 {...register("auction_end_time")}
                 className="border-white/10 bg-black/30 text-white"
               />
               <ErrorMessage message={errors.auction_end_time?.message} />
             </div>
+
             <div className="space-y-2">
               <Label>Guarantee type</Label>
               <Controller
@@ -377,13 +435,52 @@ export function AuctionForm() {
                 )}
               />
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="guarantee_amount">Guarantee amount</Label>
               <Input id="guarantee_amount" {...register("guarantee_amount")} className="border-white/10 bg-black/30 text-white" />
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="buyer_premium_rate">Buyer premium rate</Label>
+              <Input id="buyer_premium_rate" {...register("buyer_premium_rate")} className="border-white/10 bg-black/30 text-white" placeholder="15" />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="seller_fee_rate">Seller fee rate</Label>
+              <Input id="seller_fee_rate" {...register("seller_fee_rate")} className="border-white/10 bg-black/30 text-white" placeholder="8" />
+            </div>
+
             <div className="space-y-2 xl:col-span-3">
               <Label htmlFor="closing_reason">Closing reason</Label>
               <Input id="closing_reason" {...register("closing_reason")} className="border-white/10 bg-black/30 text-white" />
+            </div>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-[1fr_0.9fr]">
+            <Controller
+              control={control}
+              name="demo_mode"
+              render={({ field }) => (
+                <ToggleField
+                  label="Demo Mode"
+                  description="켜면 simulated/admin_demo bid와 시연용 샘플 히스토리를 분리해서 저장합니다."
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              )}
+            />
+
+            <div className="rounded-md border border-white/10 bg-black/25 p-4">
+              <p className="text-xs uppercase tracking-[0.2em] text-white/40">Buy Now Price</p>
+              <p className="mt-2 text-xl font-semibold text-white">
+                {watchedType === "hybrid" && computedBuyNowPrice !== null
+                  ? formatMoney(computedBuyNowPrice, watchedCurrency?.trim().toUpperCase() || "KRW")
+                  : "Hidden on Premium Auction"}
+              </p>
+              <p className="mt-2 text-xs leading-5 text-white/50">
+                Hybrid Auction은 opening bid의 150%로 자동 계산됩니다. Premium Auction은 즉시 구매가가 없습니다.
+              </p>
             </div>
           </div>
         </CardContent>

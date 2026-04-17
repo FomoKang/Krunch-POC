@@ -10,6 +10,8 @@ import {
   type ArtifactStatus,
   type AuthMethod,
   type AuthResult,
+  type AuctionBidSource,
+  type AuctionOutcomeStatus,
   type AuctionStatus,
   type AuctionType,
   type BrokerageFeePolicy,
@@ -116,6 +118,8 @@ const AUCTION_COLUMNS = [
   "estimate_high",
   "reserve_price",
   "opening_bid",
+  "minimum_increment",
+  "buy_now_price",
   "hammer_price",
   "final_price",
   "currency",
@@ -128,6 +132,38 @@ const AUCTION_COLUMNS = [
   "guarantee_type",
   "guarantee_amount",
   "winner_bidder_id",
+  "winner_bid_id",
+  "extension_rule_enabled",
+  "extension_seconds",
+  "demo_mode",
+  "created_at",
+  "updated_at",
+].join(", ")
+
+const AUCTION_BID_COLUMNS = [
+  "bid_id",
+  "auction_id",
+  "bidder_user_id",
+  "bidder_display_name",
+  "bid_amount",
+  "bid_source",
+  "is_demo",
+  "created_at",
+  "is_valid",
+  "is_winning_bid",
+].join(", ")
+
+const AUCTION_OUTCOME_COLUMNS = [
+  "outcome_id",
+  "auction_id",
+  "winner_user_id",
+  "winner_display_name",
+  "winning_bid_id",
+  "outcome_status",
+  "payment_due_at",
+  "paid_at",
+  "reassigned_from_bid_id",
+  "is_demo",
   "created_at",
   "updated_at",
 ].join(", ")
@@ -306,6 +342,8 @@ export type AuctionRecord = {
   estimate_high: number | null
   reserve_price: number | null
   opening_bid: number | null
+  minimum_increment: number | null
+  buy_now_price: number | null
   hammer_price: number | null
   final_price: number | null
   currency: string | null
@@ -318,8 +356,57 @@ export type AuctionRecord = {
   guarantee_type: GuaranteeType | null
   guarantee_amount: number | null
   winner_bidder_id: string | null
+  winner_bid_id: string | null
+  extension_rule_enabled: boolean | null
+  extension_seconds: number | null
+  demo_mode: boolean | null
   created_at: string | null
   updated_at: string | null
+}
+
+export type AuctionBidRecord = {
+  bid_id: string
+  auction_id: string
+  bidder_user_id: string | null
+  bidder_display_name: string
+  bid_amount: number
+  bid_source: AuctionBidSource
+  is_demo: boolean
+  created_at: string
+  is_valid: boolean
+  is_winning_bid: boolean
+}
+
+export type AuctionOutcomeRecord = {
+  outcome_id: string
+  auction_id: string
+  winner_user_id: string | null
+  winner_display_name: string | null
+  winning_bid_id: string | null
+  outcome_status: AuctionOutcomeStatus
+  payment_due_at: string | null
+  paid_at: string | null
+  reassigned_from_bid_id: string | null
+  is_demo: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type AuctionShowcaseRecord = {
+  auction: AuctionRecord
+  artifact: Pick<ArtifactRecord, "id" | "artifact_code" | "artifact_title" | "artist_name" | "group_name" | "era_name" | "public_visibility">
+  media: MediaAssetRecord | null
+  bids: AuctionBidRecord[]
+  outcome: AuctionOutcomeRecord | null
+  currentHighestBid: number
+  minimumNextBid: number
+}
+
+export type AuctionHomeHighlightRecord = {
+  auction: AuctionRecord
+  artifact: Pick<ArtifactRecord, "id" | "artifact_code" | "artifact_title" | "artist_name" | "group_name" | "era_name" | "public_visibility">
+  media: MediaAssetRecord | null
+  currentHighestBid: number
 }
 
 export type MediaAssetRecord = {
@@ -463,6 +550,20 @@ type AuctionFilters = {
   limit?: number
 }
 
+type AuctionBidFilters = {
+  auctionId?: string
+  limit?: number
+}
+
+export type AuctionSimulationAction =
+  | "simulate_bid"
+  | "simulate_last_minute_bid"
+  | "simulate_extension"
+  | "end_auction_now"
+  | "mark_payment_pending"
+  | "mark_payment_failed"
+  | "reassign_to_underbidder"
+
 type MediaFilters = {
   artifactId?: string
   provenanceEventId?: string
@@ -497,6 +598,41 @@ function castMaybeRow<T>(data: unknown): T | null {
   return data as unknown as T | null
 }
 
+export function calculateAuctionBuyNowPrice(
+  auctionType: AuctionType | null | undefined,
+  openingBid: number | null | undefined,
+) {
+  if (auctionType !== "hybrid" || openingBid === null || openingBid === undefined || Number.isNaN(openingBid)) {
+    return null
+  }
+
+  return Math.round(openingBid * 1.5)
+}
+
+export function getAuctionCurrentHighestBid(
+  auction: Pick<AuctionRecord, "opening_bid">,
+  bids: AuctionBidRecord[],
+) {
+  if (!bids.length) {
+    return auction.opening_bid ?? 0
+  }
+
+  return bids.reduce((highest, bid) => (bid.bid_amount > highest ? bid.bid_amount : highest), 0)
+}
+
+export function getAuctionMinimumNextBid(
+  auction: Pick<AuctionRecord, "opening_bid" | "minimum_increment">,
+  bids: AuctionBidRecord[],
+) {
+  const currentHighestBid = getAuctionCurrentHighestBid(auction, bids)
+
+  if (!bids.length) {
+    return auction.opening_bid ?? 0
+  }
+
+  return currentHighestBid + (auction.minimum_increment ?? 0)
+}
+
 function getAdminErrorMessage(tableName: string, error: unknown) {
   const message = error instanceof Error ? error.message : "Unknown Supabase error."
 
@@ -521,6 +657,16 @@ function wrapError(tableName: string, error: PostgrestError | Error) {
 
 function hasTextValue(value: string | null | undefined) {
   return Boolean(value?.trim())
+}
+
+function isMissingRelationError(error: PostgrestError | Error) {
+  const message = error.message.toLowerCase()
+
+  return (
+    message.includes("could not find the table") ||
+    message.includes("schema cache") ||
+    message.includes("does not exist")
+  )
 }
 
 function normalizeCountryCodes(codes: string[] | null | undefined) {
@@ -1347,9 +1493,16 @@ export async function getAuctionById(auctionId: string) {
 
 export async function createAuction(payload: Partial<AuctionRecord>) {
   const supabase = getSupabaseBrowserClient()
+  const normalizedPayload = {
+    ...payload,
+    buy_now_price: calculateAuctionBuyNowPrice(payload.auction_type, payload.opening_bid),
+    extension_rule_enabled: payload.extension_rule_enabled ?? true,
+    extension_seconds: payload.extension_seconds ?? 30,
+    demo_mode: payload.demo_mode ?? false,
+  }
   const { data, error } = await supabase
     .from("auctions")
-    .insert(payload)
+    .insert(normalizedPayload)
     .select(AUCTION_COLUMNS)
     .single()
 
@@ -1357,7 +1510,17 @@ export async function createAuction(payload: Partial<AuctionRecord>) {
     throw wrapError("auctions", error)
   }
 
-  return castRow<AuctionRecord>(data)
+  const createdAuction = castRow<AuctionRecord>(data)
+
+  if (createdAuction.demo_mode && createdAuction.auction_status && createdAuction.auction_status !== "draft") {
+    try {
+      await seedDemoAuctionHistory(createdAuction.auction_id)
+    } catch {
+      // Demo seeding is best-effort so the auction still saves even if the RPC migration is not applied yet.
+    }
+  }
+
+  return createdAuction
 }
 
 export async function listMediaAssets(filters: MediaFilters = {}) {
@@ -1511,21 +1674,319 @@ export async function listTransactions(artifactId?: string) {
   return castRows<Record<string, unknown>>(data)
 }
 
-export async function listBidHistory(auctionId?: string) {
+export async function listAuctionBids(filters: AuctionBidFilters = {}) {
   const supabase = getSupabaseBrowserClient()
-  let query = supabase.from("bid_history").select("*")
+  let query = supabase
+    .from("auction_bids")
+    .select(AUCTION_BID_COLUMNS)
+    .order("created_at", { ascending: false })
 
-  if (auctionId) {
-    query = query.eq("auction_id", auctionId)
+  if (filters.auctionId) {
+    query = query.eq("auction_id", filters.auctionId)
+  }
+
+  if (filters.limit) {
+    query = query.limit(filters.limit)
   }
 
   const { data, error } = await query
 
   if (error) {
-    throw wrapError("bid_history", error)
+    if (isMissingRelationError(error)) {
+      return []
+    }
+
+    throw wrapError("auction_bids", error)
   }
 
-  return castRows<Record<string, unknown>>(data)
+  return castRows<AuctionBidRecord>(data)
+}
+
+export async function listBidHistory(auctionId?: string) {
+  return listAuctionBids({ auctionId })
+}
+
+export async function getAuctionOutcome(auctionId: string) {
+  const supabase = getSupabaseBrowserClient()
+  const { data, error } = await supabase
+    .from("auction_outcomes")
+    .select(AUCTION_OUTCOME_COLUMNS)
+    .eq("auction_id", auctionId)
+    .maybeSingle()
+
+  if (error) {
+    if (isMissingRelationError(error)) {
+      return null
+    }
+
+    throw wrapError("auction_outcomes", error)
+  }
+
+  return castMaybeRow<AuctionOutcomeRecord>(data)
+}
+
+export async function placeAuctionBid(input: {
+  auctionId: string
+  bidAmount: number
+  bidderDisplayName?: string | null
+  bidSource?: AuctionBidSource
+}) {
+  const supabase = getSupabaseBrowserClient()
+  const { data, error } = await supabase.rpc("krunch_place_auction_bid", {
+    p_auction_id: input.auctionId,
+    p_bid_amount: input.bidAmount,
+    p_bidder_display_name: normalizeOptionalString(input.bidderDisplayName),
+    p_bid_source: input.bidSource ?? "manual",
+  })
+
+  if (error) {
+    throw wrapError("auction_bids", error)
+  }
+
+  return castRow<AuctionBidRecord>(data)
+}
+
+export async function buyNowAuction(input: {
+  auctionId: string
+  bidderDisplayName?: string | null
+}) {
+  const supabase = getSupabaseBrowserClient()
+  const { data, error } = await supabase.rpc("krunch_buy_now_auction", {
+    p_auction_id: input.auctionId,
+    p_bidder_display_name: normalizeOptionalString(input.bidderDisplayName),
+  })
+
+  if (error) {
+    throw wrapError("auction_bids", error)
+  }
+
+  return castRow<AuctionBidRecord>(data)
+}
+
+export async function seedDemoAuctionHistory(auctionId: string, count = 5) {
+  const supabase = getSupabaseBrowserClient()
+  const { data, error } = await supabase.rpc("krunch_seed_demo_auction_history", {
+    p_auction_id: auctionId,
+    p_seed_count: count,
+  })
+
+  if (error) {
+    throw wrapError("auction_bids", error)
+  }
+
+  return Number(data ?? 0)
+}
+
+export async function simulateAuctionAction(auctionId: string, action: AuctionSimulationAction) {
+  const supabase = getSupabaseBrowserClient()
+  const { data, error } = await supabase.rpc("krunch_admin_simulate_auction_action", {
+    p_auction_id: auctionId,
+    p_action: action,
+  })
+
+  if (error) {
+    throw wrapError("auction_bids", error)
+  }
+
+  return (data ?? null) as Record<string, unknown> | null
+}
+
+export async function getAuctionShowcase(input: {
+  auctionId?: string | null
+  auctionType?: AuctionType | null
+} = {}) {
+  const supabase = getSupabaseBrowserClient()
+  const requestedAuctionType =
+    input.auctionType === "premium" || input.auctionType === "hybrid"
+      ? input.auctionType
+      : null
+
+  let query = supabase
+    .from("auctions")
+    .select(AUCTION_COLUMNS)
+    .in("auction_status", ["live", "scheduled", "ended"])
+
+  if (input.auctionId) {
+    query = query.eq("auction_id", input.auctionId)
+  } else {
+    query = query.in("auction_type", requestedAuctionType ? [requestedAuctionType] : ["premium", "hybrid"])
+  }
+
+  const { data, error } = await query.limit(12)
+
+  if (error) {
+    throw wrapError("auctions", error)
+  }
+
+  const auctions = castRows<AuctionRecord>(data).sort((left, right) => {
+    const leftStatusPriority = left.auction_status === "live" ? 0 : left.auction_status === "scheduled" ? 1 : 2
+    const rightStatusPriority = right.auction_status === "live" ? 0 : right.auction_status === "scheduled" ? 1 : 2
+
+    if ((left.demo_mode ?? false) !== (right.demo_mode ?? false)) {
+      return left.demo_mode ? -1 : 1
+    }
+
+    if (leftStatusPriority !== rightStatusPriority) {
+      return leftStatusPriority - rightStatusPriority
+    }
+
+    const leftTime = left.auction_start_time ? new Date(left.auction_start_time).getTime() : 0
+    const rightTime = right.auction_start_time ? new Date(right.auction_start_time).getTime() : 0
+    return rightTime - leftTime
+  })
+
+  const selectedAuction = auctions[0]
+
+  if (!selectedAuction) {
+    return null
+  }
+
+  const [{ data: artifactData, error: artifactError }, bids, outcome, mediaAssets] = await Promise.all([
+    supabase
+      .from("provenance_artifacts")
+      .select("id, artifact_code, artifact_title, artist_name, group_name, era_name, public_visibility")
+      .eq("id", selectedAuction.artifact_id)
+      .maybeSingle(),
+    listAuctionBids({ auctionId: selectedAuction.auction_id, limit: 12 }),
+    getAuctionOutcome(selectedAuction.auction_id),
+    listMediaAssets({ artifactId: selectedAuction.artifact_id, limit: 8 }),
+  ])
+
+  if (artifactError) {
+    throw wrapError("provenance_artifacts", artifactError)
+  }
+
+  const artifact = castMaybeRow<AuctionShowcaseRecord["artifact"]>(artifactData)
+
+  if (!artifact) {
+    return null
+  }
+
+  return {
+    auction: selectedAuction,
+    artifact,
+    media: mediaAssets[0] ?? null,
+    bids,
+    outcome,
+    currentHighestBid: getAuctionCurrentHighestBid(selectedAuction, bids),
+    minimumNextBid: getAuctionMinimumNextBid(selectedAuction, bids),
+  } satisfies AuctionShowcaseRecord
+}
+
+export async function listPublicAuctionHighlights(input: {
+  auctionType?: AuctionType
+  limit?: number
+} = {}) {
+  const supabase = getSupabaseBrowserClient()
+  const limit = Math.max(1, Math.min(input.limit ?? 4, 12))
+  let query = supabase
+    .from("auctions")
+    .select(AUCTION_COLUMNS)
+    .in("auction_status", ["live", "scheduled", "ended"])
+    .in("auction_type", input.auctionType ? [input.auctionType] : ["premium", "hybrid"])
+    .limit(limit * 3)
+
+  const { data, error } = await query
+
+  if (error) {
+    throw wrapError("auctions", error)
+  }
+
+  const auctions = castRows<AuctionRecord>(data).sort((left, right) => {
+    const leftPriority = left.auction_status === "live" ? 0 : left.auction_status === "scheduled" ? 1 : 2
+    const rightPriority = right.auction_status === "live" ? 0 : right.auction_status === "scheduled" ? 1 : 2
+
+    if (leftPriority !== rightPriority) {
+      return leftPriority - rightPriority
+    }
+
+    const leftUpdatedAt = left.updated_at ? new Date(left.updated_at).getTime() : 0
+    const rightUpdatedAt = right.updated_at ? new Date(right.updated_at).getTime() : 0
+    return rightUpdatedAt - leftUpdatedAt
+  })
+
+  if (!auctions.length) {
+    return [] as AuctionHomeHighlightRecord[]
+  }
+
+  const artifactIds = Array.from(new Set(auctions.map((auction) => auction.artifact_id)))
+  const auctionIds = auctions.map((auction) => auction.auction_id)
+
+  const artifactPromise = supabase
+    .from("provenance_artifacts")
+    .select("id, artifact_code, artifact_title, artist_name, group_name, era_name, public_visibility")
+    .in("id", artifactIds)
+    .eq("public_visibility", "public")
+
+  const mediaPromise = supabase
+    .from("media_assets")
+    .select(MEDIA_COLUMNS)
+    .in("artifact_id", artifactIds)
+    .order("uploaded_at", { ascending: false })
+
+  const bidsPromise = supabase
+    .from("auction_bids")
+    .select(AUCTION_BID_COLUMNS)
+    .in("auction_id", auctionIds)
+    .order("created_at", { ascending: false })
+
+  const [{ data: artifactData, error: artifactError }, { data: mediaData, error: mediaError }, { data: bidData, error: bidError }] = await Promise.all([
+    artifactPromise,
+    mediaPromise,
+    bidsPromise,
+  ])
+
+  if (artifactError) {
+    throw wrapError("provenance_artifacts", artifactError)
+  }
+
+  if (mediaError) {
+    throw wrapError("media_assets", mediaError)
+  }
+
+  const artifactMap = new Map(
+    castRows<AuctionHomeHighlightRecord["artifact"]>(artifactData).map((artifact) => [artifact.id, artifact]),
+  )
+
+  const mediaMap = new Map<string, MediaAssetRecord>()
+  for (const media of castRows<MediaAssetRecord>(mediaData)) {
+    if (!mediaMap.has(media.artifact_id)) {
+      mediaMap.set(media.artifact_id, media)
+    }
+  }
+
+  const bidsByAuction = new Map<string, AuctionBidRecord[]>()
+  if (bidError) {
+    if (!isMissingRelationError(bidError)) {
+      throw wrapError("auction_bids", bidError)
+    }
+  } else {
+    for (const bid of castRows<AuctionBidRecord>(bidData)) {
+      const existing = bidsByAuction.get(bid.auction_id) ?? []
+      existing.push(bid)
+      bidsByAuction.set(bid.auction_id, existing)
+    }
+  }
+
+  return auctions
+    .map((auction) => {
+      const artifact = artifactMap.get(auction.artifact_id)
+
+      if (!artifact) {
+        return null
+      }
+
+      const bids = bidsByAuction.get(auction.auction_id) ?? []
+
+      return {
+        auction,
+        artifact,
+        media: mediaMap.get(auction.artifact_id) ?? null,
+        currentHighestBid: getAuctionCurrentHighestBid(auction, bids),
+      } satisfies AuctionHomeHighlightRecord
+    })
+    .filter((highlight): highlight is AuctionHomeHighlightRecord => Boolean(highlight))
+    .slice(0, limit)
 }
 
 export async function getDashboardCounts(): Promise<CountResult> {

@@ -143,6 +143,12 @@ export const AUCTION_TYPE_OPTIONS = [
   "charity",
 ] as const
 
+export const AUCTION_BID_SOURCE_OPTIONS = [
+  "manual",
+  "simulated",
+  "admin_demo",
+] as const
+
 export const AUCTION_STATUS_OPTIONS = [
   "draft",
   "scheduled",
@@ -156,6 +162,14 @@ export const CERTIFICATE_STATUS_OPTIONS = [
   "active",
   "superseded",
   "revoked",
+] as const
+
+export const AUCTION_OUTCOME_STATUS_OPTIONS = [
+  "pending_payment",
+  "paid",
+  "failed",
+  "reassigned",
+  "cancelled",
 ] as const
 
 export const AUCTION_ACTIVE_STATUS_OPTIONS = [
@@ -222,8 +236,10 @@ export type SourceConfidence = (typeof SOURCE_CONFIDENCE_OPTIONS)[number]
 export type AuthMethod = (typeof AUTH_METHOD_OPTIONS)[number]
 export type AuthResult = (typeof AUTH_RESULT_OPTIONS)[number]
 export type AuctionType = (typeof AUCTION_TYPE_OPTIONS)[number]
+export type AuctionBidSource = (typeof AUCTION_BID_SOURCE_OPTIONS)[number]
 export type AuctionStatus = (typeof AUCTION_STATUS_OPTIONS)[number]
 export type CertificateStatus = (typeof CERTIFICATE_STATUS_OPTIONS)[number]
+export type AuctionOutcomeStatus = (typeof AUCTION_OUTCOME_STATUS_OPTIONS)[number]
 export type SettlementStatus = (typeof SETTLEMENT_STATUS_OPTIONS)[number]
 export type GuaranteeType = (typeof GUARANTEE_TYPE_OPTIONS)[number]
 export type MediaAssetType = (typeof MEDIA_ASSET_TYPE_OPTIONS)[number]

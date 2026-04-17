@@ -164,6 +164,7 @@ export default function AdminAuctionsPage() {
                   <TableHead className="text-white/55">Auction</TableHead>
                   <TableHead className="text-white/55">Artifact code</TableHead>
                   <TableHead className="text-white/55">Type</TableHead>
+                  <TableHead className="text-white/55">Mode</TableHead>
                   <TableHead className="text-white/55">Status</TableHead>
                   <TableHead className="text-white/55">Opening</TableHead>
                   <TableHead className="text-white/55">Reserve</TableHead>
@@ -185,7 +186,12 @@ export default function AdminAuctionsPage() {
                     <TableCell className="font-mono text-sm text-white/70">
                       {artifactMap.get(auction.artifact_id)?.artifact_code ?? "-"}
                     </TableCell>
-                    <TableCell className="text-white/70">{auction.auction_type ?? "-"}</TableCell>
+                    <TableCell>
+                      <StatusBadge value={auction.auction_type} />
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge value={auction.demo_mode ? "demo_mode" : "live_mode"} />
+                    </TableCell>
                     <TableCell>
                       <StatusBadge value={auction.auction_status} />
                     </TableCell>

@@ -3,7 +3,9 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
 import { Bell, Heart, Search } from "lucide-react"
+import { PREMIUM_SHOWCASE_ID } from "@/lib/auction-showcase"
 import { useSiteTheme } from "@/components/theme-provider"
 import { useLocale } from "@/components/locale-provider"
 import { useSplash } from "@/components/splash-context"
@@ -12,6 +14,8 @@ import { LanguageToggle } from "@/components/language-toggle"
 import { useFavoriteItems } from "@/hooks/use-favorite-items"
 import { useSupabaseSession } from "@/hooks/use-supabase-session"
 import { formatDropDate as formatHybridDropDate, HYBRID_AUCTION_ITEMS } from "@/lib/auction-catalog"
+import { formatMoney } from "@/lib/admin/utils"
+import { listPublicAuctionHighlights, type AuctionHomeHighlightRecord } from "@/lib/supabase/provenance"
 
 // 로고 크기 통일 (logo-white, logo-pink, logo-black 동일 높이)
 const LOGO_WIDTH = 225
@@ -137,12 +141,50 @@ const uniqueDrops = [
   },
 ]
 
+function homeAuctionStatusLabel(
+  auction: AuctionHomeHighlightRecord["auction"],
+  isKo: boolean,
+) {
+  if (auction.auction_status === "live") {
+    return isKo ? "라이브" : "LIVE NOW"
+  }
+
+  if (auction.auction_status === "ended") {
+    return isKo ? "종료" : "ENDED"
+  }
+
+  if (auction.auction_start_time) {
+    return formatHybridDropDate(auction.auction_start_time, isKo)
+  }
+
+  return isKo ? "준비 중" : "Coming Soon"
+}
+
+function resolveHomeAuctionMedia(
+  highlight: AuctionHomeHighlightRecord,
+  fallbackImage: string,
+) {
+  const fileUrl = highlight.media?.thumbnail_url ?? highlight.media?.file_url
+  const fileType = highlight.media?.file_type?.toLowerCase() ?? ""
+
+  if (fileUrl && fileType.startsWith("image/")) {
+    return fileUrl
+  }
+
+  if (fileUrl && /\.(png|jpg|jpeg|webp|gif|avif)$/i.test(fileUrl)) {
+    return fileUrl
+  }
+
+  return fallbackImage
+}
+
 export default function HomePage() {
   const { theme } = useSiteTheme()
   const { locale } = useLocale()
   const { setSplashVisible } = useSplash()
   const { user } = useSupabaseSession()
   const { isFavorite, toggleFavorite } = useFavoriteItems(user)
+  const router = useRouter()
   const isKo = locale === "ko"
   const basePath = theme === "black" ? "/black" : ""
   const accentText = theme === "black" ? "text-white" : "text-primary"
@@ -151,6 +193,8 @@ export default function HomePage() {
 
   const [showSplash, setShowSplash] = useState(true)
   const [mounted, setMounted] = useState(false)
+  const [premiumHighlights, setPremiumHighlights] = useState<AuctionHomeHighlightRecord[]>([])
+  const [hybridHighlights, setHybridHighlights] = useState<AuctionHomeHighlightRecord[]>([])
 
   useEffect(() => {
     setMounted(true)
@@ -167,9 +211,46 @@ export default function HomePage() {
     }
   }, [setSplashVisible])
 
+  useEffect(() => {
+    let active = true
+
+    async function loadHomeAuctions() {
+      try {
+        const [nextPremium, nextHybrid] = await Promise.all([
+          listPublicAuctionHighlights({ auctionType: "premium", limit: 3 }),
+          listPublicAuctionHighlights({ auctionType: "hybrid", limit: 1 }),
+        ])
+
+        if (!active) {
+          return
+        }
+
+        setPremiumHighlights(nextPremium)
+        setHybridHighlights(nextHybrid)
+      } catch {
+        if (!active) {
+          return
+        }
+
+        setPremiumHighlights([])
+        setHybridHighlights([])
+      }
+    }
+
+    void loadHomeAuctions()
+
+    return () => {
+      active = false
+    }
+  }, [])
+
   if (!mounted || showSplash) {
     return <SplashScreen accentBg={accentBg} logoSrc={logoSrc} isKo={isKo} />
   }
+
+  const premiumPreviewItems = premiumHighlights.filter((highlight) => highlight.auction.auction_id !== "fb")
+  const hybridPreview = hybridHighlights[0] ?? null
+  const hybridGridItems = hybridPreview ? HYBRID_AUCTION_ITEMS.slice(0, 3) : HYBRID_AUCTION_ITEMS
 
   return (
     <div className="min-h-screen bg-black text-white pb-for-nav overflow-x-hidden">
@@ -205,7 +286,7 @@ export default function HomePage() {
         {/* LEGEND DROP 섹션 */}
         <section>
           <h2 className={`font-display text-3xl tracking-wide uppercase italic mb-4 min-h-10 leading-tight flex items-center ${theme === "black" ? "black-mode-legend-title" : "text-white"}`}>PREMIUM AUCTION</h2>
-          <Link href={`${basePath}/auction`} className="block">
+          <Link href={`${basePath}/auction?showcaseId=${PREMIUM_SHOWCASE_ID}`} className="block">
             <div className={`relative rounded-2xl overflow-hidden border ${theme === "black" ? "black-home-hero-card bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f]" : "bg-gradient-to-br from-[#2a1a1a] to-[#1a0a0a] border-white/10"}`}>
               {/* 배경 이미지 오버레이 — 블랙 모드: 레이어 분리 */}
               <div className={`absolute inset-0 ${theme === "black" ? "bg-gradient-to-br from-[#2a1a1a] via-[#0f0f0f] to-[#0a0a0a]" : "bg-gradient-to-br from-[#3d1a2a] via-[#1a0a0a] to-[#0d0505]"}`} />
@@ -259,13 +340,89 @@ export default function HomePage() {
               </div>
             </div>
           </Link>
+          {premiumPreviewItems.length ? (
+            <div className="mt-3 grid gap-3">
+              {premiumPreviewItems.map((highlight) => (
+                <Link
+                  key={highlight.auction.auction_id}
+                  href={`${basePath}/auction?auctionId=${highlight.auction.auction_id}`}
+                  className={`block rounded-xl overflow-hidden ${theme === "black" ? "black-home-unique-card" : "bg-[#1a1a1a] border border-[#FF6B9D]/30 hover:border-[#FF6B9D]/50"} transition-colors`}
+                >
+                  <div className="flex gap-3 p-3">
+                    <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg bg-black/40">
+                      <img
+                        src={resolveHomeAuctionMedia(highlight, "/cap2.png")}
+                        alt={highlight.artifact.artifact_title}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className={`text-[10px] uppercase tracking-[0.24em] ${theme === "black" ? "text-[#808080]" : "text-white/45"}`}>
+                          {homeAuctionStatusLabel(highlight.auction, isKo)}
+                        </p>
+                      </div>
+                      <h3 className="mt-1 line-clamp-1 text-sm font-semibold text-white">{highlight.artifact.artifact_title}</h3>
+                      <p className={`mt-0.5 text-xs italic ${theme === "black" ? "text-[#b0b0b0]" : "text-white/40"}`}>
+                        {highlight.artifact.artist_name ? `worn by ${highlight.artifact.artist_name}` : highlight.artifact.artifact_code}
+                      </p>
+                      <div className="mt-4 flex items-end justify-between gap-3">
+                        <div>
+                          <p className={`text-[10px] uppercase tracking-[0.2em] ${theme === "black" ? "text-[#808080]" : "text-white/45"}`}>
+                            Current Bid
+                          </p>
+                          <p className={`mt-1 text-lg font-bold tabular-nums ${theme === "black" ? "text-white" : accentText}`}>
+                            {formatMoney(highlight.currentHighestBid, highlight.auction.currency ?? "KRW")}
+                          </p>
+                        </div>
+                        <p className={`text-xs ${theme === "black" ? "text-[#b0b0b0]" : "text-white/55"}`}>
+                          {highlight.artifact.artifact_code}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : null}
         </section>
 
         {/* UNIQUE DROPS 섹션 */}
         <section>
           <h2 className={`font-display text-3xl tracking-wide uppercase italic mb-4 min-h-10 leading-tight flex items-center ${theme === "black" ? "black-mode-legend-title" : "text-white"}`}>HYBRID AUCTION</h2>
           <div className="grid grid-cols-2 gap-3">
-            {HYBRID_AUCTION_ITEMS.map((item) => {
+            {hybridPreview ? (
+              <Link
+                href={`${basePath}/auction?auctionId=${hybridPreview.auction.auction_id}`}
+                className={`relative rounded-xl overflow-hidden ${theme === "black" ? "black-home-unique-card" : "bg-[#1a1a1a] border border-[#FF6B9D]/30 hover:border-[#FF6B9D]/50"} transition-colors`}
+              >
+                <div className="relative aspect-[4/3] bg-transparent">
+                  <img
+                    src={resolveHomeAuctionMedia(hybridPreview, "/placeholder.svg")}
+                    alt={hybridPreview.artifact.artifact_title}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <div className="p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="line-clamp-1 text-sm font-medium text-white">{hybridPreview.artifact.artifact_title}</p>
+                  </div>
+                  <p className={`mt-0.5 text-xs italic ${theme === "black" ? "text-[#b0b0b0]" : "text-white/40"}`}>
+                    {hybridPreview.artifact.artist_name ? `worn by ${hybridPreview.artifact.artist_name}` : hybridPreview.artifact.artifact_code}
+                  </p>
+                  <p
+                    className={`${theme === "black" ? "text-white" : accentText} mt-2 text-xs font-medium uppercase tracking-wide`}
+                    style={theme === "black" ? { WebkitTextStroke: "1px rgba(255,105,180,0.4)" } : undefined}
+                  >
+                    {homeAuctionStatusLabel(hybridPreview.auction, isKo)}
+                  </p>
+                  <p className={`mt-2 text-sm font-semibold tabular-nums ${theme === "black" ? "text-white" : "text-white"}`}>
+                    {formatMoney(hybridPreview.currentHighestBid, hybridPreview.auction.currency ?? "KRW")}
+                  </p>
+                </div>
+              </Link>
+            ) : null}
+            {hybridGridItems.map((item) => {
               const isFelix = item.id === "hybrid-human-made-tee"
               const favorite = isFavorite(item.id)
               const statusClass = theme === "black"
@@ -275,13 +432,25 @@ export default function HomePage() {
               return (
                 <div
                   key={item.id}
-                  className={`relative rounded-xl overflow-hidden ${theme === "black" ? "black-home-unique-card" : "bg-[#1a1a1a] border border-[#FF6B9D]/30 hover:border-[#FF6B9D]/50"} transition-colors`}
+                  role="link"
+                  tabIndex={0}
+                  onClick={() => router.push(`${basePath}/auction?showcaseId=${item.id}`)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault()
+                      router.push(`${basePath}/auction?showcaseId=${item.id}`)
+                    }
+                  }}
+                  className={`relative cursor-pointer rounded-xl overflow-hidden ${theme === "black" ? "black-home-unique-card" : "bg-[#1a1a1a] border border-[#FF6B9D]/30 hover:border-[#FF6B9D]/50"} transition-colors`}
                 >
                   <button
                     type="button"
                     aria-label={favorite ? "Remove from favorites" : "Add to favorites"}
                     aria-pressed={favorite}
-                    onClick={() => void toggleFavorite(item.id)}
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      void toggleFavorite(item.id)
+                    }}
                     className={`absolute right-2 top-2 z-20 flex h-9 w-9 items-center justify-center rounded-full border backdrop-blur-md transition-all active:scale-95 ${
                       favorite
                         ? "border-[#FF6B9D]/70 bg-[#FF6B9D]/18 text-[#FF6B9D] shadow-[0_0_18px_rgba(255,107,157,0.28)]"
