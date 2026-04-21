@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
-import { History, Sparkles } from "lucide-react"
+import { History, Sparkles, WalletCards } from "lucide-react"
 import { EmptyState } from "@/components/admin/empty-state"
 import { PageHeader } from "@/components/admin/page-header"
 import { StatusBadge } from "@/components/admin/status-badge"
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { formatDateTime, formatMoney } from "@/lib/admin/utils"
+import { listSettlementQuotes, type PurchaseSettlementQuoteRecord } from "@/lib/supabase/settlements"
 import {
   getAuctionById,
   getAuctionCurrentHighestBid,
@@ -98,6 +99,7 @@ export default function AuctionDetailPage() {
   const [artifacts, setArtifacts] = useState<ArtifactOption[]>([])
   const [bids, setBids] = useState<AuctionBidRecord[]>([])
   const [outcome, setOutcome] = useState<AuctionOutcomeRecord | null>(null)
+  const [settlementQuotes, setSettlementQuotes] = useState<PurchaseSettlementQuoteRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [softWarning, setSoftWarning] = useState<string | null>(null)
@@ -123,6 +125,7 @@ export default function AuctionDetailPage() {
           listArtifactOptions(),
           listAuctionBids({ auctionId, limit: 30 }),
           getAuctionOutcome(auctionId),
+          listSettlementQuotes({ auctionId, limit: 12 }),
         ])
 
         if (!active) {
@@ -133,6 +136,7 @@ export default function AuctionDetailPage() {
         setArtifacts(related[0].status === "fulfilled" ? related[0].value : [])
         setBids(related[1].status === "fulfilled" ? related[1].value : [])
         setOutcome(related[2].status === "fulfilled" ? related[2].value : null)
+        setSettlementQuotes(related[3].status === "fulfilled" ? related[3].value : [])
 
         if (related.some((result) => result.status === "rejected")) {
           setSoftWarning("Some linked auction sections could not be loaded, but the auction overview is still available.")
@@ -162,17 +166,19 @@ export default function AuctionDetailPage() {
       return
     }
 
-    const [nextAuction, nextArtifacts, nextBids, nextOutcome] = await Promise.all([
+    const [nextAuction, nextArtifacts, nextBids, nextOutcome, nextSettlementQuotes] = await Promise.all([
       getAuctionById(auctionId),
       listArtifactOptions(),
       listAuctionBids({ auctionId, limit: 30 }),
       getAuctionOutcome(auctionId),
+      listSettlementQuotes({ auctionId, limit: 12 }),
     ])
 
     setAuction(nextAuction)
     setArtifacts(nextArtifacts)
     setBids(nextBids)
     setOutcome(nextOutcome)
+    setSettlementQuotes(nextSettlementQuotes)
   }
 
   async function handleSimulationAction(action: AuctionSimulationAction) {
@@ -399,6 +405,60 @@ export default function AuctionDetailPage() {
         </Card>
 
         <div className="space-y-6">
+          <Card className="border-white/10 bg-white/[0.03] text-white">
+            <CardHeader>
+              <CardTitle>Settlement quotes</CardTitle>
+              <p className="mt-1 text-sm text-white/55">
+                Hybrid Buy Now now creates a per-transaction recipient capture and payment-ready quote before payment is completed.
+              </p>
+            </CardHeader>
+            <CardContent>
+              {settlementQuotes.length ? (
+                <div className="space-y-3">
+                  {settlementQuotes.map((quote) => (
+                    <div key={quote.quote_id} className="rounded-lg border border-white/10 bg-black/25 p-4">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-medium text-white">
+                            {quote.recipient_name ?? "Awaiting shipping information"}
+                          </p>
+                          <p className="mt-1 text-xs text-white/45">
+                            {quote.destination_country ?? "Destination pending"} · {formatDateTime(quote.created_at)}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-semibold text-white">
+                            {formatMoney(quote.total_payable_amount, quote.currency)}
+                          </p>
+                          <div className="mt-2 flex flex-wrap justify-end gap-2">
+                            <StatusBadge value={quote.quote_status} />
+                            {quote.is_demo ? <StatusBadge value="demo_mode" /> : null}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mt-3 grid gap-2 text-xs text-white/60 sm:grid-cols-3">
+                        <p>Item {formatMoney(quote.base_item_amount, quote.currency)}</p>
+                        <p>Shipping {formatMoney(quote.shipping_amount, quote.currency)}</p>
+                        <p>Estimated tax {formatMoney((quote.estimated_duty_amount ?? 0) + (quote.estimated_vat_amount ?? 0), quote.currency)}</p>
+                      </div>
+                      {quote.review_reason ? (
+                        <p className="mt-3 rounded-md border border-amber-400/20 bg-amber-400/10 px-3 py-2 text-xs text-amber-100">
+                          {quote.review_reason}
+                        </p>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <EmptyState
+                  icon={WalletCards}
+                  title="No settlement quotes yet"
+                  description="When a user starts Buy Now on this hybrid lot, recipient capture and quote states will appear here."
+                />
+              )}
+            </CardContent>
+          </Card>
+
           <Card className="border-white/10 bg-white/[0.03] text-white">
             <CardHeader>
               <CardTitle>Bid history</CardTitle>

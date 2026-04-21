@@ -479,7 +479,7 @@ export function AuctionForm() {
                   : "Hidden on Premium Auction"}
               </p>
               <p className="mt-2 text-xs leading-5 text-white/50">
-                Hybrid Auction은 opening bid의 150%로 자동 계산됩니다. Premium Auction은 즉시 구매가가 없습니다.
+                Hybrid Auction은 opening bid의 150%로 자동 계산됩니다. Buy Now는 결제를 바로 확정하지 않고, 먼저 배송 정보와 정산 견적 단계를 거친 뒤 최종 결제를 요청합니다.
               </p>
             </div>
           </div>

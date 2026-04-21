@@ -897,7 +897,7 @@ export function ArtifactForm({ mode, artifactId, initialValues }: ArtifactFormPr
 
       <SectionCard
         title="Shipping Profile"
-        description="Manage packaging, weight, and carrier preferences here. Leave it blank for now if needed and keep the product in draft."
+        description="Admin / operations only. These packaging, carrier, insurance, DDP, and restriction defaults feed per-transaction settlement quotes. Buyers never edit these values."
         open={sectionsOpen.shipping}
         onOpenChange={(open) => setSectionOpen("shipping", open)}
         badges={<StatusBadge value={getShippingBadgeValue(shippingStatus)} />}
@@ -927,7 +927,7 @@ export function ArtifactForm({ mode, artifactId, initialValues }: ArtifactFormPr
                 {shippingProfiles.map((profile) => <SelectItem key={profile.shipping_profile_code} value={profile.shipping_profile_code}>{profile.shipping_profile_name}</SelectItem>)}
               </SelectContent>
             </Select>
-            <FormHint>Choosing a preset will prefill the common packaging defaults for the team.</FormHint>
+            <FormHint>Choosing a preset pre-fills the operational packaging defaults used later when hybrid Buy Now quotes are generated.</FormHint>
           </div>
           <div className="space-y-2">
             <Label htmlFor="shipping_profile_name">Shipping profile name</Label>
@@ -994,7 +994,7 @@ export function ArtifactForm({ mode, artifactId, initialValues }: ArtifactFormPr
 
       <SectionCard
         title="Customs Info"
-        description="Store customs wording, origin, and HS codes here. Unknown values can stay blank while the record remains in draft."
+        description="Admin / operations only. Store customs wording, origin, invoice description, and HS defaults here so each settlement quote inherits a believable customs snapshot."
         open={sectionsOpen.customs}
         onOpenChange={(open) => setSectionOpen("customs", open)}
         badges={<StatusBadge value={getCustomsBadgeValue(customsStatus)} />}
@@ -1055,7 +1055,7 @@ export function ArtifactForm({ mode, artifactId, initialValues }: ArtifactFormPr
 
       <SectionCard
         title="International Sales Settings"
-        description="Draft saves and international_ready activation are separate. Settings here can be saved partially, but ready activation is strict."
+        description="Operations release controls for settlement quotes. Draft saves and international_ready activation stay separate so demo checkout can reflect realistic restrictions and review states."
         open={sectionsOpen.sales}
         onOpenChange={(open) => setSectionOpen("sales", open)}
         badges={<StatusBadge value={shippingValues.international_sale_status} />}
@@ -1126,7 +1126,7 @@ export function ArtifactForm({ mode, artifactId, initialValues }: ArtifactFormPr
 
       <SectionCard
         title="Country Restrictions / Manual Review"
-        description="Manage destination restrictions and manual review flags here. This is the final ops checkpoint before international release."
+        description="Final admin / ops checkpoint before payment can be requested. Restricted countries and manual review flags feed directly into the hybrid settlement quote state."
         open={sectionsOpen.restrictions}
         onOpenChange={(open) => setSectionOpen("restrictions", open)}
         badges={<><StatusBadge value={shippingValues.international_sale_status} />{shippingValues.manual_review_required ? <StatusBadge value="review_required" /> : null}</>}

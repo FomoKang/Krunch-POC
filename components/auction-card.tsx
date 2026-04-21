@@ -6,13 +6,29 @@ import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { ArrowUp, Clock, History, Loader2 } from "lucide-react"
 import { useSupabaseSession } from "@/hooks/use-supabase-session"
+import { useUserProfile } from "@/hooks/use-user-profile"
 import {
-  buyNowAuctionShowcase,
   getAuctionShowcaseState,
   placeAuctionShowcaseBid,
   PREMIUM_SHOWCASE_ID,
 } from "@/lib/auction-showcase"
-import { buyNowAuction, getAuctionShowcase, placeAuctionBid, type AuctionBidRecord, type AuctionShowcaseRecord, type MediaAssetRecord } from "@/lib/supabase/provenance"
+import {
+  createSettlementQuoteFromBuyNowShowcase,
+  generateShowcaseSettlementQuote,
+  getLatestShowcaseSettlementQuote,
+  markShowcaseSettlementQuotePaid,
+  saveShowcaseSettlementQuoteShippingInfo,
+} from "@/lib/settlement-showcase"
+import {
+  createSettlementQuoteFromBuyNow,
+  generateSettlementQuote,
+  getLatestUserSettlementQuoteForAuction,
+  markSettlementQuotePaid,
+  saveSettlementQuoteShippingInfo,
+  type PurchaseSettlementQuoteRecord,
+} from "@/lib/supabase/settlements"
+import { getAuctionShowcase, placeAuctionBid, type AuctionBidRecord, type AuctionShowcaseRecord, type MediaAssetRecord } from "@/lib/supabase/provenance"
+import { AuctionSettlementFlow } from "./auction-settlement-flow"
 import { Confetti } from "./confetti"
 import { LanguageToggle } from "./language-toggle"
 import { SuccessPopup } from "./success-popup"
@@ -73,6 +89,27 @@ function bidTime(value: string) {
   return new Date(value).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })
 }
 
+function settlementStatusLabel(status: PurchaseSettlementQuoteRecord["quote_status"] | null | undefined) {
+  switch (status) {
+    case "awaiting_shipping_info":
+      return "Awaiting shipping information"
+    case "quote_preparing":
+      return "Preparing quote"
+    case "payment_requested":
+      return "Payment requested"
+    case "review_required":
+      return "Under manual review"
+    case "paid":
+      return "Paid"
+    case "cancelled":
+      return "Cancelled"
+    case "expired":
+      return "Expired"
+    default:
+      return "Settlement in progress"
+  }
+}
+
 function isVideo(media: MediaAssetRecord | null) {
   if (!media?.file_url) return false
   const type = media.file_type?.toLowerCase() ?? ""
@@ -123,6 +160,7 @@ function PriceFlowChart({ color, data, muted }: { color: string; data: number[];
 export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant } = {}) {
   const { theme: siteTheme } = useSiteTheme()
   const { user } = useSupabaseSession()
+  const { profile } = useUserProfile(user)
   const searchParams = useSearchParams()
   const variant = variantProp ?? siteTheme
   const theme = AUCTION_THEMES[variant]
@@ -140,6 +178,8 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
   const [showSheet, setShowSheet] = useState(false)
   const [showConfetti, setShowConfetti] = useState(false)
   const [showPopup, setShowPopup] = useState(false)
+  const [settlementFlowOpen, setSettlementFlowOpen] = useState(false)
+  const [settlementQuote, setSettlementQuote] = useState<PurchaseSettlementQuoteRecord | null>(null)
   const [successAmount, setSuccessAmount] = useState("2,450,000")
   const [timeRemaining, setTimeRemaining] = useState(DAY)
   const [showRedTime, setShowRedTime] = useState(false)
@@ -174,7 +214,7 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
   const priceHistory = useMemo(() => buildHistory(openingBid, bids, currentHighestBid), [bids, currentHighestBid, openingBid])
   const artifactSubtitle = artifact.artist_name ?? artifact.group_name ?? "KRUNCH Archive"
   const risePercent = openingBid > 0 ? Math.max(0, Math.round(((currentHighestBid - openingBid) / openingBid) * 100)) : 0
-  const displayName = user?.email?.split("@")[0] ?? "Guest Bidder"
+  const displayName = profile?.nickname ?? user?.user_metadata?.nickname ?? user?.email?.split("@")[0] ?? "Guest Bidder"
 
   const loadShowcase = useCallback(async (silent = false) => {
     if (!silent) setLoading(true)
@@ -207,6 +247,44 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
       window.clearInterval(intervalId)
     }
   }, [loadShowcase])
+
+  useEffect(() => {
+    let active = true
+
+    async function loadSettlementQuote() {
+      if (usesLocalShowcase) {
+        const nextQuote = getLatestShowcaseSettlementQuote(activeShowcaseId)
+        if (active) {
+          setSettlementQuote(nextQuote)
+        }
+        return
+      }
+
+      if (!user || !showcase?.auction?.auction_id) {
+        if (active) {
+          setSettlementQuote(null)
+        }
+        return
+      }
+
+      try {
+        const nextQuote = await getLatestUserSettlementQuoteForAuction(showcase.auction.auction_id)
+        if (active) {
+          setSettlementQuote(nextQuote)
+        }
+      } catch {
+        if (active) {
+          setSettlementQuote(null)
+        }
+      }
+    }
+
+    void loadSettlementQuote()
+
+    return () => {
+      active = false
+    }
+  }, [activeShowcaseId, showcase?.auction?.auction_id, showcase?.auction?.updated_at, user, usesLocalShowcase])
 
   useEffect(() => {
     setOfferAmount(Math.round(minimumNextBid).toLocaleString("en-US"))
@@ -293,38 +371,86 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
   }
 
   const handleBuyNow = async () => {
+    const resumableSettlement =
+      settlementQuote &&
+      settlementQuote.quote_status !== "cancelled" &&
+      settlementQuote.quote_status !== "expired"
+
+    if (resumableSettlement) {
+      setActionError(null)
+      setShowSheet(false)
+      setSettlementFlowOpen(true)
+      return
+    }
+
     if (!canBuyNow) return setActionError("Buy Now is only available on live hybrid auctions.")
+    if (!usesLocalShowcase && !user) {
+      return setActionError("Log in to continue with shipping, customs, and payment.")
+    }
+
     try {
       setActionState("buy_now")
       setActionError(null)
-      const winningBid = usesLocalShowcase
-        ? buyNowAuctionShowcase({
+      const nextQuote = usesLocalShowcase
+        ? createSettlementQuoteFromBuyNowShowcase({
             showcaseId: activeShowcaseId,
             bidderDisplayName: displayName,
+            recipientEmail: user?.email ?? null,
           })
         : showcase
-          ? await buyNowAuction({
+          ? await createSettlementQuoteFromBuyNow({
               auctionId: auction.auction_id,
               bidderDisplayName: displayName,
             })
           : (() => {
-              throw new Error("Connect the auction migration before using Buy Now.")
+            throw new Error("Connect the auction migration before using Buy Now.")
             })()
-      await loadShowcase(true)
+      if (!usesLocalShowcase) {
+        await loadShowcase(true)
+      }
+      setSettlementQuote(nextQuote)
       setShowSheet(false)
-      setSuccessAmount(Math.round(winningBid.bid_amount).toLocaleString("en-US"))
-      setShowConfetti(true)
-      setShowPopup(true)
-      window.setTimeout(() => setShowConfetti(false), 2500)
+      setSettlementFlowOpen(true)
     } catch (error) {
-      setActionError(error instanceof Error ? error.message : "Unable to complete Buy Now.")
+      setActionError(error instanceof Error ? error.message : "Unable to start the settlement flow.")
     } finally {
       setActionState(null)
     }
   }
 
+  const hasSettlementFlow =
+    settlementQuote &&
+    settlementQuote.quote_status !== "cancelled" &&
+    settlementQuote.quote_status !== "expired"
+  const settlementActionLabel = settlementQuote?.quote_status === "paid" ? "VIEW PAYMENT" : "RESUME CHECKOUT"
+  const settlementButtonDisabled = !hasSettlementFlow && (!canBuyNow || actionState !== null)
+  const settlementDisplayAmount =
+    settlementQuote?.quote_status === "payment_requested" ||
+    settlementQuote?.quote_status === "review_required" ||
+    settlementQuote?.quote_status === "paid"
+      ? settlementQuote.total_payable_amount
+      : settlementQuote?.base_item_amount ?? auction.buy_now_price ?? 0
+  const settlementDescription =
+    settlementQuote?.quote_status === "paid"
+      ? "Payment completed and settlement records have been written."
+      : settlementQuote?.quote_status === "review_required"
+        ? settlementQuote.review_reason ?? "Operations review is required before payment can be completed."
+        : settlementQuote?.quote_status === "payment_requested"
+          ? "Shipping, insurance, and estimated import charges are ready for payment review."
+          : settlementQuote?.quote_status === "quote_preparing"
+            ? "The shipping and customs quote is being prepared."
+            : "Buy Now reserves the lot first, then collects shipping details before payment."
   const footerLabel = !hasActualAuction ? "PLACE BID" : auctionStatus === "scheduled" ? "STARTS SOON" : auctionStatus === "ended" ? "AUCTION CLOSED" : "PLACE BID"
   const logoSrc = isBlack ? "/logo-white.png" : "/logo-pink.png"
+
+  async function handleSettlementPaid(paidQuote: PurchaseSettlementQuoteRecord) {
+    setSettlementQuote(paidQuote)
+    if (!usesLocalShowcase) {
+      await loadShowcase(true)
+    }
+    setShowConfetti(true)
+    window.setTimeout(() => setShowConfetti(false), 2500)
+  }
 
   return (
     <>
@@ -394,6 +520,26 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
                 ))}
               </div>
             </div>
+            {hasSettlementFlow ? (
+              <div className={`mx-4 mb-3 rounded-xl border p-3 sm:mx-6 ${isBlack ? "border-[#1f1f1f] bg-[#0a0a0a]" : "border-[#FF6B9D]/30 bg-[#140810]"}`}>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/45">Settlement Status</p>
+                    <p className={`text-sm font-semibold ${isBlack ? "text-white" : "text-[#FF9DBE]"}`}>{settlementStatusLabel(settlementQuote?.quote_status)}</p>
+                    <p className="max-w-2xl text-xs leading-5 text-white/60">{settlementDescription}</p>
+                  </div>
+                  <div className="flex items-center justify-between gap-4 sm:block sm:text-right">
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/45">Current Due</p>
+                      <p className={`mt-1 text-sm font-semibold tabular-nums ${isBlack ? "text-white" : "text-[#FF9DBE]"}`}>{money(settlementDisplayAmount, currency)}</p>
+                    </div>
+                    <button className={`rounded-full border px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] transition-colors ${isBlack ? "border-white/15 bg-white/[0.04] text-white hover:bg-white/[0.08]" : "border-[#FF6B9D]/35 bg-[#FF6B9D]/10 text-white hover:bg-[#FF6B9D]/20"}`} onClick={() => setSettlementFlowOpen(true)} type="button">
+                      {settlementActionLabel}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : null}
             <div className={`mx-4 mb-3 rounded-xl border p-3 sm:mx-6 ${isBlack ? "border-[#1f1f1f] bg-[#0a0a0a]" : "border-white/10 bg-black/30"}`}>
               <div className="mb-3 flex items-center justify-between"><div className="flex items-center gap-2"><History className="size-4 text-white/70" /><p className="text-sm font-semibold text-white">Bid History</p></div><p className="text-[11px] uppercase tracking-[0.2em] text-white/45">{bids.slice(0, 5).length} entries</p></div>
               <div className="space-y-2">
@@ -410,6 +556,7 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
               <p className="text-xs text-white/55">Last-minute bids may extend the auction.</p>
               {loading ? <div className="flex items-center gap-2 text-xs text-white/45"><Loader2 className="size-3.5 animate-spin" />Syncing auction data</div> : null}
               {refreshError ? <div className="rounded-lg border border-amber-400/20 bg-amber-400/10 px-3 py-2 text-xs text-amber-100">{refreshError}</div> : null}
+              {actionError && !showSheet ? <div className="rounded-lg border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-xs text-rose-100">{actionError}</div> : null}
             </div>
             <div className={`mx-4 border-t sm:mx-6 ${isBlack ? "border-[#1f1f1f]" : theme.accentBorder}`} />
           </div>
@@ -425,12 +572,12 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
                 <div className="space-y-2">
                   <p className="text-xs text-muted-foreground">Starting bid {money(openingBid, currency)}</p>
                   <p className="text-xs text-muted-foreground">Minimum increment {money(minimumIncrement, currency)}</p>
-                  {auctionType === "hybrid" ? <p className="text-xs text-[#FF8FB4]">Buy Now closes the auction immediately at {money(auction.buy_now_price, currency)}.</p> : null}
+                  {auctionType === "hybrid" ? <p className="text-xs text-[#FF8FB4]">{hasSettlementFlow ? "Buy Now is already reserved. Resume shipping, customs, and payment review from this checkout." : `Buy Now reserves the lot, collects shipping details, and prepares a final payment quote from ${money(auction.buy_now_price, currency)}.`}</p> : null}
                   {actionError ? <p className="text-xs text-[#FF8FAB]">{actionError}</p> : null}
                 </div>
                 <div className={`grid gap-3 ${auctionType === "hybrid" ? "grid-cols-2" : "grid-cols-1"}`}>
                   <button className={`w-full py-4 text-lg uppercase transition-all active:scale-[0.98] place-bid-btn ${!isLiveAuction || actionState !== null || parseInput(offerAmount) < minimumNextBid ? "cursor-not-allowed border border-white/10 bg-white/10 text-white/50" : isBlack ? "black-mode-place-bid" : `${theme.accentBg} ${theme.accentForeground} hover:brightness-110`}`} disabled={!isLiveAuction || actionState !== null || parseInput(offerAmount) < minimumNextBid} onClick={handleBid}>{actionState === "bid" ? "PLACING..." : "SET OFFER"}</button>
-                  {auctionType === "hybrid" ? <button className={`w-full rounded-lg border py-4 text-lg font-semibold uppercase transition-all active:scale-[0.98] ${!canBuyNow || actionState !== null ? "cursor-not-allowed border-white/10 bg-white/10 text-white/50" : "border-[#FF6B9D]/40 bg-black text-white hover:border-[#FF6B9D]/70 hover:bg-[#12070d]"}`} disabled={!canBuyNow || actionState !== null} onClick={handleBuyNow}>{actionState === "buy_now" ? "BUYING..." : "BUY NOW"}</button> : null}
+                  {auctionType === "hybrid" ? <button className={`w-full rounded-lg border py-4 text-lg font-semibold uppercase transition-all active:scale-[0.98] ${settlementButtonDisabled ? "cursor-not-allowed border-white/10 bg-white/10 text-white/50" : "border-[#FF6B9D]/40 bg-black text-white hover:border-[#FF6B9D]/70 hover:bg-[#12070d]"}`} disabled={settlementButtonDisabled} onClick={handleBuyNow}>{actionState === "buy_now" ? "STARTING..." : hasSettlementFlow ? settlementActionLabel : "BUY NOW"}</button> : null}
                 </div>
               </div>
             </div>
@@ -443,10 +590,26 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
                 {ripple ? <span className="pointer-events-none absolute rounded-full bg-white/40 animate-place-bid-ripple" style={{ left: ripple.x, top: ripple.y, width: 20, height: 20, marginLeft: -10, marginTop: -10 }} /> : null}
                 {footerLabel}
               </button>
-              {auctionType === "hybrid" ? <button className={`h-full w-full rounded-none border px-4 text-lg font-semibold uppercase transition-all duration-200 active:scale-[0.98] ${canBuyNow ? "border-[#FF6B9D]/45 bg-[#0a0a0a] text-white hover:-translate-y-0.5 hover:border-[#FF6B9D]/70 hover:bg-[#12070d]" : "cursor-not-allowed border-white/10 bg-white/10 text-white/45"}`} disabled={!canBuyNow} onClick={handleBuyNow} type="button">{actionState === "buy_now" ? "BUYING..." : "BUY NOW"}</button> : null}
+              {auctionType === "hybrid" ? <button className={`h-full w-full rounded-none border px-4 text-lg font-semibold uppercase transition-all duration-200 active:scale-[0.98] ${settlementButtonDisabled ? "cursor-not-allowed border-white/10 bg-white/10 text-white/45" : "border-[#FF6B9D]/45 bg-[#0a0a0a] text-white hover:-translate-y-0.5 hover:border-[#FF6B9D]/70 hover:bg-[#12070d]"}`} disabled={settlementButtonDisabled} onClick={handleBuyNow} type="button">{actionState === "buy_now" ? "STARTING..." : hasSettlementFlow ? settlementActionLabel : "BUY NOW"}</button> : null}
             </div>
           </div>
         ) : null}
+        <AuctionSettlementFlow
+          adapter={{
+            generateQuote: async (quoteId) => usesLocalShowcase ? generateShowcaseSettlementQuote(quoteId) : generateSettlementQuote(quoteId),
+            proceedToPay: async (quoteId) => usesLocalShowcase ? markShowcaseSettlementQuotePaid(quoteId) : markSettlementQuotePaid({ quoteId, paymentProvider: "demo_mock" }),
+            saveShippingInfo: async (input) => usesLocalShowcase ? saveShowcaseSettlementQuoteShippingInfo(input) : saveSettlementQuoteShippingInfo(input),
+          }}
+          artifactTitle={artifact.artifact_title}
+          isBlack={isBlack}
+          onOpenChange={setSettlementFlowOpen}
+          onPaid={(paidQuote) => void handleSettlementPaid(paidQuote)}
+          onQuoteChange={setSettlementQuote}
+          open={settlementFlowOpen}
+          quote={settlementQuote}
+          recipientEmail={user?.email ?? null}
+          recipientName={displayName}
+        />
       </div>
     </>
   )
