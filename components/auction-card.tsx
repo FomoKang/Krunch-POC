@@ -469,9 +469,9 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
         <div className="mb-2 flex min-h-[40px] items-stretch" style={{ marginLeft: "max(1rem, env(safe-area-inset-left))", marginRight: "max(1rem, env(safe-area-inset-right))" }}>
           {bidRibbon ? <div className={`z-40 mx-4 flex w-full items-center justify-center rounded-lg border bg-black/80 px-4 py-2 backdrop-blur-sm animate-in fade-in duration-300 ${theme.accentBorder}`}><p className="text-center text-xs text-white/90 sm:text-sm"><span className={`${theme.accent} font-semibold`}>{bidRibbon.username}</span><span className="text-white/70"> placed a bid of </span><span className={`${theme.accent} font-semibold tabular-nums`}>{money(bidRibbon.amount, currency)}</span></p></div> : null}
         </div>
-        <div className="flex min-h-0 flex-1 flex-col justify-center py-4">
-          <div className={`relative mx-4 mb-4 overflow-hidden rounded-lg border ${isBlack ? "black-mode-card" : "border-border/50 bg-black/30"}`} style={{ marginLeft: "max(1rem, env(safe-area-inset-left))", marginRight: "max(1rem, env(safe-area-inset-right))" }}>
-            <div className="flex items-start justify-between gap-4 p-4 pb-4 pt-5 sm:p-6 sm:pt-6">
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-4 py-4">
+          <div className={`relative mb-4 w-full max-w-[720px] overflow-hidden rounded-lg border ${isBlack ? "black-mode-card" : "border-border/50 bg-black/30"}`}>
+            <div className="flex items-start justify-between gap-4 p-6 pb-5 pt-7 sm:p-8 sm:pb-6 sm:pt-8">
               <div>
                 <div className="mb-2 flex flex-wrap items-center gap-2">
                   <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-white/70">{auctionType}</span>
@@ -480,7 +480,7 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
                 <h2 className={`font-display text-4xl uppercase leading-[0.85] tracking-tight sm:text-5xl ${isBlack ? "black-mode-legend-title" : `${theme.accent} drop-shadow-md`}`}>{auctionType === "hybrid" ? "HYBRID" : "PREMIUM"}</h2>
                 <h2 className={`font-display text-4xl uppercase leading-[0.85] tracking-tight sm:text-5xl ${isBlack ? "black-mode-legend-title" : `${theme.accent} drop-shadow-md`}`}>AUCTION</h2>
               </div>
-              <div className="flex shrink-0 items-center gap-2 rounded-xl border border-white/15 bg-black/50 py-2 pl-3 pr-2 backdrop-blur-sm">
+              <div className="flex shrink-0 items-center gap-2 rounded-xl border border-white/15 bg-black/50 py-3 pl-4 pr-3 backdrop-blur-sm">
                 <div>
                   <p className="mb-0.5 text-[9px] font-bold uppercase tracking-widest text-white/60">{auctionStatus === "scheduled" ? "Starts In" : auctionStatus === "ended" ? "Auction Ended" : "Time Remaining"}</p>
                   <span className={`font-mono text-lg font-semibold tracking-tight tabular-nums transition-colors sm:text-xl ${timeRemaining >= ONE_HOUR ? "auction-timer-normal" : timeRemaining < TEN_MINUTES ? "auction-timer-urgent" : showRedTime ? "auction-timer-urgent" : "auction-timer-normal"} ${timeRemaining < TEN_MINUTES && timeRemaining > 0 ? "animate-pulse" : ""}`}>{timer(timeRemaining)}</span>
@@ -488,14 +488,14 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
                 <Clock className="size-4 shrink-0 text-white/55" />
               </div>
             </div>
-            <div className="flex items-center gap-5 px-4 pb-4 sm:gap-8 sm:px-6">
-              <div className="relative h-32 w-40 shrink-0 sm:h-44 sm:w-56">
+            <div className="flex flex-col items-center gap-4 px-4 pb-4 sm:px-6">
+              <div className="relative h-36 w-full max-w-[240px] shrink-0 sm:h-44 sm:max-w-[280px]">
                 {isVideo(media) ? <video key={media?.file_url ?? "cap-spin"} src={media?.file_url ?? "/cap-spin.mp4"} autoPlay className="h-full w-full rounded-xl object-contain" loop muted playsInline /> : isImage(media) ? <img alt={media?.caption ?? artifact.artifact_title} className="h-full w-full rounded-xl object-contain" src={media?.file_url ?? media?.thumbnail_url ?? "/cap-thumb.png"} /> : <video src="/cap-spin.mp4" autoPlay className="h-full w-full rounded-xl object-contain" loop muted playsInline />}
               </div>
-              <div className="flex min-w-0 flex-1 flex-col items-end justify-center pl-2">
-                <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-white/60">Current Highest Bid</p>
-                <p className={`text-right text-2xl font-bold leading-tight tabular-nums sm:text-3xl ${bidPulse ? "animate-bid-pulse" : ""} ${isBlack ? "black-mode-text-primary" : theme.accent}`}>{money(currentHighestBid, currency)}</p>
-                <p className={`mt-1.5 flex items-center justify-end gap-1 text-sm font-semibold tabular-nums ${isBlack ? "text-[#FF69B4]" : "text-white/90"}`}>+{risePercent}%<ArrowUp className="size-4 shrink-0" /></p>
+              <div className="flex min-w-0 flex-1 flex-col items-center justify-center">
+                <p className="mb-1 text-center text-[10px] font-bold uppercase tracking-widest text-white/60">Current Highest Bid</p>
+                <p className={`text-center text-2xl font-bold leading-tight tabular-nums sm:text-3xl ${bidPulse ? "animate-bid-pulse" : ""} ${isBlack ? "black-mode-text-primary" : theme.accent}`}>{money(currentHighestBid, currency)}</p>
+                <p className={`mt-1.5 flex items-center justify-center gap-1 text-sm font-semibold tabular-nums ${isBlack ? "text-[#FF69B4]" : "text-white/90"}`}>+{risePercent}%<ArrowUp className="size-4 shrink-0" /></p>
               </div>
             </div>
             <div className="px-4 pb-3 sm:px-6">
@@ -564,7 +564,7 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
         {showSheet ? (
           <>
             <div className="fixed inset-0 z-30 bg-black/50" onClick={() => setShowSheet(false)} />
-            <div className="fixed bottom-0 left-0 right-0 z-40 max-w-full min-w-0 overflow-hidden rounded-t-2xl border-l border-r border-t border-border/50 animate-slide-up-bottom-sheet" style={{ marginLeft: "max(0, env(safe-area-inset-left))", marginRight: "max(0, env(safe-area-inset-right))", paddingBottom: "calc(100px + env(safe-area-inset-bottom))", background: isBlack ? "rgba(10,10,10,0.98)" : "rgba(0,0,0,0.98)", backdropFilter: "blur(12px)" }}>
+            <div className="fixed bottom-0 left-1/2 z-40 w-[calc(100%-2rem)] max-w-[720px] -translate-x-1/2 overflow-hidden rounded-t-2xl border-l border-r border-t border-border/50 animate-slide-up-bottom-sheet" style={{ paddingBottom: "calc(100px + env(safe-area-inset-bottom))", background: isBlack ? "rgba(10,10,10,0.98)" : "rgba(0,0,0,0.98)", backdropFilter: "blur(12px)" }}>
               <div className="flex justify-end p-4 pb-0"><button aria-label="Close bidding panel" className="flex size-8 items-center justify-center rounded-full bg-white/10 transition-colors hover:bg-white/15" onClick={() => setShowSheet(false)}><svg className="size-5 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} /></svg></button></div>
               <div className="space-y-4 px-4 pb-4 pt-2">
                 <div className="space-y-1"><p className="text-sm font-medium text-foreground">Your Offer</p><p className="text-xs text-muted-foreground">Enter at least {money(minimumNextBid, currency)}.</p></div>
@@ -584,8 +584,8 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
           </>
         ) : null}
         {!showSheet ? (
-          <div className="fixed bottom-0 left-0 right-0 z-50 w-full bg-black" style={{ height: "calc(100px + env(safe-area-inset-bottom))", paddingLeft: "max(0, env(safe-area-inset-left))", paddingRight: "max(0, env(safe-area-inset-right))", paddingBottom: "env(safe-area-inset-bottom)" }}>
-            <div className={`grid h-full gap-2 ${auctionType === "hybrid" ? "grid-cols-2" : "grid-cols-1"}`}>
+          <div className="fixed bottom-0 left-0 right-0 z-50 flex w-full justify-center bg-black px-4" style={{ height: "calc(100px + env(safe-area-inset-bottom))", paddingBottom: "env(safe-area-inset-bottom)" }}>
+            <div className={`grid h-full w-full max-w-[720px] gap-2 ${auctionType === "hybrid" ? "grid-cols-2" : "grid-cols-1"}`}>
               <button className={`relative flex h-full w-full items-center justify-center overflow-hidden text-xl uppercase transition-all duration-200 active:scale-[0.98] place-bid-btn ${isLiveAuction ? isBlack ? "black-mode-place-bid hover:-translate-y-0.5" : "bg-[#FF6B9D] text-black hover:-translate-y-0.5 hover:brightness-110" : "cursor-not-allowed bg-white/10 text-white/45"}`} onClick={(event) => { if (!isLiveAuction) { setActionError(hasActualAuction ? auctionStatus === "scheduled" ? "This auction has not started yet." : "This auction is no longer accepting bids." : usesLocalShowcase ? "This showcase auction is not accepting bids right now." : "Connect the database migration to enable live bidding."); setShowSheet(true); return } const rect = event.currentTarget.getBoundingClientRect(); setRipple({ x: event.clientX - rect.left, y: event.clientY - rect.top }); window.setTimeout(() => setRipple(null), 600); setShowSheet(true) }} style={{ boxShadow: "0 4px 20px rgba(255, 0, 110, 0.4)" }} type="button">
                 {ripple ? <span className="pointer-events-none absolute rounded-full bg-white/40 animate-place-bid-ripple" style={{ left: ripple.x, top: ripple.y, width: 20, height: 20, marginLeft: -10, marginTop: -10 }} /> : null}
                 {footerLabel}

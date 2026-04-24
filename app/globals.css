@@ -287,6 +287,84 @@ body svg {
   box-shadow: 0 0 14px rgba(255, 107, 157, 0.55);
 }
 
+@keyframes demo-price-pop {
+  0% {
+    transform: scale(1);
+    text-shadow: 0 0 0 rgba(255, 107, 157, 0);
+  }
+  32% {
+    transform: scale(1.045);
+    text-shadow: 0 0 22px rgba(255, 107, 157, 0.72);
+  }
+  100% {
+    transform: scale(1);
+    text-shadow: 0 0 0 rgba(255, 107, 157, 0);
+  }
+}
+.demo-price-pop {
+  animation: demo-price-pop 700ms ease-out both;
+  transform-origin: left center;
+}
+
+@keyframes demo-feed-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+    border-color: rgba(255, 107, 157, 0.36);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+}
+.demo-feed-in {
+  animation: demo-feed-in 340ms ease-out both;
+}
+
+@keyframes demo-bid-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 107, 157, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 14px rgba(255, 107, 157, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 107, 157, 0);
+  }
+}
+.demo-bid-pulse {
+  animation: demo-bid-pulse 1.4s ease-out infinite;
+}
+
+@keyframes demo-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.demo-toast-in {
+  animation: demo-toast-in 260ms ease-out both;
+}
+
+@keyframes demo-result-in {
+  from {
+    opacity: 0;
+    transform: translateY(22px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.demo-result-in {
+  animation: demo-result-in 420ms ease-out both;
+}
+
 [data-theme="black"] .black-home-unique-card {
   background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%) !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;

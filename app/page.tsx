@@ -286,16 +286,27 @@ export default function HomePage() {
         {/* LEGEND DROP 섹션 */}
         <section>
           <h2 className={`font-display text-3xl tracking-wide uppercase italic mb-4 min-h-10 leading-tight flex items-center ${theme === "black" ? "black-mode-legend-title" : "text-white"}`}>PREMIUM AUCTION</h2>
-          <Link href={`${basePath}/auction?showcaseId=${PREMIUM_SHOWCASE_ID}`} className="block">
-            <div className={`relative rounded-2xl overflow-hidden border ${theme === "black" ? "black-home-hero-card bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f]" : "bg-gradient-to-br from-[#2a1a1a] to-[#1a0a0a] border-white/10"}`}>
+          <div className={`relative rounded-2xl overflow-hidden border ${theme === "black" ? "black-home-hero-card bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f]" : "bg-gradient-to-br from-[#2a1a1a] to-[#1a0a0a] border-white/10"}`}>
+            <Link
+              href={`${basePath}/auction?showcaseId=${PREMIUM_SHOWCASE_ID}`}
+              className="absolute inset-0 z-10"
+              aria-label={isKo ? "프리미엄 경매 상세로 이동" : "Open premium auction"}
+            />
               {/* 배경 이미지 오버레이 — 블랙 모드: 레이어 분리 */}
               <div className={`absolute inset-0 ${theme === "black" ? "bg-gradient-to-br from-[#2a1a1a] via-[#0f0f0f] to-[#0a0a0a]" : "bg-gradient-to-br from-[#3d1a2a] via-[#1a0a0a] to-[#0d0505]"}`} />
 
-              <div className="relative p-5">
+              <div className="pointer-events-none relative z-20 p-5">
                 {/* Live Now 뱃지 — 높이 고정해서 핑크/다크 전환 시 카드 시작 구간 동일 */}
                 <div className="min-h-[2.5rem] flex items-center gap-2 mb-4">
-                  <span
-                    className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide border ${
+                  <button
+                    type="button"
+                    aria-label={isKo ? "시연 경매로 이동" : "Open demo auction"}
+                    onClick={(event) => {
+                      event.preventDefault()
+                      event.stopPropagation()
+                      router.push("/demo/auction")
+                    }}
+                    className={`pointer-events-auto flex cursor-pointer touch-manipulation items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide border transition duration-200 hover:scale-[1.02] hover:brightness-110 active:scale-[0.98] ${
                       theme === "black"
                         ? "bg-transparent text-white border-[rgba(255,105,180,0.5)]"
                         : "bg-[#FF6B9D] text-black border-transparent live-now-badge"
@@ -306,7 +317,7 @@ export default function HomePage() {
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-red-600" />
                     </span>
                     LIVE NOW
-                  </span>
+                  </button>
                 </div>
 
                 {/* 상품 이미지 */}
@@ -339,7 +350,6 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
-          </Link>
           {premiumPreviewItems.length ? (
             <div className="mt-3 grid gap-3">
               {premiumPreviewItems.map((highlight) => (
