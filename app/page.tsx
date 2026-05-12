@@ -23,9 +23,21 @@ const LOGO_HEIGHT = 72
 // 로딩창 전용: 로딩 바와 비슷한 가로 길이로 조정 (w-32 = 128px 기준, 조금 더 크게)
 const SPLASH_LOGO_WIDTH = 160
 const SPLASH_LOGO_HEIGHT = 51
+const SPLASH_DURATION_MS = 1500
+const SPLASH_STORAGE_KEY = "krunch-home-splash-seen"
 
 // Splash Screen (테마 악센트 + 로딩 시간별 메시지)
-function SplashScreen({ accentBg, logoSrc, isKo }: { accentBg: string; logoSrc: string; isKo: boolean }) {
+function SplashScreen({
+  accentBg,
+  logoSrc,
+  isKo,
+  durationMs,
+}: {
+  accentBg: string
+  logoSrc: string
+  isKo: boolean
+  durationMs: number
+}) {
   const [elapsed, setElapsed] = useState(0)
   useEffect(() => {
     const start = Date.now()
@@ -42,7 +54,7 @@ function SplashScreen({ accentBg, logoSrc, isKo }: { accentBg: string; logoSrc: 
       <div className="flex flex-col items-center">
         <Image src={logoSrc} alt="Krunch Logo" width={SPLASH_LOGO_WIDTH} height={SPLASH_LOGO_HEIGHT} className={`h-[51px] w-[160px] object-contain animate-pulse block mb-4`} />
         <div className="w-32 h-1 bg-white/20 rounded-full overflow-hidden">
-          <div className={`h-full ${accentBg} animate-[loading_3s_ease-in-out_forwards]`} />
+          <div className={`h-full ${accentBg}`} style={{ animation: `loading ${durationMs}ms ease-in-out forwards` }} />
         </div>
         {loadingMessage && <p className="text-white/60 text-sm mt-3 animate-in fade-in duration-300">{loadingMessage}</p>}
       </div>
@@ -198,12 +210,21 @@ export default function HomePage() {
 
   useEffect(() => {
     setMounted(true)
+    const hasSeenSplash = window.localStorage.getItem(SPLASH_STORAGE_KEY) === "1"
+
+    if (hasSeenSplash) {
+      setShowSplash(false)
+      setSplashVisible(false)
+      return
+    }
+
     setSplashVisible(true)
     // 스플래시 화면을 3초 후에 사라지게 함
+    window.localStorage.setItem(SPLASH_STORAGE_KEY, "1")
     const timer = setTimeout(() => {
       setShowSplash(false)
       setSplashVisible(false)
-    }, 3000)
+    }, SPLASH_DURATION_MS)
 
     return () => {
       clearTimeout(timer)
@@ -245,7 +266,7 @@ export default function HomePage() {
   }, [])
 
   if (!mounted || showSplash) {
-    return <SplashScreen accentBg={accentBg} logoSrc={logoSrc} isKo={isKo} />
+    return <SplashScreen accentBg={accentBg} logoSrc={logoSrc} isKo={isKo} durationMs={SPLASH_DURATION_MS} />
   }
 
   const premiumPreviewItems = premiumHighlights.filter((highlight) => highlight.auction.auction_id !== "fb")
