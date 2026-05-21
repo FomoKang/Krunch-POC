@@ -161,6 +161,10 @@ function homeAuctionStatusLabel(
     return isKo ? "라이브" : "LIVE NOW"
   }
 
+  if (auction.auction_status === "open") {
+    return isKo ? "오픈" : "OPEN"
+  }
+
   if (auction.auction_status === "ended") {
     return isKo ? "종료" : "ENDED"
   }

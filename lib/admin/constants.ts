@@ -152,10 +152,13 @@ export const AUCTION_BID_SOURCE_OPTIONS = [
 export const AUCTION_STATUS_OPTIONS = [
   "draft",
   "scheduled",
+  "published",
+  "open",
   "live",
   "ended",
   "cancelled",
   "settled",
+  "deleted",
 ] as const
 
 export const CERTIFICATE_STATUS_OPTIONS = [

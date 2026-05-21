@@ -1,21 +1,40 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useMemo, useState } from "react"
-import { Download, Gavel, Plus } from "lucide-react"
+import { useCallback, useEffect, useMemo, useState } from "react"
+import { Download, Eye, EyeOff, Gavel, Plus, Rocket, Trash2 } from "lucide-react"
 import { AUCTION_STATUS_OPTIONS } from "@/lib/admin/constants"
 import { downloadCsv, formatDateTime, formatMoney } from "@/lib/admin/utils"
 import {
   listArtifactOptions,
   listAuctions,
+  removeDemoAuction,
+  updateAuctionStorefrontState,
   type ArtifactOption,
   type AuctionRecord,
 } from "@/lib/supabase/provenance"
+import {
+  canDeleteDemoAuction,
+  getStorefrontVisibilityLabel,
+  isAuctionVisibleOnStorefront,
+} from "@/lib/auction-storefront"
+import { toast } from "@/hooks/use-toast"
 import { EmptyState } from "@/components/admin/empty-state"
 import { PageHeader } from "@/components/admin/page-header"
 import { StatusBadge } from "@/components/admin/status-badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import {
   Select,
   SelectContent,
@@ -39,44 +58,45 @@ export default function AdminAuctionsPage() {
   const [status, setStatus] = useState("all")
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [busyAuctionId, setBusyAuctionId] = useState<string | null>(null)
+
+  const loadAuctions = useCallback(async (active = true) => {
+    try {
+      setLoading(true)
+      const [nextAuctions, nextArtifacts] = await Promise.all([
+        listAuctions({ status }),
+        listArtifactOptions(),
+      ])
+
+      if (!active) {
+        return
+      }
+
+      setAuctions(nextAuctions)
+      setArtifacts(nextArtifacts)
+      setError(null)
+    } catch (loadError) {
+      if (!active) {
+        return
+      }
+
+      setError(loadError instanceof Error ? loadError.message : "Unable to load auctions.")
+    } finally {
+      if (active) {
+        setLoading(false)
+      }
+    }
+  }, [status])
 
   useEffect(() => {
     let active = true
-
-    async function loadAuctions() {
-      try {
-        setLoading(true)
-        const [nextAuctions, nextArtifacts] = await Promise.all([
-          listAuctions({ status }),
-          listArtifactOptions(),
-        ])
-
-        if (!active) {
-          return
-        }
-
-        setAuctions(nextAuctions)
-        setArtifacts(nextArtifacts)
-        setError(null)
-      } catch (loadError) {
-        if (!active) {
-          return
-        }
-
-        setError(loadError instanceof Error ? loadError.message : "Unable to load auctions.")
-      } finally {
-        if (active) {
-          setLoading(false)
-        }
-      }
-    }
 
     void loadAuctions()
 
     return () => {
       active = false
     }
-  }, [status])
+  }, [loadAuctions])
 
   const artifactMap = useMemo(
     () => new Map(artifacts.map((artifact) => [artifact.id, artifact])),
@@ -98,6 +118,65 @@ export default function AdminAuctionsPage() {
       })),
     [artifactMap, auctions],
   )
+
+  async function publishAuction(auction: AuctionRecord) {
+    setBusyAuctionId(auction.auction_id)
+
+    try {
+      await updateAuctionStorefrontState(auction.auction_id, {
+        auction_status: "scheduled",
+        storefront_visible: true,
+      })
+      toast({ title: "Auction published to storefront" })
+      await loadAuctions()
+    } catch (actionError) {
+      toast({
+        title: "Publish failed",
+        description: actionError instanceof Error ? actionError.message : "Unable to publish auction.",
+        variant: "destructive",
+      })
+    } finally {
+      setBusyAuctionId(null)
+    }
+  }
+
+  async function setStorefrontVisibility(auction: AuctionRecord, visible: boolean) {
+    setBusyAuctionId(auction.auction_id)
+
+    try {
+      await updateAuctionStorefrontState(auction.auction_id, {
+        storefront_visible: visible,
+      })
+      toast({ title: visible ? "Auction shown on storefront" : "Auction hidden from storefront" })
+      await loadAuctions()
+    } catch (actionError) {
+      toast({
+        title: visible ? "Show failed" : "Hide failed",
+        description: actionError instanceof Error ? actionError.message : "Unable to update storefront visibility.",
+        variant: "destructive",
+      })
+    } finally {
+      setBusyAuctionId(null)
+    }
+  }
+
+  async function deleteDemoAuction(auction: AuctionRecord) {
+    setBusyAuctionId(auction.auction_id)
+
+    try {
+      await removeDemoAuction(auction)
+      toast({ title: "Demo auction removed" })
+      await loadAuctions()
+    } catch (actionError) {
+      toast({
+        title: "Delete failed",
+        description: actionError instanceof Error ? actionError.message : "Unable to delete demo auction.",
+        variant: "destructive",
+      })
+    } finally {
+      setBusyAuctionId(null)
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -166,41 +245,113 @@ export default function AdminAuctionsPage() {
                   <TableHead className="text-white/55">Type</TableHead>
                   <TableHead className="text-white/55">Mode</TableHead>
                   <TableHead className="text-white/55">Status</TableHead>
+                  <TableHead className="text-white/55">Storefront</TableHead>
                   <TableHead className="text-white/55">Opening</TableHead>
                   <TableHead className="text-white/55">Reserve</TableHead>
                   <TableHead className="text-white/55">Final</TableHead>
                   <TableHead className="text-white/55">Winner</TableHead>
+                  <TableHead className="text-right text-white/55">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {auctions.map((auction) => (
-                  <TableRow key={auction.auction_id} className="border-white/10">
-                    <TableCell>
-                      <Link href={`/admin/auctions/${auction.auction_id}`} className="block">
-                        <p className="text-sm font-medium text-white">{auction.auction_title}</p>
-                        <p className="text-sm text-white/55">
-                          {auction.auction_start_time ? formatDateTime(auction.auction_start_time) : "No start time"}
-                        </p>
-                      </Link>
-                    </TableCell>
-                    <TableCell className="font-mono text-sm text-white/70">
-                      {artifactMap.get(auction.artifact_id)?.artifact_code ?? "-"}
-                    </TableCell>
-                    <TableCell>
-                      <StatusBadge value={auction.auction_type} />
-                    </TableCell>
-                    <TableCell>
-                      <StatusBadge value={auction.demo_mode ? "demo_mode" : "live_mode"} />
-                    </TableCell>
-                    <TableCell>
-                      <StatusBadge value={auction.auction_status} />
-                    </TableCell>
-                    <TableCell className="text-white/70">{formatMoney(auction.opening_bid, auction.currency ?? "USD")}</TableCell>
-                    <TableCell className="text-white/70">{formatMoney(auction.reserve_price, auction.currency ?? "USD")}</TableCell>
-                    <TableCell className="text-white/70">{formatMoney(auction.final_price, auction.currency ?? "USD")}</TableCell>
-                    <TableCell className="text-white/70">{auction.winner_bidder_id ?? "-"}</TableCell>
-                  </TableRow>
-                ))}
+                {auctions.map((auction) => {
+                  const visible = isAuctionVisibleOnStorefront(auction, true)
+                  const visibilityLabel = getStorefrontVisibilityLabel(auction)
+                  const visibilityBadge =
+                    visibilityLabel === "Visible live"
+                      ? "storefront_live_visible"
+                      : visibilityLabel === "Visible in demo storefront"
+                        ? "storefront_demo_visible"
+                        : "storefront_hidden"
+                  const canDeleteDemo = canDeleteDemoAuction(auction)
+                  const isBusy = busyAuctionId === auction.auction_id
+
+                  return (
+                    <TableRow key={auction.auction_id} className="border-white/10">
+                      <TableCell>
+                        <Link href={`/admin/auctions/${auction.auction_id}`} className="block">
+                          <p className="text-sm font-medium text-white">{auction.auction_title}</p>
+                          <p className="text-sm text-white/55">
+                            {auction.auction_start_time ? formatDateTime(auction.auction_start_time) : "No start time"}
+                          </p>
+                        </Link>
+                      </TableCell>
+                      <TableCell className="font-mono text-sm text-white/70">
+                        {artifactMap.get(auction.artifact_id)?.artifact_code ?? "-"}
+                      </TableCell>
+                      <TableCell>
+                        <StatusBadge value={auction.auction_type} />
+                      </TableCell>
+                      <TableCell>
+                        <StatusBadge value={auction.demo_mode ? "demo_mode" : "live_mode"} />
+                      </TableCell>
+                      <TableCell>
+                        <StatusBadge value={auction.auction_status} />
+                      </TableCell>
+                      <TableCell>
+                        <StatusBadge value={visibilityBadge} />
+                      </TableCell>
+                      <TableCell className="text-white/70">{formatMoney(auction.opening_bid, auction.currency ?? "USD")}</TableCell>
+                      <TableCell className="text-white/70">{formatMoney(auction.reserve_price, auction.currency ?? "USD")}</TableCell>
+                      <TableCell className="text-white/70">{formatMoney(auction.final_price, auction.currency ?? "USD")}</TableCell>
+                      <TableCell className="text-white/70">{auction.winner_bidder_id ?? "-"}</TableCell>
+                      <TableCell>
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            className="bg-[#FF6B9D] text-black hover:bg-[#ff86b0]"
+                            disabled={isBusy}
+                            onClick={() => publishAuction(auction)}
+                          >
+                            <Rocket className="mr-1 size-3.5" />
+                            Publish
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="border-white/10 bg-transparent text-white hover:bg-white/[0.04]"
+                            disabled={isBusy}
+                            onClick={() => setStorefrontVisibility(auction, !visible)}
+                          >
+                            {visible ? <EyeOff className="mr-1 size-3.5" /> : <Eye className="mr-1 size-3.5" />}
+                            {visible ? "Hide" : "Show"}
+                          </Button>
+                          {canDeleteDemo ? (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button type="button" size="sm" variant="destructive" disabled={isBusy}>
+                                  <Trash2 className="mr-1 size-3.5" />
+                                  Delete Demo
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent className="border-white/10 bg-[#0f1117] text-white">
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Remove demo auction?</AlertDialogTitle>
+                                  <AlertDialogDescription className="text-white/60">
+                                    This demo auction will be removed from the admin and storefront. Continue?
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel className="border-white/10 bg-transparent text-white hover:bg-white/[0.04]">
+                                    Cancel
+                                  </AlertDialogCancel>
+                                  <AlertDialogAction
+                                    className="bg-rose-600 text-white hover:bg-rose-500"
+                                    onClick={() => deleteDemoAuction(auction)}
+                                  >
+                                    Delete Demo
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          ) : null}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
               </TableBody>
             </Table>
           ) : (

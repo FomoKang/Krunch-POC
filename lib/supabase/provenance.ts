@@ -40,6 +40,12 @@ import {
   normalizeOptionalNumber,
   normalizeOptionalString,
 } from "@/lib/admin/utils"
+import {
+  canDeleteDemoAuction,
+  isAuctionVisibleOnStorefront,
+  isDeletedAuction,
+  sortAuctionsForStorefront,
+} from "@/lib/auction-storefront"
 import { getSupabaseBrowserClient } from "@/lib/supabase/client"
 
 const ARTIFACT_COLUMNS = [
@@ -136,6 +142,8 @@ const AUCTION_COLUMNS = [
   "extension_rule_enabled",
   "extension_seconds",
   "demo_mode",
+  "storefront_visible",
+  "deleted_at",
   "created_at",
   "updated_at",
 ].join(", ")
@@ -360,6 +368,8 @@ export type AuctionRecord = {
   extension_rule_enabled: boolean | null
   extension_seconds: number | null
   demo_mode: boolean | null
+  storefront_visible?: boolean | null
+  deleted_at?: string | null
   created_at: string | null
   updated_at: string | null
 }
@@ -1453,6 +1463,8 @@ export async function listAuctions(filters: AuctionFilters = {}) {
   let query = supabase
     .from("auctions")
     .select(AUCTION_COLUMNS)
+    .is("deleted_at", null)
+    .neq("auction_status", "deleted")
     .order("created_at", { ascending: false })
 
   if (filters.artifactId) {
@@ -1499,6 +1511,7 @@ export async function createAuction(payload: Partial<AuctionRecord>) {
     extension_rule_enabled: payload.extension_rule_enabled ?? true,
     extension_seconds: payload.extension_seconds ?? 30,
     demo_mode: payload.demo_mode ?? false,
+    storefront_visible: payload.storefront_visible ?? true,
   }
   const { data, error } = await supabase
     .from("auctions")
@@ -1521,6 +1534,54 @@ export async function createAuction(payload: Partial<AuctionRecord>) {
   }
 
   return createdAuction
+}
+
+export async function updateAuctionStorefrontState(
+  auctionId: string,
+  payload: Partial<Pick<AuctionRecord, "auction_status" | "storefront_visible" | "deleted_at">>,
+) {
+  const supabase = getSupabaseBrowserClient()
+  const { data, error } = await supabase
+    .from("auctions")
+    .update(payload)
+    .eq("auction_id", auctionId)
+    .select(AUCTION_COLUMNS)
+    .single()
+
+  if (error) {
+    throw wrapError("auctions", error)
+  }
+
+  return castRow<AuctionRecord>(data)
+}
+
+export async function removeDemoAuction(auction: AuctionRecord) {
+  if (!canDeleteDemoAuction(auction)) {
+    throw new Error("Only demo auctions without live/settled status or winners can be deleted.")
+  }
+
+  const supabase = getSupabaseBrowserClient()
+  const hardDelete = await supabase
+    .from("auctions")
+    .delete()
+    .eq("auction_id", auction.auction_id)
+
+  if (!hardDelete.error) {
+    return
+  }
+
+  const softDelete = await supabase
+    .from("auctions")
+    .update({
+      auction_status: "deleted",
+      storefront_visible: false,
+      deleted_at: new Date().toISOString(),
+    })
+    .eq("auction_id", auction.auction_id)
+
+  if (softDelete.error) {
+    throw wrapError("auctions", softDelete.error)
+  }
 }
 
 export async function listMediaAssets(filters: MediaFilters = {}) {
@@ -1804,7 +1865,8 @@ export async function getAuctionShowcase(input: {
   let query = supabase
     .from("auctions")
     .select(AUCTION_COLUMNS)
-    .in("auction_status", ["live", "scheduled", "ended"])
+    .in("auction_status", ["live", "open", "scheduled", "published", "ended", "draft"])
+    .is("deleted_at", null)
 
   if (input.auctionId) {
     query = query.eq("auction_id", input.auctionId)
@@ -1819,12 +1881,8 @@ export async function getAuctionShowcase(input: {
   }
 
   const auctions = castRows<AuctionRecord>(data).sort((left, right) => {
-    const leftStatusPriority = left.auction_status === "live" ? 0 : left.auction_status === "scheduled" ? 1 : 2
-    const rightStatusPriority = right.auction_status === "live" ? 0 : right.auction_status === "scheduled" ? 1 : 2
-
-    if ((left.demo_mode ?? false) !== (right.demo_mode ?? false)) {
-      return left.demo_mode ? -1 : 1
-    }
+    const leftStatusPriority = left.auction_status === "live" || left.auction_status === "open" ? 0 : left.auction_status === "scheduled" || left.auction_status === "published" ? 1 : 2
+    const rightStatusPriority = right.auction_status === "live" || right.auction_status === "open" ? 0 : right.auction_status === "scheduled" || right.auction_status === "published" ? 1 : 2
 
     if (leftStatusPriority !== rightStatusPriority) {
       return leftStatusPriority - rightStatusPriority
@@ -1833,7 +1891,7 @@ export async function getAuctionShowcase(input: {
     const leftTime = left.auction_start_time ? new Date(left.auction_start_time).getTime() : 0
     const rightTime = right.auction_start_time ? new Date(right.auction_start_time).getTime() : 0
     return rightTime - leftTime
-  })
+  }).filter((auction) => isAuctionVisibleOnStorefront(auction, true) || auction.auction_status === "ended")
 
   const selectedAuction = auctions[0]
 
@@ -1882,7 +1940,8 @@ export async function listPublicAuctionHighlights(input: {
   let query = supabase
     .from("auctions")
     .select(AUCTION_COLUMNS)
-    .in("auction_status", ["live", "scheduled", "ended"])
+    .in("auction_status", ["live", "open", "scheduled", "published", "draft"])
+    .is("deleted_at", null)
     .in("auction_type", input.auctionType ? [input.auctionType] : ["premium", "hybrid"])
     .limit(limit * 3)
 
@@ -1892,18 +1951,9 @@ export async function listPublicAuctionHighlights(input: {
     throw wrapError("auctions", error)
   }
 
-  const auctions = castRows<AuctionRecord>(data).sort((left, right) => {
-    const leftPriority = left.auction_status === "live" ? 0 : left.auction_status === "scheduled" ? 1 : 2
-    const rightPriority = right.auction_status === "live" ? 0 : right.auction_status === "scheduled" ? 1 : 2
-
-    if (leftPriority !== rightPriority) {
-      return leftPriority - rightPriority
-    }
-
-    const leftUpdatedAt = left.updated_at ? new Date(left.updated_at).getTime() : 0
-    const rightUpdatedAt = right.updated_at ? new Date(right.updated_at).getTime() : 0
-    return rightUpdatedAt - leftUpdatedAt
-  })
+  const auctions = sortAuctionsForStorefront(
+    castRows<AuctionRecord>(data).filter((auction) => isAuctionVisibleOnStorefront(auction, true)),
+  )
 
   if (!auctions.length) {
     return [] as AuctionHomeHighlightRecord[]
