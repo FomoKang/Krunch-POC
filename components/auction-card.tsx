@@ -423,6 +423,7 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
     settlementQuote.quote_status !== "cancelled" &&
     settlementQuote.quote_status !== "expired"
   const settlementActionLabel = settlementQuote?.quote_status === "paid" ? "VIEW PAYMENT" : "RESUME CHECKOUT"
+  const isEndedAuction = hasActualAuction && auctionStatus === "ended"
   const settlementButtonDisabled = !hasSettlementFlow && (!canBuyNow || actionState !== null)
   const settlementDisplayAmount =
     settlementQuote?.quote_status === "payment_requested" ||
@@ -575,9 +576,15 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
                   {auctionType === "hybrid" ? <p className="text-xs text-[#FF8FB4]">{hasSettlementFlow ? "Buy Now is already reserved. Resume shipping, customs, and payment review from this checkout." : `Buy Now reserves the lot, collects shipping details, and prepares a final payment quote from ${money(auction.buy_now_price, currency)}.`}</p> : null}
                   {actionError ? <p className="text-xs text-[#FF8FAB]">{actionError}</p> : null}
                 </div>
-                <div className={`grid gap-3 ${auctionType === "hybrid" ? "grid-cols-2" : "grid-cols-1"}`}>
-                  <button className={`w-full py-4 text-lg uppercase transition-all active:scale-[0.98] place-bid-btn ${!isLiveAuction || actionState !== null || parseInput(offerAmount) < minimumNextBid ? "cursor-not-allowed border border-white/10 bg-white/10 text-white/50" : isBlack ? "black-mode-place-bid" : `${theme.accentBg} ${theme.accentForeground} hover:brightness-110`}`} disabled={!isLiveAuction || actionState !== null || parseInput(offerAmount) < minimumNextBid} onClick={handleBid}>{actionState === "bid" ? "PLACING..." : "SET OFFER"}</button>
-                  {auctionType === "hybrid" ? <button className={`w-full rounded-lg border py-4 text-lg font-semibold uppercase transition-all active:scale-[0.98] ${settlementButtonDisabled ? "cursor-not-allowed border-white/10 bg-white/10 text-white/50" : "border-[#FF6B9D]/40 bg-black text-white hover:border-[#FF6B9D]/70 hover:bg-[#12070d]"}`} disabled={settlementButtonDisabled} onClick={handleBuyNow}>{actionState === "buy_now" ? "STARTING..." : hasSettlementFlow ? settlementActionLabel : "BUY NOW"}</button> : null}
+                <div className={`grid gap-3 ${auctionType === "hybrid" && !isEndedAuction ? "grid-cols-2" : "grid-cols-1"}`}>
+                  {isEndedAuction ? (
+                    <button className="w-full cursor-not-allowed rounded-lg border border-white/10 bg-white/10 py-4 text-lg font-semibold uppercase text-white/50" disabled type="button">
+                      AUCTION CLOSED
+                    </button>
+                  ) : (
+                    <button className={`w-full py-4 text-lg uppercase transition-all active:scale-[0.98] place-bid-btn ${!isLiveAuction || actionState !== null || parseInput(offerAmount) < minimumNextBid ? "cursor-not-allowed border border-white/10 bg-white/10 text-white/50" : isBlack ? "black-mode-place-bid" : `${theme.accentBg} ${theme.accentForeground} hover:brightness-110`}`} disabled={!isLiveAuction || actionState !== null || parseInput(offerAmount) < minimumNextBid} onClick={handleBid}>{actionState === "bid" ? "PLACING..." : "SET OFFER"}</button>
+                  )}
+                  {auctionType === "hybrid" && !isEndedAuction ? <button className={`w-full rounded-lg border py-4 text-lg font-semibold uppercase transition-all active:scale-[0.98] ${settlementButtonDisabled ? "cursor-not-allowed border-white/10 bg-white/10 text-white/50" : "border-[#FF6B9D]/40 bg-black text-white hover:border-[#FF6B9D]/70 hover:bg-[#12070d]"}`} disabled={settlementButtonDisabled} onClick={handleBuyNow}>{actionState === "buy_now" ? "STARTING..." : hasSettlementFlow ? settlementActionLabel : "BUY NOW"}</button> : null}
                 </div>
               </div>
             </div>
@@ -585,12 +592,12 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
         ) : null}
         {!showSheet ? (
           <div className="fixed bottom-0 left-0 right-0 z-50 flex w-full justify-center bg-black px-4" style={{ height: "calc(100px + env(safe-area-inset-bottom))", paddingBottom: "env(safe-area-inset-bottom)" }}>
-            <div className={`grid h-full w-full max-w-[720px] gap-2 ${auctionType === "hybrid" ? "grid-cols-2" : "grid-cols-1"}`}>
-              <button className={`relative flex h-full w-full items-center justify-center overflow-hidden text-xl uppercase transition-all duration-200 active:scale-[0.98] place-bid-btn ${isLiveAuction ? isBlack ? "black-mode-place-bid hover:-translate-y-0.5" : "bg-[#FF6B9D] text-black hover:-translate-y-0.5 hover:brightness-110" : "cursor-not-allowed bg-white/10 text-white/45"}`} onClick={(event) => { if (!isLiveAuction) { setActionError(hasActualAuction ? auctionStatus === "scheduled" ? "This auction has not started yet." : "This auction is no longer accepting bids." : usesLocalShowcase ? "This showcase auction is not accepting bids right now." : "Connect the database migration to enable live bidding."); setShowSheet(true); return } const rect = event.currentTarget.getBoundingClientRect(); setRipple({ x: event.clientX - rect.left, y: event.clientY - rect.top }); window.setTimeout(() => setRipple(null), 600); setShowSheet(true) }} style={{ boxShadow: "0 4px 20px rgba(255, 0, 110, 0.4)" }} type="button">
+            <div className={`grid h-full w-full max-w-[720px] gap-2 ${auctionType === "hybrid" && !isEndedAuction ? "grid-cols-2" : "grid-cols-1"}`}>
+              <button className={`relative flex h-full w-full items-center justify-center overflow-hidden text-xl uppercase transition-all duration-200 active:scale-[0.98] place-bid-btn ${isLiveAuction ? isBlack ? "black-mode-place-bid hover:-translate-y-0.5" : "bg-[#FF6B9D] text-black hover:-translate-y-0.5 hover:brightness-110" : "cursor-not-allowed bg-white/10 text-white/45"}`} disabled={isEndedAuction} onClick={(event) => { if (!isLiveAuction) { setActionError(hasActualAuction ? auctionStatus === "scheduled" ? "This auction has not started yet." : "This auction is no longer accepting bids." : usesLocalShowcase ? "This showcase auction is not accepting bids right now." : "Connect the database migration to enable live bidding."); if (!isEndedAuction) setShowSheet(true); return } const rect = event.currentTarget.getBoundingClientRect(); setRipple({ x: event.clientX - rect.left, y: event.clientY - rect.top }); window.setTimeout(() => setRipple(null), 600); setShowSheet(true) }} style={isLiveAuction ? { boxShadow: "0 4px 20px rgba(255, 0, 110, 0.4)" } : undefined} type="button">
                 {ripple ? <span className="pointer-events-none absolute rounded-full bg-white/40 animate-place-bid-ripple" style={{ left: ripple.x, top: ripple.y, width: 20, height: 20, marginLeft: -10, marginTop: -10 }} /> : null}
                 {footerLabel}
               </button>
-              {auctionType === "hybrid" ? <button className={`h-full w-full rounded-none border px-4 text-lg font-semibold uppercase transition-all duration-200 active:scale-[0.98] ${settlementButtonDisabled ? "cursor-not-allowed border-white/10 bg-white/10 text-white/45" : "border-[#FF6B9D]/45 bg-[#0a0a0a] text-white hover:-translate-y-0.5 hover:border-[#FF6B9D]/70 hover:bg-[#12070d]"}`} disabled={settlementButtonDisabled} onClick={handleBuyNow} type="button">{actionState === "buy_now" ? "STARTING..." : hasSettlementFlow ? settlementActionLabel : "BUY NOW"}</button> : null}
+              {auctionType === "hybrid" && !isEndedAuction ? <button className={`h-full w-full rounded-none border px-4 text-lg font-semibold uppercase transition-all duration-200 active:scale-[0.98] ${settlementButtonDisabled ? "cursor-not-allowed border-white/10 bg-white/10 text-white/45" : "border-[#FF6B9D]/45 bg-[#0a0a0a] text-white hover:-translate-y-0.5 hover:border-[#FF6B9D]/70 hover:bg-[#12070d]"}`} disabled={settlementButtonDisabled} onClick={handleBuyNow} type="button">{actionState === "buy_now" ? "STARTING..." : hasSettlementFlow ? settlementActionLabel : "BUY NOW"}</button> : null}
             </div>
           </div>
         ) : null}
