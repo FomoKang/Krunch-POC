@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useEffect, useState } from "react"
 import { Dices, Home, Store, TrendingUp, User } from "lucide-react"
 import { useLocale } from "@/components/locale-provider"
 import { useSplash } from "@/components/splash-context"
@@ -21,10 +22,21 @@ export function BottomNav() {
   const { isSplashVisible } = useSplash()
   const { locale } = useLocale()
   const { user } = useSupabaseSession()
+  const [splashGuardExpired, setSplashGuardExpired] = useState(false)
   const basePath = theme === "black" ? "/black" : ""
   const isKo = locale === "ko"
 
-  if (isSplashVisible || pathname?.includes("/auction") || pathname?.startsWith("/admin")) {
+  useEffect(() => {
+    if (!isSplashVisible) {
+      setSplashGuardExpired(false)
+      return
+    }
+
+    const timeoutId = window.setTimeout(() => setSplashGuardExpired(true), 2200)
+    return () => window.clearTimeout(timeoutId)
+  }, [isSplashVisible])
+
+  if ((isSplashVisible && !splashGuardExpired) || pathname?.includes("/auction") || pathname?.startsWith("/admin")) {
     return null
   }
 
@@ -63,7 +75,7 @@ export function BottomNav() {
   const inactiveColor = isPink ? "text-white/50 hover:text-white/80" : "text-[#6B7280] hover:text-white/90"
 
   return (
-    <nav className="nav-bottom-bar w-full border-t border-white/10 bg-black/95 backdrop-blur-sm [contain:layout]">
+    <nav className="nav-bottom-bar w-full border-t border-white/10 bg-black/95 backdrop-blur-sm [contain:layout]" aria-label={isKo ? "하단 내비게이션" : "Bottom navigation"}>
       <div className="relative flex w-full py-3">
         {tabs.map((tab, index) => {
           const isActive = index === activeIndexResolved
