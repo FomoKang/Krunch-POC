@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useEffect, useState, type CSSProperties } from "react"
 import { Dices, Home, Store, TrendingUp, User } from "lucide-react"
 import { useLocale } from "@/components/locale-provider"
 import { useSiteTheme } from "@/components/theme-provider"
@@ -19,8 +20,33 @@ export function BottomNav() {
   const { theme } = useSiteTheme()
   const { locale } = useLocale()
   const { user } = useSupabaseSession()
+  const [visualBottomGap, setVisualBottomGap] = useState(0)
   const basePath = theme === "black" ? "/black" : ""
   const isKo = locale === "ko"
+
+  useEffect(() => {
+    const updateVisualBottomGap = () => {
+      const viewport = window.visualViewport
+      if (!viewport) {
+        setVisualBottomGap(0)
+        return
+      }
+
+      const gap = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop)
+      setVisualBottomGap(Math.ceil(gap))
+    }
+
+    updateVisualBottomGap()
+    window.visualViewport?.addEventListener("resize", updateVisualBottomGap)
+    window.visualViewport?.addEventListener("scroll", updateVisualBottomGap)
+    window.addEventListener("resize", updateVisualBottomGap)
+
+    return () => {
+      window.visualViewport?.removeEventListener("resize", updateVisualBottomGap)
+      window.visualViewport?.removeEventListener("scroll", updateVisualBottomGap)
+      window.removeEventListener("resize", updateVisualBottomGap)
+    }
+  }, [])
 
   if (pathname?.startsWith("/admin")) {
     return null
@@ -61,7 +87,11 @@ export function BottomNav() {
   const inactiveColor = isPink ? "text-white/50 hover:text-white/80" : "text-[#6B7280] hover:text-white/90"
 
   return (
-    <nav className="nav-bottom-bar w-full border-t border-white/10 bg-black/95 backdrop-blur-sm [contain:layout]" aria-label={isKo ? "하단 내비게이션" : "Bottom navigation"}>
+    <nav
+      className="nav-bottom-bar w-full border-t border-white/10 bg-black/95 backdrop-blur-sm [contain:layout]"
+      aria-label={isKo ? "하단 내비게이션" : "Bottom navigation"}
+      style={{ "--krunch-visual-bottom-gap": `${visualBottomGap}px` } as CSSProperties}
+    >
       <div className="relative flex w-full py-3">
         {tabs.map((tab, index) => {
           const isActive = index === activeIndexResolved
