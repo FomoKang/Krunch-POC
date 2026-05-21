@@ -38,6 +38,7 @@ import { useSiteTheme } from "./theme-provider"
 const ONE_HOUR = 3600
 const TEN_MINUTES = 600
 const DAY = 86400
+const BOTTOM_NAV_OFFSET = "calc(76px + env(safe-area-inset-bottom, 0px))"
 
 const AUCTION_THEMES = {
   default: { accent: "text-primary", accentBg: "bg-primary", accentBorder: "border-primary/30", accentBorderFocus: "border-primary/50 focus:border-primary", accentForeground: "text-primary-foreground", chartColor: "#FF6B9D" },
@@ -457,7 +458,7 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
     <>
       <Confetti active={showConfetti} />
       <SuccessPopup amount={successAmount} onClose={() => setShowPopup(false)} show={showPopup} />
-      <div className="relative flex min-h-[100dvh] flex-col bg-transparent" style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "calc(100px + env(safe-area-inset-bottom))" }}>
+      <div className="relative flex min-h-[100dvh] flex-col bg-transparent" style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "calc(176px + env(safe-area-inset-bottom, 0px))" }}>
         <div className="relative z-50 flex min-h-[calc(5rem+env(safe-area-inset-top))] items-center justify-between gap-1.5 overflow-visible px-2.5 sm:gap-2 sm:px-4" style={{ paddingTop: "calc(1rem + env(safe-area-inset-top))" }}>
           <Link href={isBlack ? "/black" : "/"} className="block h-16 w-32 min-w-0 shrink-0 sm:h-[72px] sm:w-[225px]">
             <Image src={logoSrc} alt="Krunch Logo" width={225} height={72} className={`h-full w-full cursor-pointer object-contain object-left transition-opacity hover:opacity-80 ${!isBlack ? "origin-center scale-[1.02]" : ""}`} />
@@ -565,7 +566,7 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
         {showSheet ? (
           <>
             <div className="fixed inset-0 z-30 bg-black/50" onClick={() => setShowSheet(false)} />
-            <div className="fixed bottom-0 left-1/2 z-40 w-[calc(100%-2rem)] max-w-[720px] -translate-x-1/2 overflow-hidden rounded-t-2xl border-l border-r border-t border-border/50 animate-slide-up-bottom-sheet" style={{ paddingBottom: "calc(100px + env(safe-area-inset-bottom))", background: isBlack ? "rgba(10,10,10,0.98)" : "rgba(0,0,0,0.98)", backdropFilter: "blur(12px)" }}>
+            <div className="fixed left-1/2 z-40 w-[calc(100%-2rem)] max-w-[720px] -translate-x-1/2 overflow-hidden rounded-t-2xl border-l border-r border-t border-border/50 animate-slide-up-bottom-sheet" style={{ bottom: BOTTOM_NAV_OFFSET, paddingBottom: "calc(100px + env(safe-area-inset-bottom, 0px))", background: isBlack ? "rgba(10,10,10,0.98)" : "rgba(0,0,0,0.98)", backdropFilter: "blur(12px)" }}>
               <div className="flex justify-end p-4 pb-0"><button aria-label="Close bidding panel" className="flex size-8 items-center justify-center rounded-full bg-white/10 transition-colors hover:bg-white/15" onClick={() => setShowSheet(false)}><svg className="size-5 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} /></svg></button></div>
               <div className="space-y-4 px-4 pb-4 pt-2">
                 <div className="space-y-1"><p className="text-sm font-medium text-foreground">Your Offer</p><p className="text-xs text-muted-foreground">Enter at least {money(minimumNextBid, currency)}.</p></div>
@@ -591,7 +592,7 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
           </>
         ) : null}
         {!showSheet ? (
-          <div className="fixed bottom-0 left-0 right-0 z-50 flex w-full justify-center bg-black px-4" style={{ height: "calc(100px + env(safe-area-inset-bottom))", paddingBottom: "env(safe-area-inset-bottom)" }}>
+          <div className="fixed left-0 right-0 z-50 flex w-full justify-center bg-black px-4" style={{ bottom: BOTTOM_NAV_OFFSET, height: "calc(100px + env(safe-area-inset-bottom, 0px))", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
             <div className={`grid h-full w-full max-w-[720px] gap-2 ${auctionType === "hybrid" && !isEndedAuction ? "grid-cols-2" : "grid-cols-1"}`}>
               <button className={`relative flex h-full w-full items-center justify-center overflow-hidden text-xl uppercase transition-all duration-200 active:scale-[0.98] place-bid-btn ${isLiveAuction ? isBlack ? "black-mode-place-bid hover:-translate-y-0.5" : "bg-[#FF6B9D] text-black hover:-translate-y-0.5 hover:brightness-110" : "cursor-not-allowed bg-white/10 text-white/45"}`} disabled={isEndedAuction} onClick={(event) => { if (!isLiveAuction) { setActionError(hasActualAuction ? auctionStatus === "scheduled" ? "This auction has not started yet." : "This auction is no longer accepting bids." : usesLocalShowcase ? "This showcase auction is not accepting bids right now." : "Connect the database migration to enable live bidding."); if (!isEndedAuction) setShowSheet(true); return } const rect = event.currentTarget.getBoundingClientRect(); setRipple({ x: event.clientX - rect.left, y: event.clientY - rect.top }); window.setTimeout(() => setRipple(null), 600); setShowSheet(true) }} style={isLiveAuction ? { boxShadow: "0 4px 20px rgba(255, 0, 110, 0.4)" } : undefined} type="button">
                 {ripple ? <span className="pointer-events-none absolute rounded-full bg-white/40 animate-place-bid-ripple" style={{ left: ripple.x, top: ripple.y, width: 20, height: 20, marginLeft: -10, marginTop: -10 }} /> : null}

@@ -2,10 +2,8 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useEffect, useState } from "react"
 import { Dices, Home, Store, TrendingUp, User } from "lucide-react"
 import { useLocale } from "@/components/locale-provider"
-import { useSplash } from "@/components/splash-context"
 import { useSiteTheme } from "@/components/theme-provider"
 import { useSupabaseSession } from "@/hooks/use-supabase-session"
 
@@ -19,24 +17,12 @@ type TabItem = {
 export function BottomNav() {
   const pathname = usePathname()
   const { theme } = useSiteTheme()
-  const { isSplashVisible } = useSplash()
   const { locale } = useLocale()
   const { user } = useSupabaseSession()
-  const [splashGuardExpired, setSplashGuardExpired] = useState(false)
   const basePath = theme === "black" ? "/black" : ""
   const isKo = locale === "ko"
 
-  useEffect(() => {
-    if (!isSplashVisible) {
-      setSplashGuardExpired(false)
-      return
-    }
-
-    const timeoutId = window.setTimeout(() => setSplashGuardExpired(true), 2200)
-    return () => window.clearTimeout(timeoutId)
-  }, [isSplashVisible])
-
-  if ((isSplashVisible && !splashGuardExpired) || pathname?.includes("/auction") || pathname?.startsWith("/admin")) {
+  if (pathname?.startsWith("/admin")) {
     return null
   }
 
