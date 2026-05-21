@@ -360,6 +360,14 @@ function syncState(definition: ShowcaseDefinition, state: StoredShowcaseState) {
     }))
   }
 
+  if (definition.id === PREMIUM_SHOWCASE_ID) {
+    next.auctionStatus = "live"
+    next.auctionStartTime = new Date(now - 6 * 60 * 60 * 1000).toISOString()
+    next.auctionEndTime = new Date(now + 24 * 60 * 60 * 1000).toISOString()
+    next.outcome = null
+    return next
+  }
+
   if (next.auctionStatus !== "ended") {
     const startTime = next.auctionStartTime ? new Date(next.auctionStartTime).getTime() : null
     const endTime = next.auctionEndTime ? new Date(next.auctionEndTime).getTime() : null

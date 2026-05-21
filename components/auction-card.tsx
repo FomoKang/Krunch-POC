@@ -200,7 +200,7 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
   const auction = display.auction
   const artifact = display.artifact
   const bids = showcase?.bids ?? FALLBACK_SHOWCASE.bids
-  const media = showcase?.media ?? FALLBACK_SHOWCASE.media
+  const media = showcase ? showcase.media : FALLBACK_SHOWCASE.media
   const openingBid = auction.opening_bid ?? 2000000
   const minimumIncrement = auction.minimum_increment ?? 100000
   const currentHighestBid = display.currentHighestBid
@@ -490,7 +490,7 @@ export function AuctionCard({ variant: variantProp }: { variant?: AuctionVariant
             </div>
             <div className="flex flex-col items-center gap-4 px-4 pb-4 sm:px-6">
               <div className="relative h-36 w-full max-w-[240px] shrink-0 sm:h-44 sm:max-w-[280px]">
-                {isVideo(media) ? <video key={media?.file_url ?? "cap-spin"} src={media?.file_url ?? "/cap-spin.mp4"} autoPlay className="h-full w-full rounded-xl object-contain" loop muted playsInline /> : isImage(media) ? <img alt={media?.caption ?? artifact.artifact_title} className="h-full w-full rounded-xl object-contain" src={media?.file_url ?? media?.thumbnail_url ?? "/cap-thumb.png"} /> : <video src="/cap-spin.mp4" autoPlay className="h-full w-full rounded-xl object-contain" loop muted playsInline />}
+                {isVideo(media) ? <video key={media?.file_url ?? "cap-spin"} src={media?.file_url ?? "/cap-spin.mp4"} autoPlay className="h-full w-full rounded-xl object-contain" loop muted playsInline /> : isImage(media) ? <img alt={media?.caption ?? artifact.artifact_title} className="h-full w-full rounded-xl object-contain" src={media?.thumbnail_url ?? media?.file_url ?? "/placeholder.jpg"} /> : <img alt={artifact.artifact_title} className="h-full w-full rounded-xl object-contain" src="/placeholder.jpg" />}
               </div>
               <div className="flex min-w-0 flex-1 flex-col items-center justify-center">
                 <p className="mb-1 text-center text-[10px] font-bold uppercase tracking-widest text-white/60">Current Highest Bid</p>

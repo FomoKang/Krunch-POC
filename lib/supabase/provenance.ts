@@ -1612,6 +1612,15 @@ export async function listMediaAssets(filters: MediaFilters = {}) {
   return castRows<MediaAssetRecord>(data)
 }
 
+function isDisplayableImageMedia(media: MediaAssetRecord) {
+  const type = media.file_type?.toLowerCase() ?? ""
+  return type.startsWith("image/") || /\.(png|jpg|jpeg|webp|gif|avif)$/i.test(media.file_url)
+}
+
+function getPreferredDisplayMedia(mediaAssets: MediaAssetRecord[]) {
+  return mediaAssets.find(isDisplayableImageMedia) ?? mediaAssets[0] ?? null
+}
+
 export async function uploadMediaFile(file: File, artifactId: string, provenanceEventId?: string | null) {
   const supabase = getSupabaseBrowserClient()
   const bucket = getMediaBucketName()
@@ -1923,7 +1932,7 @@ export async function getAuctionShowcase(input: {
   return {
     auction: selectedAuction,
     artifact,
-    media: mediaAssets[0] ?? null,
+    media: getPreferredDisplayMedia(mediaAssets),
     bids,
     outcome,
     currentHighestBid: getAuctionCurrentHighestBid(selectedAuction, bids),
@@ -2000,7 +2009,9 @@ export async function listPublicAuctionHighlights(input: {
 
   const mediaMap = new Map<string, MediaAssetRecord>()
   for (const media of castRows<MediaAssetRecord>(mediaData)) {
-    if (!mediaMap.has(media.artifact_id)) {
+    const existing = mediaMap.get(media.artifact_id)
+
+    if (!existing || (!isDisplayableImageMedia(existing) && isDisplayableImageMedia(media))) {
       mediaMap.set(media.artifact_id, media)
     }
   }
