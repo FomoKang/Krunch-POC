@@ -54,7 +54,7 @@ export function BottomNav() {
 
   const tabs: TabItem[] = [
     { href: basePath || "/", label: isKo ? "\uD648" : "Home", icon: Home },
-    { href: `${basePath}/trend`, label: isKo ? "\uD2B8\uB80C\uB4DC" : "Trend", icon: TrendingUp },
+    { href: `${basePath}/trend`, label: "Meme", icon: TrendingUp },
     { href: `${basePath}/draw`, label: isKo ? "\uB4DC\uB85C\uC6B0" : "Draw", icon: Dices },
     { href: `${basePath}/market`, label: isKo ? "2\uCC28 \uB9C8\uCF13" : "2nd Market", icon: Store },
     {

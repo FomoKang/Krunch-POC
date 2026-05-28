@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { Fragment, useState, useEffect, useRef } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { ChevronRight, Sparkles, Flame, Zap, Search, Bell, Crown, MessageCircle, Heart, Check } from "lucide-react"
+import { ChevronRight, Sparkles, Flame, Zap, Search, Bell, Crown, MessageCircle, Heart, Check, Wallet, Gift, BadgeCheck } from "lucide-react"
 import { useSiteTheme } from "@/components/theme-provider"
 import { useLocale } from "@/components/locale-provider"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -237,7 +237,15 @@ function BattleCard({ battle, isBlack, isKo }: { battle: BattleItem; isBlack?: b
       )}
 
       <div className="px-4 pt-4 pb-2 flex items-start justify-between gap-3">
-        <h3 className="text-white/80 text-sm font-medium flex-1 min-w-0">{isKo && "titleKo" in battle ? battle.titleKo : battle.title}</h3>
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-1.5 mb-2">
+            <StatusChip label="Meme Mission" isBlack={isBlack} />
+            <StatusChip label="Wallet-gated Vote" isBlack={isBlack} />
+            <StatusChip label="Community Reward" isBlack={isBlack} />
+          </div>
+          <h3 className="text-white/80 text-sm font-medium">{isKo && "titleKo" in battle ? battle.titleKo : battle.title}</h3>
+          <p className={`mt-1 text-[11px] ${isBlack ? "text-white/45" : "text-white/40"}`}>Connect wallet to vote and unlock rewards</p>
+        </div>
         {/* HOT 뱃지: 고정 높이로 모드 바꿔도 세로 위치 동일 */}
         {battle.isHot && (
           <div className={`rounded-xl px-2.5 py-1.5 min-h-[3.25rem] min-w-[4rem] flex flex-col items-end justify-center text-right flex-shrink-0 ${isBlack ? "bg-transparent" : "hot-badge shadow-lg"}`}>
@@ -373,12 +381,116 @@ function BattleCard({ battle, isBlack, isKo }: { battle: BattleItem; isBlack?: b
   )
 }
 
+function StatusChip({ label, isBlack }: { label: string; isBlack?: boolean }) {
+  return (
+    <span className={`inline-flex items-center rounded-full border px-2 py-1 text-[10px] font-bold leading-none ${
+      isBlack
+        ? "border-[rgba(255,105,180,0.35)] bg-white/[0.03] text-white/80"
+        : "border-[#FF6B9D]/25 bg-[#FF6B9D]/10 text-[#FF8FAB]"
+    }`}>
+      {label}
+    </span>
+  )
+}
+
+function WalletCollabCard({ connected, onConnect, isBlack }: { connected: boolean; onConnect: () => void; isBlack?: boolean }) {
+  return (
+    <section className={`rounded-2xl border p-4 relative overflow-hidden ${
+      isBlack
+        ? "bg-[#121212] border-white/10 shadow-[0_8px_30px_rgba(255,105,180,0.08)]"
+        : "bg-white/[0.04] border-white/10"
+    }`}>
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#FF6B9D]/70 to-transparent" />
+      {!connected ? (
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#FF6B9D]/15 ring-1 ring-[#FF6B9D]/30">
+            <Wallet className="h-5 w-5 text-[#FF6B9D]" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#FF8FAB]">Krunch × MemeCore</p>
+            <h2 className="mt-1 text-lg font-bold text-white">Connect Wallet</h2>
+            <p className="mt-1 text-xs leading-relaxed text-white/58">Connect to join meme missions, vote, and unlock community rewards</p>
+            <p className="mt-2 text-[11px] text-white/35">Supports MeCo Wallet, MetaMask, OKX Wallet</p>
+          </div>
+          <button
+            type="button"
+            onClick={onConnect}
+            className="shrink-0 rounded-full bg-gradient-to-r from-[#FF006E] to-[#FF4D94] px-3.5 py-2 text-xs font-bold text-white shadow-lg shadow-[#FF006E]/25 transition-transform active:scale-95"
+          >
+            Connect Wallet
+          </button>
+        </div>
+      ) : (
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-400/12 ring-1 ring-emerald-300/25">
+            <BadgeCheck className="h-5 w-5 text-emerald-300" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full bg-emerald-400/12 px-2 py-1 text-[10px] font-bold text-emerald-200 ring-1 ring-emerald-300/20">Wallet Connected</span>
+              <span className="text-xs font-semibold text-white/80">0x8A3F...19C2</span>
+            </div>
+            <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-[#FF6B9D]/12 px-2.5 py-1 text-[11px] font-bold text-[#FF8FAB] ring-1 ring-[#FF6B9D]/25">
+              <Sparkles className="h-3 w-3" />
+              Meme Pass Holder
+            </div>
+            <p className="mt-2 text-xs text-white/55">Vote, comment, and join missions</p>
+          </div>
+          <div className="flex shrink-0 flex-col gap-2">
+            <button type="button" className="rounded-full border border-white/10 px-3 py-1.5 text-[11px] font-bold text-white/80">My Missions</button>
+            <button type="button" className="rounded-full border border-[#FF6B9D]/25 px-3 py-1.5 text-[11px] font-bold text-[#FF8FAB]">Rewards</button>
+          </div>
+        </div>
+      )}
+    </section>
+  )
+}
+
+function MissionPreviewCard({ isBlack }: { isBlack?: boolean }) {
+  const missions = ["Vote in 1 battle", "Leave 1 comment", "React to 3 posts"]
+  const rewards = ["Meme Badge", "Fan XP", "Early Access Entry"]
+
+  return (
+    <section className={`rounded-2xl border p-4 ${
+      isBlack
+        ? "bg-[#121212] border-white/10"
+        : "bg-white/[0.035] border-white/10"
+    }`}>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-sm font-bold text-white">Mission Preview</p>
+          <p className="mt-1 text-[11px] text-white/40">Community actions, light rewards</p>
+        </div>
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#FF6B9D]/12 ring-1 ring-[#FF6B9D]/25">
+          <Gift className="h-4 w-4 text-[#FF8FAB]" />
+        </div>
+      </div>
+      <div className="mt-4 grid grid-cols-1 gap-2">
+        {missions.map((mission) => (
+          <div key={mission} className="flex items-center gap-2 text-xs text-white/65">
+            <Check className="h-3.5 w-3.5 text-[#FF8FAB]" />
+            <span>{mission}</span>
+          </div>
+        ))}
+      </div>
+      <div className="mt-4 flex flex-wrap gap-2">
+        {rewards.map((reward) => (
+          <span key={reward} className="rounded-full bg-white/[0.06] px-2.5 py-1 text-[11px] font-semibold text-white/70 ring-1 ring-white/10">
+            {reward}
+          </span>
+        ))}
+      </div>
+    </section>
+  )
+}
+
 export default function TrendPage() {
   const { theme } = useSiteTheme()
   const { locale } = useLocale()
   const isKo = locale === "ko"
   const basePath = theme === "black" ? "/black" : ""
-  const [activeMainTab, setActiveMainTab] = useState<"ranking" | "community">("ranking")
+  const [activeMainTab, setActiveMainTab] = useState<"ranking" | "community">("community")
+  const [walletConnected, setWalletConnected] = useState(false)
   const [categoryFilter, setCategoryFilter] = useState("All")
   const [sortBy, setSortBy] = useState<"sales" | "volume" | "new">("sales")
   const logoSrc = theme === "black" ? "/logo-white.png" : "/logo-pink.png"
@@ -423,7 +535,7 @@ export default function TrendPage() {
           <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0 overflow-visible">
             <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
               <Sparkles className={`w-4 h-4 shrink-0 sm:w-5 sm:h-5 ${theme === "black" ? "text-white" : "text-[#FF6B9D]"}`} />
-              <span className={isKo ? "font-sans font-bold tracking-tight text-xs sm:text-base text-white/95 uppercase whitespace-nowrap" : "font-display text-xs sm:text-lg tracking-wide text-white uppercase whitespace-nowrap"}>{isKo ? "트렌드" : "Trend"}</span>
+              <span className={isKo ? "font-sans font-bold tracking-tight text-xs sm:text-base text-white/95 uppercase whitespace-nowrap" : "font-display text-xs sm:text-lg tracking-wide text-white uppercase whitespace-nowrap"}>Meme</span>
             </div>
             <Link href={`${basePath}/search`} className="p-1.5 sm:p-2 hover:bg-white/10 rounded-full transition-colors shrink-0">
               <Search className="w-4 h-4 sm:w-5 sm:h-5 text-white/80" />
@@ -445,23 +557,6 @@ export default function TrendPage() {
             <div className="absolute inset-0 rounded-full bg-black/40 backdrop-blur-sm ring-1 ring-[rgba(255,105,180,0.25)] pointer-events-none" aria-hidden />
           )}
           <button
-            onClick={() => setActiveMainTab("ranking")}
-            className={`flex-1 py-3 px-6 rounded-[24px] text-sm font-bold transition-all duration-300 ease-in-out relative overflow-hidden border-2 ${
-              activeMainTab === "ranking"
-                ? theme === "black"
-                  ? "bg-transparent text-white border-white/90"
-                  : "bg-gradient-to-r from-[#FF006E] to-[#FF4D94] text-white shadow-lg shadow-[#FF006E]/40 border-transparent"
-                : theme === "black"
-                  ? "text-white/50 hover:text-white/80 border border-white/10"
-                  : "bg-white/5 text-white/60 border border-white/10 hover:bg-white/10 hover:text-white/80"
-            }`}
-          >
-            {activeMainTab === "ranking" && theme !== "black" && (
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
-            )}
-            <span className="relative z-10">{isKo ? "랭킹" : "Ranking"}</span>
-          </button>
-          <button
             onClick={() => setActiveMainTab("community")}
             className={`flex-1 py-3 px-6 rounded-[24px] text-sm font-bold transition-all duration-300 ease-in-out relative overflow-hidden border-2 ${
               activeMainTab === "community"
@@ -476,7 +571,24 @@ export default function TrendPage() {
             {activeMainTab === "community" && theme !== "black" && (
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
             )}
-            <span className="relative z-10">{isKo ? "커뮤니티" : "Community"}</span>
+            <span className="relative z-10">Community</span>
+          </button>
+          <button
+            onClick={() => setActiveMainTab("ranking")}
+            className={`flex-1 py-3 px-6 rounded-[24px] text-sm font-bold transition-all duration-300 ease-in-out relative overflow-hidden border-2 ${
+              activeMainTab === "ranking"
+                ? theme === "black"
+                  ? "bg-transparent text-white border-white/90"
+                  : "bg-gradient-to-r from-[#FF006E] to-[#FF4D94] text-white shadow-lg shadow-[#FF006E]/40 border-transparent"
+                : theme === "black"
+                  ? "text-white/50 hover:text-white/80 border border-white/10"
+                  : "bg-white/5 text-white/60 border border-white/10 hover:bg-white/10 hover:text-white/80"
+            }`}
+          >
+            {activeMainTab === "ranking" && theme !== "black" && (
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+            )}
+            <span className="relative z-10">Ranking</span>
           </button>
         </div>
       </div>
@@ -786,19 +898,27 @@ export default function TrendPage() {
         </div>
       ) : (
         <main className="px-4 py-6">
+          <div className="mb-5">
+            <WalletCollabCard connected={walletConnected} onConnect={() => setWalletConnected(true)} isBlack={theme === "black"} />
+          </div>
+
           {/* 페이지 타이틀 */}
           <div className="mb-6">
+            <p className={`mb-2 text-[10px] font-bold uppercase tracking-[0.22em] ${theme === "black" ? "text-[#FF8FAB]" : "text-[#FF6B9D]"}`}>KRUNCH × MEMECORE</p>
             <h1 className={`font-display text-3xl tracking-wide uppercase italic flex items-center gap-2 ${theme === "black" ? "arena-header" : "text-white"}`}>
               FASHION ARENA
               <Zap className={`w-6 h-6 ${theme === "black" ? "arena-icon" : "text-yellow-400"}`} />
             </h1>
-            <p className={`text-sm mt-1 ${theme === "black" ? "arena-subtitle" : "text-white/50"}`}>{isKo ? "좋아하는 셀럽 스타일에 투표하세요" : "Vote for your favorite celebrity style"}</p>
+            <p className={`text-sm mt-1 ${theme === "black" ? "arena-subtitle" : "text-white/50"}`}>Vote, react, and join fan missions</p>
           </div>
 
           {/* 배틀 피드 */}
           <div className="space-y-6">
-            {fashionBattles.map((battle) => (
-              <BattleCard key={battle.id} battle={battle} isBlack={theme === "black"} isKo={isKo} />
+            {fashionBattles.map((battle, index) => (
+              <Fragment key={battle.id}>
+                <BattleCard battle={battle} isBlack={theme === "black"} isKo={isKo} />
+                {index === 0 && <MissionPreviewCard isBlack={theme === "black"} />}
+              </Fragment>
             ))}
           </div>
         </main>
